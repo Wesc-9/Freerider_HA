@@ -20,7 +20,7 @@ from .filters import Ride, parse_transport_routes
 
 _LOGGER = logging.getLogger(__name__)
 MIN_CACHE_SECONDS = 900  # one source request per country per 15 minutes
-MANUAL_MIN_SECONDS = 60  # avoid a refresh-button request storm
+MANUAL_MIN_SECONDS = 300  # no repeated forced request within five minutes
 MAX_BACKOFF_SECONDS = 4 * 3600
 ROUTE_API = {
     "NO": ("https://hertzfreerider.no/api/transport-routes/?country=NORWAY",
@@ -61,6 +61,8 @@ class CountryFeed:
         self.last_success = 0.0
         self.blocked_until = 0.0
         self.errors = 0
+        self.requests = 0
+        self.last_attempt_utc: str | None = None
         self.etag: str | None = None
         self.modified: str | None = None
 
@@ -84,6 +86,8 @@ class CountryFeed:
                 # Avoid hammering the provider on rapidly repeated failures.
                 raise SourceNotReady(f"{country}: request cooldown active")
             self.last_attempt = now
+            self.last_attempt_utc = datetime.now(timezone.utc).isoformat()
+            self.requests += 1
             endpoint, homepage = ROUTE_API[country]
             headers = {"Accept": "application/json"}
             if self.etag:
@@ -100,7 +104,10 @@ class CountryFeed:
                         self.errors = 0
                         return list(self.items)
                     if response.status in (403, 429, 503):
-                        self._failure(retry_after_seconds(response.headers.get("Retry-After")))
+                        self._failure(
+                            MAX_BACKOFF_SECONDS if response.status == 403
+                            else retry_after_seconds(response.headers.get("Retry-After"))
+                        )
                         raise SourceNotReady(
                             f"{country}: provider returned HTTP {response.status}, backing off"
                         )
