@@ -94,6 +94,21 @@ def place_values(value: object) -> list[str]:
     return list(places.values())
 
 
+def station_matches(option: str, station: str) -> bool:
+    """Match names conservatively, including known public airport aliases.
+
+    'Værnes' is a common name for Trondheim Airport, which can be published
+    as 'TRONDHEIM LUFTHAVN' in Freerider's listing feed.
+    """
+    needle = normalized(option)
+    location = normalized(station)
+    if needle in location:
+        return True
+    if needle in {"vaernes", "vaernes lufthavn", "trondheim vaernes"}:
+        return "trondheim lufthavn" in location or "trondheim airport" in location
+    return False
+
+
 def ride_matches(ride: Ride, config: dict) -> bool:
     """Evaluate location, date, transmission and optional vehicle filters.
 
@@ -107,17 +122,15 @@ def ride_matches(ride: Ride, config: dict) -> bool:
 
     # OR across alternatives in a column, AND between From and To columns.
     # Existing single-string searches are still supported after upgrading.
-    wanted_from = [normalized(x) for x in place_values(config.get("origin"))]
-    wanted_to = [normalized(x) for x in place_values(config.get("destination"))]
-    origin = normalized(ride.origin)
-    destination = normalized(ride.destination)
+    wanted_from = place_values(config.get("origin"))
+    wanted_to = place_values(config.get("destination"))
     forward = (
-        (not wanted_from or any(x in origin for x in wanted_from))
-        and (not wanted_to or any(x in destination for x in wanted_to))
+        (not wanted_from or any(station_matches(x, ride.origin) for x in wanted_from))
+        and (not wanted_to or any(station_matches(x, ride.destination) for x in wanted_to))
     )
     reverse = (
-        (not wanted_from or any(x in destination for x in wanted_from))
-        and (not wanted_to or any(x in origin for x in wanted_to))
+        (not wanted_from or any(station_matches(x, ride.destination) for x in wanted_from))
+        and (not wanted_to or any(station_matches(x, ride.origin) for x in wanted_to))
     )
     if not (forward or (config.get("direction") == "either" and reverse)):
         return False
