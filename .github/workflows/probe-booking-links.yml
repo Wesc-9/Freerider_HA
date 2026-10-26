@@ -20,8 +20,8 @@ jobs:
           print('RUNTIME_SNIPPET',js[js.find('a.u=function'):js.find('a.u=function')+3100],flush=True)
           runtime=js[js.find('a.u=function'):js.find('a.u=function')+1350]
           nameset=runtime.split('return{',1)[1].split('}[e]+"-"+',1)
-          names={int(k):v for k,v in re.findall(r'(\\d+):"([^"]+)"',nameset[0])}
-          hashes={int(k):v for k,v in re.findall(r'(\\d+):"([^"]+)"',nameset[1].split('}[e]+',1)[0])}
+          names={int(k):v for k,v in re.findall(r'([0-9]+):"([^"]+)"',nameset[0])}
+          hashes={int(k):v for k,v in re.findall(r'([0-9]+):"([^"]+)"',nameset[1].split('}[e]+',1)[0])}
           chunks=[names[k]+'-'+hashes[k]+'.js' for k in names]
           print('CHUNKS',chunks,flush=True)
           for name in chunks:
@@ -31,9 +31,7 @@ jobs:
             s=r.text
             if r.status_code!=200: continue
             for module in ['9691','758','6141']:
-              for p in [rf'(?<!\\d){module}:function\\(',rf'(?<!\\d){module}:\\(\\w,\\w,\\w\\)=>']:
-                mm=re.search(p,s)
-                if mm:
-                  print('MODULE',module,'FILE',name,'JS',s[mm.start():mm.start()+3500],flush=True)
-                  break
+              needle=module+':function'
+              ix=s.find(needle)
+              if ix>=0:print('MODULE',module,'FILE',name,'JS',s[ix:ix+3300],flush=True)
           PY
