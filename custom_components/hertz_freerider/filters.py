@@ -27,6 +27,8 @@ class Ride:
     vehicle_type: str | None = None  # car/van/minibus, only when explicit
     fuel: str | None = None  # electric/hybrid/petrol/diesel, only when explicit
     seats: int | None = None
+    distance_km: float | None = None
+    drive_minutes: float | None = None
     available_at: str | None = None
     offer_expires_at: str | None = None
     latest_return_at: str | None = None
@@ -57,6 +59,8 @@ class Ride:
             "vehicle_type": self.vehicle_type,
             "fuel": self.fuel,
             "seats": self.seats,
+            "distance_km": self.distance_km,
+            "drive_minutes": self.drive_minutes,
             "available_at": self.available_at,
             "offer_expires_at": self.offer_expires_at,
             "latest_return_at": self.latest_return_at,
@@ -212,6 +216,15 @@ def _explicit_seats(model: str) -> int | None:
     return int(match.group(1)) if match else None
 
 
+def _positive_number(value: object) -> float | None:
+    """Accept valid positive numeric provider metrics, reject unknown/invalid."""
+    from math import isfinite
+    if isinstance(value, bool) or not isinstance(value, (float, int)):
+        return None
+    value = float(value)
+    return round(value, 1) if isfinite(value) and value > 0 else None
+
+
 def parse_transport_routes(payload: object, country: str, booking_url: str) -> list[Ride]:
     """Normalize the publicly returned Hertz route groups.
 
@@ -261,6 +274,8 @@ def parse_transport_routes(payload: object, country: str, booking_url: str) -> l
                 vehicle_type=_explicit_vehicle_type(model),
                 fuel=_explicit_fuel(model),
                 seats=_explicit_seats(model),
+                distance_km=_positive_number(item.get("distance")),
+                drive_minutes=_positive_number(item.get("travelTime")),
                 available_at=available_at,
                 offer_expires_at=expires_at,
                 latest_return_at=latest_return,

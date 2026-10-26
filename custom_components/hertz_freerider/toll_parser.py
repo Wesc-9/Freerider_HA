@@ -47,11 +47,26 @@ def parse_toll_response(payload: object, *, electric: bool) -> dict:
                 "name": str(item["name"]),
                 "covered_by_hour_rule": bool(item.get("_coveredByTimesregel", False)),
             })
+    # Documented BompengeAppen _billing fields. Distance is in meters,
+    # durationMin is minutes. The Hertz offer's own travel estimate is
+    # preferred when available; these metrics are useful as a fallback.
+    raw_distance = route.get("distance")
+    raw_duration = route.get("durationMin")
+    distance_km = (
+        round(float(raw_distance) / 1000, 1)
+        if _amount(raw_distance) is not None else None
+    )
+    duration_min = (
+        round(float(raw_duration), 1)
+        if _amount(raw_duration) is not None else None
+    )
     count = route.get("tollCount")
     ferry_count = route.get("ferryCount")
     return {
         "amount_nok": cost,
         "currency": "NOK",
+        "distance_km": distance_km,
+        "duration_min": duration_min,
         "vehicle_rate": "electric_no_discount" if electric else "small_vehicle_no_discount",
         "toll_count": count if isinstance(count, int) and not isinstance(count, bool) else None,
         "toll_stations": stations[:40],
