@@ -1,6 +1,9 @@
 {
   "domain": "hertz_freerider",
   "name": "Hertz Freerider",
+  "categories": [
+    "vehicles_transport.cars_evs"
+  ],
   "codeowners": [
     "@Wesc-9"
   ],
