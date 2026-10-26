@@ -19,6 +19,9 @@ def example(model):
 class ClassificationTest(unittest.TestCase):
     def test_exact_reported_vw_crafter(self):
         ride = example("VW CRAFTER 14M3 4MOTION TDI VA")
+        # Display the provider's exact carModel verbatim (including "VW").
+        self.assertEqual(ride.vehicle, "VW CRAFTER 14M3 4MOTION TDI VA")
+        self.assertEqual(ride.as_event()["vehicle"], "VW CRAFTER 14M3 4MOTION TDI VA")
         self.assertEqual(ride.vehicle_type, "van")
         self.assertEqual(ride.distance_km, 505.5)
         self.assertEqual(ride.drive_minutes, 415.0)
