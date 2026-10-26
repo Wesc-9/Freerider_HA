@@ -18,9 +18,13 @@ jobs:
           from html import unescape
           sites = [
               "https://hertzfreerider.nu/robots.txt",
+              "https://hertzfreerider.nu/sitemap.xml",
+              "https://hertzfreerider.nu/sitemap_index.xml",
               "https://hertzfreerider.nu/booking/",
               "https://hertzfreerider.nu/booking/?page=2",
               "https://hertzfreerider.nu/booking/3-biler/1389-toyota-proace-aut-ev75792-billund-til-aalborg/",
+              "https://hertzfreerider.no/robots.txt",
+              "https://hertzfreerider.no/page-data/no-no/page-data.json",
               "https://hertzfreerider.no/no-no/",
               "https://hertzfreerider.se/sv-se/",
           ]
@@ -31,8 +35,8 @@ jobs:
                   b = r.read(350_000)
                   html = b.decode("utf-8", errors="replace")
                   print("HTTP", r.status, "bytes", len(b), flush=True)
-                  if url.endswith("robots.txt"):
-                      print("ROBOTS", html[:1500].replace("\n", " | "), flush=True)
+                  if url.endswith(("robots.txt", ".xml", ".json")):
+                      print("DOCUMENT", html[:700].replace("\n", " | "), flush=True)
                       continue
                   for term in ("Toyota", "booking/3-biler/", "1389", "m-productlist", "m-product", "product-card", "product-item", "product-list", "product_id", "På lager", "Ikke på lager"):
                       matches=list(re.finditer(re.escape(term),html,re.I))
