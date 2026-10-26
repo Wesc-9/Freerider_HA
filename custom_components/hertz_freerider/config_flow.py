@@ -22,6 +22,7 @@ from .const import (
 )
 from .filters import station_candidates, place_values
 from .source import async_fetch_country
+from .station_catalog import async_get_station_catalog
 
 
 def select(options: list[str], translation_key: str):
@@ -73,7 +74,11 @@ def route_schema(values: dict | None, stations: list[str]) -> vol.Schema:
     for key in (CONF_ORIGIN, CONF_DESTINATION):
         places = place_values(values.get(key))
         field = vol.Optional(key, default=places) if places else vol.Optional(key)
-        fields[field] = _place_selector(stations)
+        # The selected chips already show these stations. Don't duplicate
+        # them in the initial suggestion list on a reopened options form.
+        selected = {name.casefold() for name in places}
+        choices = [name for name in stations if name.casefold() not in selected]
+        fields[field] = _place_selector(choices)
     fields[vol.Required(
         CONF_DIRECTION, default=values.get(CONF_DIRECTION, "forward")
     )] = select(["forward", "either"], "direction")
@@ -178,22 +183,22 @@ def validation_error(values: dict) -> str | None:
 
 
 async def async_station_suggestions(hass, countries: list[str]) -> list[str]:
-    """Fetch distinct published stations, ignoring provider failures.
+    """Use saved stations, then learn from the latest publicly listed routes.
 
-    This is a convenience hint only: a missing station must remain searchable
-    via the free-text option. Denmark has no verified listing adapter.
+    Each Home Assistant installation keeps its own station history. Old
+    locations remain selectable even after the corresponding car disappears.
+    No extra API calls are needed for additional saved watch profiles.
     """
     active = [country for country in countries if country in ("NO", "SE")]
+    catalog = await async_get_station_catalog(hass)
     results = await asyncio.gather(
         *(async_fetch_country(hass, country) for country in active),
         return_exceptions=True,
     )
-    rides = [
-        ride for result in results if isinstance(result, list)
-        for ride in result
-    ]
-    return station_candidates(rides)
-
+    for country, result in zip(active, results):
+        if isinstance(result, list):
+            await catalog.async_learn(country, result)
+    return catalog.suggestions(active)
 
 class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Short guided setup with free-text-compatible station suggestions."""
