@@ -156,7 +156,7 @@ def vehicle_schema(values: dict | None = None) -> vol.Schema:
     })
 
 
-def updates_schema(values: dict | None = None, targets: list[tuple[str, str]] | None = None) -> vol.Schema:
+def updates_schema(values: dict | None = None) -> vol.Schema:
     values = values or {}
     return vol.Schema({
         vol.Required(CONF_SCAN_MODE, default=values.get(CONF_SCAN_MODE, "automatic")):
@@ -169,14 +169,6 @@ def updates_schema(values: dict | None = None, targets: list[tuple[str, str]] | 
             )),
         vol.Required(CONF_EVENTS, default=values.get(CONF_EVENTS, True)):
             selector.BooleanSelector(),
-        vol.Required(CONF_NOTIFY_TARGET, default=values.get(CONF_NOTIFY_TARGET, TARGET_OFF)):
-            selector.SelectSelector(selector.SelectSelectorConfig(
-                options=[
-                    selector.SelectOptionDict(value=value, label=label)
-                    for value, label in (targets if targets is not None else [(TARGET_OFF, "Off")])
-                ],
-                mode=selector.SelectSelectorMode.DROPDOWN,
-            )),
     })
 
 
@@ -369,6 +361,8 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
                 **route_dates(user_input),
             }
             invalid = validation_error(user_input)
+            if not invalid and user_input.get(CONF_NOTIFY_ENABLED) and user_input.get(CONF_NOTIFY_TARGET) == TARGET_OFF:
+                invalid = "notification_device_required"
             if not invalid and user_input.get(CONF_DATE_END) and not user_input.get(CONF_DATE_START):
                 invalid = "missing_date"
             if invalid is None:
@@ -386,7 +380,8 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
         self._stations = await async_station_suggestions(self.hass, selected)
         values = {**current, **(user_input or {}), CONF_WATCH_NAME: self.config_entry.title}
         fields = dict(countries_schema(values).schema)
-        fields.update(route_schema(values, self._stations).schema)
+        targets = notification_targets(self.hass, values.get(CONF_NOTIFY_TARGET))
+        fields.update(route_schema(values, self._stations, targets).schema)
         return self.async_show_form(
             step_id="route", data_schema=vol.Schema(fields), errors=errors,
         )
@@ -442,21 +437,11 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
         )
 
     async def async_step_updates(self, user_input=None):
-        """Optional polling/notification event configuration."""
+        """Configure update frequency and optional event broadcasts."""
         if user_input is not None:
-            old_target = self._settings().get(CONF_NOTIFY_TARGET, TARGET_OFF)
-            target = user_input.get(CONF_NOTIFY_TARGET, old_target)
-            options = {**self.config_entry.options, **user_input}
-            if target == TARGET_OFF:
-                options[CONF_NOTIFY_ENABLED] = False
-            elif old_target == TARGET_OFF:
-                # Picking a phone is sufficient to turn notifications on.
-                options[CONF_NOTIFY_ENABLED] = True
-            return self.async_create_entry(title="", data=options)
-        values = self._settings()
-        targets = notification_targets(
-            self.hass, values.get(CONF_NOTIFY_TARGET),
-        )
+            return self.async_create_entry(
+                title="", data={**self.config_entry.options, **user_input},
+            )
         return self.async_show_form(
-            step_id="updates", data_schema=updates_schema(values, targets),
+            step_id="updates", data_schema=updates_schema(self._settings()),
         )
