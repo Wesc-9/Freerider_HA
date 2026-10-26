@@ -1,20 +1,47 @@
-# Freerider HA 0.8.2 — Open the exact car from a notification
+# Freerider HA 0.9.0
 
-This update addresses the reported issue where tapping a car alert opened only the general Freerider homepage.
+A six-part update to search quality, mobile alerts and diagnostics. **Existing saved searches, Home Assistant entities and notification devices are preserved.**
 
-## What changed
+## New capabilities
 
-- **Individual-car links:** The official Freerider booking-flow JavaScript supports a URL hash containing the actual route `id` and a pickup `date`. New car alerts now use the same provider-recognized parameters.
-- Norwegian offers open the official `/booking-flow/no-no/` page and Swedish offers open `/booking-flow/sv-se/`, with the matching offer ID.
-- We select a pickup time from the provider's published availability, return-time limit, estimated trip duration and pickup station opening hours. Stale or incomplete offers fall back to the public listings instead of a fabricated checkout link.
-- **Test notification:** When a real matching car is available, the existing test button previews that car; tapping the test alert now uses its actual booking link. If no matching car is available, the test only validates mobile notifications.
-- **Device & dashboard:** Per-car entity links and dashboard ride attributes now use the same car-specific URL.
-- Automated matching and rich push details (car model, route, km, drive time, optional Norwegian toll estimate) remain unchanged.
+### Smarter notifications
+- New vehicles trigger alerts after the normal first baseline check.
+- Optionally alert for vehicles that are *already* available on the first scan (off by default).
+- Date/availability changes to an existing vehicle can trigger an updated-offer alert (on by default).
+- Confirmed removed/returned offers are recorded and returning offers can trigger a new alert.
+- An outage in one country does not falsely mark its cars as removed or send stale-car alerts.
 
-## Important limitations
+### Booking-link reliability
+- Official NO/SE car-specific booking links are retained where an eligible pickup time can be constructed.
+- Latest source health is shown alongside results; stale-source cars are labeled and the dashboard falls back to the official country homepage.
+- Final availability is still checked by the provider. Neither a link nor a notification constitutes a reservation.
 
-This is an **unofficial** integration and the deep-link format was verified from the provider's publicly served web JavaScript and the booking-flow pages, not from a published deep-link API contract. We verified both provider pages respond and their code reads the car ID/date fields. We have **not** verified a logged-in, end-to-end mobile booking; the provider may require login or reject an expired offer or exceptional pickup time. Opening a booking form does not reserve a vehicle.
+### Vehicle model filter
+- New include/exclude model name fields in **Configure → Vehicle preferences**.
+- Semicolon-separated terms (for example `Crafter; Transporter`); exclusions take precedence.
 
-The link is a direct link to that specific offer's booking process **when the provider validates its time and availability**, not a guarantee the vehicle can still be booked.
+### Trip cost breakdown
+- **Configure → Trip cost assumptions**: enter petrol/diesel litres/100 km and NOK/litre; EV kWh/100 km and NOK/kWh.
+- Defaults are blank/unknown (0), not guessed figures.
+- Cars and phone notifications show estimated road toll and driving energy, plus a **partial subtotal** when components are known.
+- Ferries, fees, provider billings and actual consumption remain excluded/uncertain.
 
-Update to **0.8.2** in HACS, restart Home Assistant, and send a test notification while at least one real Freerider offer is matching your search.
+### Radius-based station discovery
+- **Configure → Search radius around stations** selects a verified station, plus 25, 50 or 100 km.
+- Origin and destination areas may be configured independently; the same radius value applies.
+- Straight-line GPS radius, not road travel distance. Existing manually selected stations remain eligible.
+
+### Operational status and recent activity
+- **Search status** diagnostic entity shows last attempted/successful scan, estimated next check, source errors, recent changes, successful/pending mobile notifications and the last push error.
+- Bounded history of the 100 most recent changes, persisted locally across restarts.
+
+## Install
+1. Update the custom Freerider HA repository in HACS to **0.9.0**.
+2. Restart Home Assistant.
+3. Open **Settings → Devices & services → Freerider HA → Configure**, and choose the optional filters, radius, cost or notification pages.
+4. Inspect the new **Search status** diagnostic entity under your watch device.
+
+## Remaining limitations
+This is an **independent community project, not endorsed by Hertz**. The API only supports Norwegian and Swedish source feeds. The provider's booking flow can still demand sign-in and reject a stale offer. Toll lookups for Norway have daily quotas and limited vehicle-weight information. No end-to-end user Home Assistant/mobile runtime trial is claimed by this release.
+
+Report bugs at https://github.com/Wesc-9/Freerider_HA/issues .

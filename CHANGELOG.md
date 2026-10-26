@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.0 (2026-10-26) — comprehensive search, alerts and diagnostics
+- Smarter alerts: optional existing offers on first scan, default alerts on date changes, and notifications for confirmed returned offers.
+- Local 100-event history of newly seen, updated and removed offer IDs; no false removal when a country feed is down.
+- Better offer-link status and stale-source guards; no push alerts based solely on stale cached offers.
+- Model name include/exclude filters using case/accent-insensitive semicolon-separated terms.
+- 25, 50 and 100 km radius around GPS-known source stations (straight-line), with coordinates stored across restarts.
+- Four user-configurable price/consumption assumptions for a clearly marked partial fuel/charging/toll cost breakdown; no invented complete totals.
+- New diagnostics sensor: source health, successful/attempted checks, next estimated check, pending/sent alerts, and recent offer activity.
+- Updated Lovelace card with partial cost sections and safe official booking actions; refreshed frontend asset version.
+- Expanded regression tests for stable notifications, reappearing offers, mixed-source failures and electric fuel costs.
+
+
 ## 0.8.2 (2026-10-26) — booking-flow deep links for exact cars
 - Fixed push alerts opening only the Freerider homepage: directly open provider booking-flow for the matching official route ID and selected pickup date.
 - Confirmed official NO/SE booking page paths and hash parameters from the provider's public JavaScript.

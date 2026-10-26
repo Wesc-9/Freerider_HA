@@ -1,5 +1,28 @@
 # Freerider HA
 
+## What's new in 0.9.0 — six practical improvements
+
+All enhancements are opt-in or conservative by default and preserve existing watch profiles.
+
+**1. Smarter notifications:** set **Notify on existing offers on first scan** and **Notify on changes to offer dates** under **Configure → Refresh interval and events**. New, updated and removed offers are recorded in a bounded local history (100 entries). Date-change alerts are on by default; initial existing-offer alerts are off to avoid a flood. A previously absent offer triggers a new alert when it returns. Existing saved event automations retain the **new-ride** event; date updates use a separate `hertz_freerider_offer_updated` event.
+
+**2. Better booking links:** Car links use the provider's per-offer booking flow only when a future pickup slot can be constructed from the official route ID, availability window, drive duration, return deadline and station hours. Offers from a failed source remain visible with a **stale** warning instead of pretending they can be immediately booked. Alerts from a stale source are deferred until it recovers. A real booking still requires the provider's own verification and login; it is never reserved by this integration.
+
+**3. Car-model filters:** **Configure → Vehicle preferences** now includes **Include models** and **Exclude models**. Separate multiple partial names using `;` (for example `Crafter; Transporter`). Exclusions override inclusions. Previously saved vehicle filters remain unchanged.
+
+**4. Partial journey cost:** **Configure → Trip cost assumptions** accepts your own fuel consumption/price (litres per 100 km, NOK per litre) and EV consumption/price (kWh per 100 km, NOK per kWh). All values default to **0 = unknown**; no price or model energy usage is guessed. The per-car sensor, dashboard and phone alerts show known toll costs, estimated driving energy and a **partial subtotal** if available. Ferries and actual rental fees are never treated as included, and unknown values are not shown as zero. Norwegian toll estimates remain quota-limited.
+
+**5. GPS station radius:** **Configure → Search radius around stations** lets you select **25 / 50 / 100 km** around a departure or destination station from the locally remembered, provider-confirmed GPS stations. Straight-line distance is used, *not road driving distance*. Radius matches are added to your existing text station choices. Set radius to Off to disable it. Areas without verified station coordinates are not silently accepted as matches.
+
+**6. Search status and history:** A new **Search status** diagnostic sensor groups with each saved watch. It shows last attempted and successful source scan, approximate next scan, partial/outage state, recent additions/updates/removals, number of successful and pending push notifications, and last delivery error. The existing matching-offers sensor exposes the recent history and partial travel costs. On a partial provider outage, affected cached offers remain visible with a stale status.
+
+### Updating
+
+Use HACS to download **0.9.0**, restart Home Assistant and open **Settings → Devices & services → Freerider HA → Configure**. All optional new screens appear there. No need to delete or recreate existing search profiles. The **Search status** diagnostic sensor is under each Freerider search device. The Lovelace resource now uses `/freerider-ha/freerider-rides-card.js?v=0.9.0`.
+
+This is a community integration and not affiliated with or endorsed by Hertz. Exact end-to-end booking is subject to the provider's validation. Home Assistant production-runtime and physical-phone verification still require user testing.
+
+
 [Latest GitHub release](https://github.com/Wesc-9/Freerider_HA/releases/latest) · [Changelog](https://github.com/Wesc-9/Freerider_HA/blob/main/CHANGELOG.md)
 
 
@@ -40,12 +63,12 @@ entity: sensor.freerider_matching_rides
 The integration attempts to register the JavaScript dashboard resource in the normal storage-managed Lovelace mode. If you see **Custom element doesn't exist**, add a dashboard resource manually under **Settings → Dashboards → Resources** (or in YAML mode's `lovelace:` resources) as **JavaScript module** with URL:
 
 ```text
-/freerider-ha/freerider-rides-card.js?v=0.8.0
+/freerider-ha/freerider-rides-card.js?v=0.9.0
 ```
 
 The card follows Home Assistant's selected **light/dark theme** and adapts to mobile widths. There is no external frontend package, login, or extra network request. It renders existing Freerider sensor attributes and updates when that sensor changes.
 
-**Important:** Home Assistant's standard entity detail dialog remains unchanged; a custom integration cannot turn its raw attribute list into a custom modal without replacing core frontend UI. Use the dashboard card for the new results view. For safety, clicking a car opens the **official Freerider country listing**, not an unverified exact-car checkout URL.
+**Important:** Home Assistant's standard entity detail dialog remains unchanged. Use the dashboard card for the richer results view. Clicking a current eligible car opens the official booking flow for its offer ID and proposed pickup time. When a direct link is not available or the source is stale, it opens the official country listing instead. Neither action reserves a car.
 
 ## Direct notifications with booking-site link
 
