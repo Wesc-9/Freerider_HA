@@ -18,12 +18,11 @@ jobs:
           m=re.search(pat,js)
           print('RUNTIME_MAP',bool(m),flush=True)
           print('RUNTIME_SNIPPET',js[js.find('a.u=function'):js.find('a.u=function')+3100],flush=True)
-          if m:
-            names={int(k):v for k,v in re.findall(r'(\\d+):"([^"]+)"',m.group(1))}
-            hashes={int(k):v for k,v in re.findall(r'(\\d+):"([^"]+)"',m.group(2))}
-            chunks=[names[k]+'-'+hashes[k]+'.js' for k in names]
-          else:
-            chunks=[]
+          runtime=js[js.find('a.u=function'):js.find('a.u=function')+1350]
+          nameset=runtime.split('return{',1)[1].split('}[e]+"-"+',1)
+          names={int(k):v for k,v in re.findall(r'(\\d+):"([^"]+)"',nameset[0])}
+          hashes={int(k):v for k,v in re.findall(r'(\\d+):"([^"]+)"',nameset[1].split('}[e]+',1)[0])}
+          chunks=[names[k]+'-'+hashes[k]+'.js' for k in names
           print('CHUNKS',chunks,flush=True)
           for name in chunks:
             try:
