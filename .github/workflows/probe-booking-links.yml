@@ -8,35 +8,32 @@ jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
-      - name: Extract official Freerider direct-link contract
+      - name: Find booking hash constants and locale URL
         run: |
           python - <<'PY'
           import requests,re
-          base='https://hertzfreerider.no'
-          urls=[
-            base+'/component---src-templates-booking-flow-tsx-5ca4adf91cca8b5747e4.js',
-            base+'/app-39437c55b75f4d1a2470.js',
-            base+'/sitemap.xml',
-            base+'/page-data/no-no/booking-flow/page-data.json',
-            base+'/page-data/no-no/booking/page-data.json',
-            base+'/page-data/no-no/bestilling/page-data.json'
+          base="https://hertzfreerider.no/"
+          names=[
+          "app-39437c55b75f4d1a2470.js",
+          "7c6e4af9-b55a4cc3e3b96ff0fa8b.js",
+          "0b256fc4-54501eb77faa357eea95.js",
+          "framework-9c1cec184b7d374cfed8.js",
+          "component---src-templates-booking-flow-tsx-5ca4adf91cca8b5747e4.js",
+          "component---src-templates-start-tsx-711208a1da0171ccda5f.js"
           ]
-          for url in urls:
-            r=requests.get(url,timeout=25)
-            s=r.text
-            print('RESOURCE',r.status_code,len(s),url,flush=True)
-            if r.status_code!=200:continue
-            if '/sitemap' in url:print('CONTENT',s[:3800],flush=True)
-            if '/page-data/' in url:print('CONTENT',s[:600],flush=True)
-            if not url.endswith('.js'):continue
-            for id in ('9691','6141','758','booking_flow','BOOKING_FLOW','booking-flow','selectedRoute','/booking-flow/'):
-              if id.isnumeric():
-                for pattern in (id+':function',id+':(e',id+':(t'):
-                  idx=s.find(pattern)
-                  if idx>=0:print('MODULE',id,s[idx:idx+1700],flush=True)
-              else:
-                hits=list(re.finditer(re.escape(id),s,re.I))
-                print('HITS',id,len(hits),flush=True)
-                for hit in hits[-5:]:
-                  print('NEAR',id,s[max(0,hit.start()-250):hit.end()+310][:600],flush=True)
+          for name in names:
+            r=requests.get(base+name,timeout=25)
+            content=r.text
+            print("RESOURCE",r.status_code,len(content),name,flush=True)
+            if r.status_code!=200: continue
+            for module in ("9691","758","6141","6018","975"):
+              for pattern in [rf'(?<!\\d){module}:function',rf'(?<!\\d){module}:\\(\\w,\\w,\\w\\)=>']:
+                m=re.search(pattern,content)
+                if m:
+                  print("MODULE",module,content[m.start():m.start()+2400],flush=True)
+                  break
+            for term in ['urlIsoPickupDate','urlId','urlInsurances','queryParams','booking_flow','bookingFlow','/booking/','"/no-no/']:
+              hits=list(re.finditer(re.escape(term),content,re.I))
+              for hit in hits[:2]:
+                print("SEARCH",term,content[max(0,hit.start()-180):hit.end()+250][:460],flush=True)
           PY
