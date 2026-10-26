@@ -37,6 +37,7 @@ class Ride:
     return_lat: float | None = None
     return_lon: float | None = None
     pickup_country: str | None = None
+    pickup_opening_hours: dict | None = None
     return_country: str | None = None
 
     @property
@@ -296,6 +297,10 @@ def parse_transport_routes(payload: object, country: str, booking_url: str) -> l
                 return_lat=dropoff.get("geoLat"),
                 return_lon=dropoff.get("geoLon"),
                 pickup_country=pickup.get("country"),
+                pickup_opening_hours=(
+                    pickup.get("regularOpeningHours")
+                    if isinstance(pickup.get("regularOpeningHours"), dict) else None
+                ),
                 return_country=dropoff.get("country"),
             )
             rides[ride.key] = ride
