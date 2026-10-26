@@ -43,6 +43,9 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
                 for ride in (self.coordinator.data or [])[:20]
             ],
             "total_matches": len(self.coordinator.data or []),
+            "notification_target": self.coordinator.settings.get("notify_target", "off"),
+            "notification_enabled": self.coordinator.settings.get("notify_enabled", True),
+            "pending_notifications": len(self.coordinator.pending_notification_ids),
             "extra_costs": "Tolls may be payable. Fuel/charging may incur additional costs.",
             "tolls": "Norway: on-demand estimate from an external routing provider; no automatic batch calls.",
         }

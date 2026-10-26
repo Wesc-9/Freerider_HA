@@ -12,7 +12,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     CONF_COUNTRIES, CONF_EVENTS, CONF_SCAN_INTERVAL, CONF_SCAN_MODE,
-    DEFAULT_POLL_MINUTES, DOMAIN, EVENT_NEW_RIDE, CONF_NOTIFY_TARGET,
+    DEFAULT_POLL_MINUTES, DOMAIN, EVENT_NEW_RIDE, CONF_NOTIFY_TARGET, CONF_NOTIFY_ENABLED,
 )
 from .filters import Ride, filter_rides
 from .source import async_fetch_country
@@ -120,7 +120,7 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
                 })
 
         target = self.settings.get(CONF_NOTIFY_TARGET, TARGET_OFF)
-        if target != TARGET_OFF and previous is not None:
+        if target != TARGET_OFF and self.settings.get(CONF_NOTIFY_ENABLED, True) and previous is not None:
             queued = set(self.pending_notification_ids)
             next_ids = {ride.key for ride in new_rides} | queued
             pending: list[str] = []

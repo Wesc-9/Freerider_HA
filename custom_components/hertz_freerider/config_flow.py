@@ -17,7 +17,7 @@ from homeassistant.helpers import selector
 from .const import (
     CONF_COUNTRIES, CONF_DATE_END, CONF_DATE_MODE, CONF_DATE_START,
     CONF_DESTINATION, CONF_DIRECTION, CONF_EVENTS, CONF_FUEL, CONF_MIN_SEATS,
-    CONF_ORIGIN, CONF_SCAN_INTERVAL, CONF_SCAN_MODE, CONF_NOTIFY_TARGET, CONF_TRANSMISSION,
+    CONF_ORIGIN, CONF_SCAN_INTERVAL, CONF_SCAN_MODE, CONF_NOTIFY_TARGET, CONF_NOTIFY_ENABLED, CONF_TRANSMISSION,
     CONF_VEHICLE_TYPE, CONF_WATCH_NAME, COUNTRIES, DEFAULT_POLL_MINUTES, DOMAIN,
 )
 from .filters import station_candidates, place_values
@@ -428,9 +428,15 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
     async def async_step_updates(self, user_input=None):
         """Optional polling/notification event configuration."""
         if user_input is not None:
-            return self.async_create_entry(title="", data={
-                **self.config_entry.options, **user_input,
-            })
+            old_target = self._settings().get(CONF_NOTIFY_TARGET, TARGET_OFF)
+            target = user_input.get(CONF_NOTIFY_TARGET, old_target)
+            options = {**self.config_entry.options, **user_input}
+            if target == TARGET_OFF:
+                options[CONF_NOTIFY_ENABLED] = False
+            elif old_target == TARGET_OFF:
+                # Picking a phone is sufficient to turn notifications on.
+                options[CONF_NOTIFY_ENABLED] = True
+            return self.async_create_entry(title="", data=options)
         values = self._settings()
         targets = notification_targets(
             self.hass, values.get(CONF_NOTIFY_TARGET),
