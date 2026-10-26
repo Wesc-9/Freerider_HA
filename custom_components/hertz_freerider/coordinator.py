@@ -224,7 +224,7 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
                     continue
                 if self.settings.get(CONF_ONLY_FEASIBLE,False):
                     feasibility=journey_feasibility(ride,wall_time)
-                    if feasibility["status"] in ("insufficient","expired"):
+                    if feasibility["status"] not in ("comfortable","tight"):
                         continue
                 if attempts>=8:
                     still_pending.append(ride.key)

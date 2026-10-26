@@ -58,7 +58,8 @@
           "filters": "Bilpreferanser (valgfritt)",
           "updates": "Søkeintervall og hendelser",
           "area": "Søkeradius rundt steder",
-          "costs": "Reisekostnader (egne satser)"
+          "costs": "Reisekostnader (egne satser)",
+          "alerts": "Varslingsregler og stilleperioder"
         }
       },
       "route": {
@@ -100,7 +101,8 @@
           "fuel": "Drivstoff",
           "min_seats": "Minste antall seter (0 = alle)",
           "model_include": "Bilnavn som inkluderes (atskilt med ;)",
-          "model_exclude": "Bilnavn som utelates (atskilt med ;)"
+          "model_exclude": "Bilnavn som utelates (atskilt med ;)",
+          "sort_by": "Sorter treff etter"
         }
       },
       "updates": {
@@ -133,6 +135,17 @@
           "electric_kwh_100km": "Forbruk elbil (kWh/100 km)",
           "electric_price_nok_kwh": "Ladepris (kr/kWh)"
         }
+      },
+      "alerts": {
+        "title": "Varslingsregler",
+        "description": "Valgfri stilleperiode i norsk tid (HH:MM, eksempel 22:00–07:00). Haster det før tilbudet utløper, kan du tillate unntak. Bommaks gjelder bare når prisen kan beregnes; ukjent pris sendes ikke som om den er innenfor grensen. Null betyr ingen prisgrense.",
+        "data": {
+          "quiet_start": "Stilleperiode fra (HH:MM, valgfritt)",
+          "quiet_end": "Stilleperiode til (HH:MM, valgfritt)",
+          "quiet_urgent_bypass": "Tillat hastesaker gjennom stilleperiode (utløper innen 3 timer)",
+          "alerts_only_feasible": "Varsle bare når tidsmarginen kan beregnes og er positiv",
+          "max_toll_nok": "Maks beregnet bom NOK (0 = ingen grense)"
+        }
       }
     },
     "error": {
@@ -142,7 +155,8 @@
       "end_before_start": "Sluttdato kan ikke være før startdato.",
       "notification_device_required": "Velg en varslingsenhet før du slår på varsler.",
       "radius_station_unavailable": "Velg en stasjon med kjente GPS-koordinater.",
-      "radius_center_required": "Velg minst ett referansested når radius er aktiv."
+      "radius_center_required": "Velg minst ett referansested når radius er aktiv.",
+      "invalid_quiet_hours": "Stilleperioden krever både fra- og til-tid skrevet som HH:MM, for eksempel 22:00 og 07:00."
     }
   },
   "selector": {
@@ -202,6 +216,16 @@
         "25": "25 km",
         "50": "50 km",
         "100": "100 km"
+      }
+    },
+    "sort_by": {
+      "options": {
+        "date": "Tilgjengelig først",
+        "short_drive": "Korteste kjøretid",
+        "short_route": "Korteste kjørerute",
+        "nearest_pickup": "Nærmest hjem (luftlinje)",
+        "low_cost": "Laveste kjente kostnad",
+        "best_margin": "Størst tidsmargin"
       }
     }
   }
