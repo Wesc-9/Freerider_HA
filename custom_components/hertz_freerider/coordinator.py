@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta, timezone
 from time import monotonic
 import logging
 
@@ -13,7 +13,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     CONF_COUNTRIES, CONF_EVENTS, CONF_SCAN_INTERVAL, CONF_SCAN_MODE,
     DEFAULT_POLL_MINUTES, DOMAIN, EVENT_NEW_RIDE, CONF_NOTIFY_TARGET, CONF_NOTIFY_ENABLED,
-    CONF_TOLL_IN_NOTIFICATIONS,
+    CONF_TOLL_IN_NOTIFICATIONS, CONF_ALERT_EXISTING, CONF_ALERT_UPDATES,
 )
 from .filters import Ride, filter_rides
 from .source import async_fetch_country
@@ -24,6 +24,8 @@ from .station_catalog import async_get_station_catalog
 from .tolls import async_estimate_toll, TollLookupError
 from .quote_cache import async_get_quote_catalog
 from .quote_rules import quote_eligibility
+from .search_enhancements import classify_offers
+from .trip_costs import cost_breakdown
 
 _LOGGER = logging.getLogger(__name__)
 MAX_REMEMBERED = 1500
@@ -38,6 +40,13 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         self.seen_store = Store(hass, 1, f"{DOMAIN}_seen_{entry.entry_id}")
         self.seen_ids: list[str] | None = None
         self.pending_notification_ids: list[str] = []
+        self.offer_snapshots: dict[str,dict] | None = None
+        self.offer_history: list[dict] = []
+        self.last_success_utc: str | None = None
+        self.last_attempt_utc: str | None = None
+        self.last_alert_utc: str | None = None
+        self.sent_alert_count = 0
+        self.last_alert_error: str | None = None
         self.last_source_errors: dict[str, str] = {}
         self.toll_estimates: dict[str, dict] = {}
         self._toll_cache: dict[tuple[str, str], tuple[float, dict]] = {}
@@ -63,8 +72,22 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
                 self.pending_notification_ids = [
                     key for key in previous_pending if isinstance(key, str)
                 ][-80:]
+            snapshots=loaded.get("snapshots")
+            if isinstance(snapshots,dict):
+                self.offer_snapshots={
+                    key:val for key,val in snapshots.items()
+                    if isinstance(key,str) and isinstance(val,dict)
+                }
+            history=loaded.get("history")
+            if isinstance(history,list):
+                self.offer_history=[ev for ev in history if isinstance(ev,dict)][-100:]
+            self.last_success_utc=loaded.get("last_success_utc")
+            self.last_alert_utc=loaded.get("last_alert_utc")
+            self.sent_alert_count=int(loaded.get("sent_alert_count") or 0)
+
 
     async def _async_update_data(self) -> list[Ride]:
+        self.last_attempt_utc = datetime.now(timezone.utc).isoformat()
         countries = self.settings.get(CONF_COUNTRIES, ["NO"])
         results = await asyncio.gather(
             *(async_fetch_country(self.hass, country) for country in countries),
@@ -99,96 +122,125 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         # One offer can be exposed by several provider views: de-duplicate IDs.
         unique = {ride.key: ride for ride in valid}
         matched = filter_rides(list(unique.values()), self.settings)
-        await self._remember_and_notify(matched)
+        await self._remember_and_notify(
+            matched,
+            {country for country, result in zip(countries, results)
+             if isinstance(result, list)},
+        )
         return matched
 
-    async def _remember_and_notify(self, matched: list[Ride]) -> None:
-        """Emit events and deliver chosen mobile push for genuinely new rides.
+    async def _remember_and_notify(
+        self, matched: list[Ride], successful_countries: set[str]
+    ) -> None:
+        """Record offer history and send new/changed notifications at most once.
 
-        The very first successful feed scan establishes a baseline, rather
-        than notifying about every already available car. Failed mobile push
-        attempts are remembered and retried on the next successful scan while
-        the matching ride is still available.
+        Avoid false 'removed' events for a failed country's source. Persistent
+        snapshots and failed-delivery queue survive Home Assistant restarts.
         """
-        previous = set(self.seen_ids) if self.seen_ids is not None else None
-        old_pending = list(self.pending_notification_ids)
-        new_rides = [ride for ride in matched if previous is not None and ride.key not in previous]
+        previous=set(self.seen_ids) if self.seen_ids is not None else None
+        old_pending=list(self.pending_notification_ids)
+        before=self.offer_snapshots
+        alerts, changes, latest=classify_offers(
+            before, matched, successful_countries, previous,
+            notify_existing=bool(self.settings.get(CONF_ALERT_EXISTING,False)),
+        )
+        self.offer_snapshots=latest
+        now=datetime.now(timezone.utc).isoformat()
+        self.last_success_utc=now
+        if changes:
+            self.offer_history=(self.offer_history+[
+                {**change,"observed_at":now} for change in changes
+            ])[-100:]
 
-        if self.settings.get(CONF_EVENTS, True):
-            for ride in new_rides:
-                self.hass.bus.async_fire(EVENT_NEW_RIDE, {
-                    "entry_id": self.entry.entry_id,
-                    "watch_name": self.entry.title,
-                    **ride.as_event(),
-                })
+        # Preserve existing event contract for new cars; emit a separate
+        # event for changed offer dates instead of mislabelling it as new.
+        if self.settings.get(CONF_EVENTS,True):
+            for ride,kind in alerts:
+                if kind=="updated" and not self.settings.get(CONF_ALERT_UPDATES,True):
+                    continue
+                self.hass.bus.async_fire(
+                    EVENT_NEW_RIDE if kind in ("new","existing") else f"{DOMAIN}_offer_updated",
+                    {"entry_id":self.entry.entry_id,"watch_name":self.entry.title,
+                     "change":kind,**ride.as_event()},
+                )
 
-        target = self.settings.get(CONF_NOTIFY_TARGET, TARGET_OFF)
-        if target != TARGET_OFF and self.settings.get(CONF_NOTIFY_ENABLED, True) and previous is not None:
-            queued = set(self.pending_notification_ids)
-            next_ids = {ride.key for ride in new_rides} | queued
-            pending: list[str] = []
-            sent_count = 0
-            fresh_quote_limit = 2  # At most two new paid/quota API calls per scan
-            quote_catalog = None
+        target=self.settings.get(CONF_NOTIFY_TARGET,TARGET_OFF)
+        enabled=target != TARGET_OFF and self.settings.get(CONF_NOTIFY_ENABLED,True)
+        queued={ride.key:kind for ride,kind in alerts if
+                kind!="updated" or self.settings.get(CONF_ALERT_UPDATES,True)}
+        if enabled:
+            for key in self.pending_notification_ids:
+                queued.setdefault(key,"retry")
+            still_pending=[]
+            attempts=0
+            remaining_toll_calls=2
+            quote_catalog=None
             for ride in matched:
-                if ride.key not in next_ids:
+                if ride.key not in queued:
                     continue
-                if sent_count >= 8:
-                    pending.append(ride.key)
+                if attempts>=8:
+                    still_pending.append(ride.key)
                     continue
-                sent_count += 1
-                toll_quote = self.toll_estimates.get(ride.key)
-                toll_status = "cached" if toll_quote is not None else "not_calculated"
-                if toll_quote is None and self.settings.get(CONF_TOLL_IN_NOTIFICATIONS, True):
-                    reason = quote_eligibility(ride)
-                    if reason != "ok":
-                        toll_status = reason
-                    elif fresh_quote_limit <= 0:
-                        toll_status = "scan_limit"
+                attempts+=1
+                quote=self.toll_estimates.get(ride.key)
+                toll_status="cached" if quote is not None else "not_calculated"
+                if quote is None and self.settings.get(CONF_TOLL_IN_NOTIFICATIONS,True):
+                    reason=quote_eligibility(ride)
+                    if reason!="ok":
+                        toll_status=reason
+                    elif remaining_toll_calls<=0:
+                        toll_status="scan_limit"
                     else:
-                        fresh_quote_limit -= 1
+                        remaining_toll_calls-=1
                         try:
                             if quote_catalog is None:
-                                quote_catalog = await async_get_quote_catalog(self.hass)
-                            toll_quote, toll_status = await quote_catalog.async_quote(ride)
-                            if toll_quote is not None:
-                                self.toll_estimates[ride.key] = toll_quote
-                                self.last_toll_estimate = toll_quote
+                                quote_catalog=await async_get_quote_catalog(self.hass)
+                            quote,toll_status=await quote_catalog.async_quote(ride)
+                            if quote is not None:
+                                self.toll_estimates[ride.key]=quote
+                                self.last_toll_estimate=quote
                         except Exception:
-                            # Even if the toll API fails, never lose the car alert.
-                            _LOGGER.exception("Freerider toll enrichment failed for %s", ride.key)
-                            toll_status = "provider_error"
-
+                            toll_status="provider_error"
+                            _LOGGER.exception("Freerider toll enrichment failed for %s",ride.key)
+                cost=cost_breakdown(ride,quote,self.settings)
                 try:
-                    delivered = await async_send_notification(
-                        self.hass, target,
-                        notification_content(
-                            ride, self.entry.title, self.hass.config.language,
-                            toll_estimate=toll_quote, toll_status=toll_status,
+                    delivered=await async_send_notification(
+                        self.hass,target,notification_content(
+                            ride,self.entry.title,self.hass.config.language,
+                            toll_estimate=quote,toll_status=toll_status,
+                            cost_estimate=cost,
+                            alert_kind=queued[ride.key],
                         ),
                     )
-                except Exception:
-                    # An unavailable phone must never break the main sensor.
-                    _LOGGER.exception(
-                        "Freerider HA could not send a mobile notification for %s",
-                        ride.key,
-                    )
-                    delivered = False
-                if not delivered:
-                    pending.append(ride.key)
-            self.pending_notification_ids = pending[-80:]
+                except Exception as exc:
+                    _LOGGER.warning("Freerider push failed for %s: %s",ride.key,exc)
+                    self.last_alert_error=str(exc)[:200]
+                    delivered=False
+                if delivered:
+                    self.sent_alert_count+=1
+                    self.last_alert_utc=now
+                    self.last_alert_error=None
+                else:
+                    still_pending.append(ride.key)
+            self.pending_notification_ids=still_pending[-80:]
         else:
-            self.pending_notification_ids = []
+            self.pending_notification_ids=[]
 
-        merged = list(dict.fromkeys([
-            *(self.seen_ids or []), *(ride.key for ride in matched),
+        merged=list(dict.fromkeys([
+            *(self.seen_ids or []),*(ride.key for ride in matched),
         ]))[-MAX_REMEMBERED:]
-        if merged != self.seen_ids or old_pending != self.pending_notification_ids:
-            self.seen_ids = merged
-            await self.seen_store.async_save({
-                "ids": merged,
-                "pending": self.pending_notification_ids,
-            })
+        self.seen_ids=merged
+        # Save after every successful fetch to persist history and diagnostics,
+        # even if no new offer happens on this scan.
+        await self.seen_store.async_save({
+            "ids":merged,
+            "pending":self.pending_notification_ids,
+            "snapshots":self.offer_snapshots,
+            "history":self.offer_history,
+            "last_success_utc":self.last_success_utc,
+            "last_alert_utc":self.last_alert_utc,
+            "sent_alert_count":self.sent_alert_count,
+        })
 
     async def async_send_test_notification(self) -> bool:
         """User-triggered validation of the selected mobile destination."""
