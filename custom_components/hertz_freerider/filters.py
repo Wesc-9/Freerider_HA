@@ -233,3 +233,19 @@ def parse_transport_routes(payload: object, country: str, booking_url: str) -> l
             )
             rides[ride.key] = ride
     return list(rides.values())
+
+
+def station_candidates(rides: list[Ride]) -> list[str]:
+    """Unique, accent-safe station suggestions from live route destinations.
+
+    Suggestions never limit custom free-text searches. Include endpoints in
+    both directions to allow searching all stations and cross-border returns.
+    """
+    names: dict[str, str] = {}
+    for ride in rides:
+        for candidate in (ride.origin, ride.destination):
+            name = candidate.strip()
+            key = normalized(name)
+            if name and key:
+                names.setdefault(key, name)
+    return sorted(names.values(), key=normalized)
