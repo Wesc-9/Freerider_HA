@@ -1,31 +1,27 @@
-# Freerider HA 0.8.0 — Clear results for matching rides
+# Freerider HA 0.8.1 — Available cars directly under Devices
 
-New optional **dashboard results card**: one readable card per matching Freerider offer.
+Previously, the **Devices** page only showed **Matching rides: 2** and the raw details of the two cars were buried in attributes. The prettier offer cards were only available on dashboards.
 
-## Each offer shows
-- **Exact original vehicle name**, just as published by the provider — e.g. `VW CRAFTER 14M3 4MOTION TDI VA`, not a generic "van".
-- Origin → destination, distance in km, estimated travel time.
-- Available-from date and latest return time.
-- Toll estimate when legitimately available; "Unknown vehicle toll class" for vans with unknown permitted vehicle weight.
-- Safe button opening the official Freerider website for that country. No unverified per-car booking deep link.
+### Now both cars appear directly on their Freerider search device
+For example, the sensor list can show:
 
-## Technical safety fixes
-- VW Crafter, Sprinter, Transit, Ducato and other commercial vehicle model names are recognized for internal vehicle classification.
-- **No incorrect Norwegian small-passenger-car toll quote** for commercial vans or minibuses in automatic alerts or the manual toll estimator, unless a future release can verify the correct vehicle toll class.
-- Legacy matching-rides entity ID remains unchanged; the dashboard card is entirely optional.
+- **VW CRAFTER 14M3 4MOTION TDI VA · OSLO LUFTHAVN** — Trondheim lufthavn → Oslo lufthavn
+- **VW CRAFTER 14M3 4MOTION TDI VA · OSLO ALNABRU** — Trondheim lufthavn → Oslo Alnabru
 
-## Install the dashboard card
-1. Update **Freerider HA to 0.8.0** in HACS and restart Home Assistant.
-2. Edit a dashboard → Add Card → **Manual**.
-3. Use:
+Vehicle names are taken **exactly** from the official data feed (not replaced with a generic "van" label). The destination suffix distinguishes offers with the same vehicle model.
 
-```yaml
-type: custom:freerider-rides-card
-entity: sensor.freerider_matching_rides
-```
+Tap an offer sensor to see the route, published kilometers and estimated travel time, available-from and latest return dates, any verified toll estimate, and the official provider website URL.
 
-If the card is not recognized, add `/freerider-ha/freerider-rides-card.js?v=0.8.0` as a **JavaScript module** under Dashboard Resources, then reload the dashboard. The integration attempts to register that resource automatically when Home Assistant uses Lovelace storage mode.
+### Dynamic and bounded
+- New offers show up as new sensors without a restart.
+- Once an offer disappears from the successful source refresh it is removed from the entity list/registry; stale entries after restart are cleaned up on the next successful refresh.
+- When the data provider fails, sensors become unavailable rather than incorrectly reporting zero cars.
+- To avoid clutter the device displays the first **8 active offers**; **Matching rides** retains the complete real count and original entity ID.
+- Technical toll diagnostics moved to their own device section.
+- Existing dashboard card stays optional; the Home Assistant native Devices page uses standard entity rows, not large custom cards.
+- No additional external API requests or polling changes.
 
-**Note:** This card is shown on dashboards; it does not replace Home Assistant's normal entity detail pop-up. The default sensor will continue to expose raw attributes for power users and automations.
+### Upgrade
+Install **0.8.1** via HACS and restart Home Assistant. Open **Settings → Devices & services → Freerider HA → Devices → your saved search**. The extra car sensors will be added from current matching listings.
 
-Unofficial community project, not affiliated with or approved by Hertz. Vehicle availability and booking must be confirmed at the official website.
+**Disclaimer:** Unofficial community project, not affiliated with or approved by Hertz. These are published offers; final booking availability is confirmed only on the official Freerider website.

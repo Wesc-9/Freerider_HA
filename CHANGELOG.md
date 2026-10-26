@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.8.1 (2026-10-26) — active offers in the device view
+- Surface one normal sensor per currently matched car offer directly on the Freerider HA device page.
+- Each row names the exact provider car model plus return destination; its state gives the origin → destination route.
+- Tapping a car sensor shows its dates, time, kilometers, model, toll status and official provider link.
+- On successful refresh, dynamically add new car-offer sensors and remove vanished ones, including stale entity-registry entries after restart.
+- During a source failure retain existing entities as unavailable; do not falsely report zero offers.
+- Cap per-search visible device offer sensors at 8; retain the full real count and original aggregating sensor ID.
+- Move the last toll-estimate sensor to diagnostics to reduce the primary sensor list.
+- Original dashboard card remains available when a user wants richer visual presentation.
+- No new calls to the Freerider data sources; uses already fetched coordinator data.
+
+
 ## 0.8.0 (2026-10-26) — readable offers and exact car model names
 - Optional Home Assistant dashboard card shows separate offer cards rather than raw sensor attribute lists.
 - Original provider `carModel` string displayed prominently and unmodified (including VW CRAFTER 14M3 4MOTION TDI VA).

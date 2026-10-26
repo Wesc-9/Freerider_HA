@@ -7,7 +7,20 @@
 
 Independent community project; not affiliated with or endorsed by Hertz.
 
-## Visual offer list on a Home Assistant dashboard (0.8.0)
+## Simpler results directly on the device page (0.8.1)
+
+The integration now creates **one normal Home Assistant sensor per currently visible car offer** under your Freerider search device. For example, a two-offer search lists separate sensor rows:
+
+- **VW CRAFTER 14M3 4MOTION TDI VA · OSLO LUFTHAVN** — state: `TRONDHEIM LUFTHAVN → OSLO LUFTHAVN`
+- **VW CRAFTER 14M3 4MOTION TDI VA · OSLO ALNABRU** — state: `TRONDHEIM LUFTHAVN → OSLO ALNABRU`
+
+The full car name is taken **verbatim** from the provider's original model field. Tap an individual car sensor to inspect departure, destination, distance, estimated drive duration, availability and return deadline, estimated toll if known, and the official Freerider website URL. This is the standard **Home Assistant device view**, not only a separate dashboard.
+
+As new listings match your saved search they appear automatically; when the provider no longer lists an offer, its sensor and registry entry are removed. A failed feed update does not silently erase the last offers or pretend the count was zero: sensors become unavailable as normal. The device view is **capped at eight active offers per search** to prevent unnecessary entity proliferation. The existing **Matching rides** total counts *all* matching offers and retains its original entity ID and attributes for compatibility; the dedicated dashboard card can present the first 20. A toll-estimate diagnostic sensor is moved to the device's diagnostic section for less clutter.
+
+**Important:** A sensor's state does not reserve a car. Final bookability and terms must be checked on the official Freerider site. Home Assistant's built-in device page supports normal sensor rows rather than custom large offer cards; the optional dashboard card remains available for richer layout and external link buttons.
+
+## Optional visual card on a Home Assistant dashboard (0.8.0+)
 
 The default Home Assistant entity-details dialog shows the `rides` sensor as raw attributes. Freerider HA now adds an **optional dashboard card** for an understandable list of offers, without changing how the existing sensors and alerts work.
 
