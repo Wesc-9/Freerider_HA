@@ -20,7 +20,7 @@ from .const import (
     CONF_ORIGIN, CONF_SCAN_INTERVAL, CONF_SCAN_MODE, CONF_TRANSMISSION,
     CONF_VEHICLE_TYPE, CONF_WATCH_NAME, COUNTRIES, DEFAULT_POLL_MINUTES, DOMAIN,
 )
-from .filters import station_candidates
+from .filters import station_candidates, place_values
 from .source import async_fetch_country
 
 
@@ -52,13 +52,14 @@ def countries_schema(values: dict | None = None) -> vol.Schema:
 
 
 def _place_selector(names: list[str]):
-    """Combobox supports a recommended station OR any free-text value."""
-    if not names:
-        return selector.TextSelector(selector.TextSelectorConfig(
-            type=selector.TextSelectorType.SEARCH,
-        ))
+    """One searchable multi-select with native text entry and chips.
+
+    HA's SelectSelector supports multiple=True and custom_value=True.  No
+    custom frontend is needed; submitted data is a list of chosen places.
+    """
     return selector.SelectSelector(selector.SelectSelectorConfig(
         options=names,
+        multiple=True,
         custom_value=True,
         mode=selector.SelectSelectorMode.DROPDOWN,
         sort=True,
@@ -66,19 +67,35 @@ def _place_selector(names: list[str]):
 
 
 def route_schema(values: dict | None, stations: list[str]) -> vol.Schema:
-    """Origin and destination can be left blank for all locations."""
+    """Show departure, destination and travel dates together."""
     values = values or {}
     fields = {}
     for key in (CONF_ORIGIN, CONF_DESTINATION):
-        field = (
-            vol.Optional(key, default=values[key])
-            if values.get(key) else vol.Optional(key)
-        )
+        places = place_values(values.get(key))
+        field = vol.Optional(key, default=places) if places else vol.Optional(key)
         fields[field] = _place_selector(stations)
     fields[vol.Required(
         CONF_DIRECTION, default=values.get(CONF_DIRECTION, "forward")
     )] = select(["forward", "either"], "direction")
+    for key in (CONF_DATE_START, CONF_DATE_END):
+        if values.get(key):
+            fields[vol.Optional(key, default=values[key])] = selector.DateSelector()
+        else:
+            fields[vol.Optional(key)] = selector.DateSelector()
     return vol.Schema(fields)
+
+
+def route_dates(payload: dict) -> dict:
+    """Infer all/single/range from two optional dates on the route screen."""
+    start = payload.get(CONF_DATE_START) or None
+    end = payload.get(CONF_DATE_END) or None
+    return {
+        CONF_DATE_MODE: "range" if start and end else "single" if start else "any",
+        CONF_DATE_START: start,
+        CONF_DATE_END: end,
+    }
+
+
 
 
 def date_mode_schema(values: dict | None = None) -> vol.Schema:
@@ -207,17 +224,35 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_route(self, user_input=None):
-        """Page two: station dropdown with optional custom search text."""
+        """Page two: multi-station route and optional date range in one form."""
+        errors = {}
         if user_input is not None:
-            self._draft.update(user_input)
-            return await self.async_step_date()
+            candidate = {
+                **self._draft, **user_input,
+                CONF_ORIGIN: place_values(user_input.get(CONF_ORIGIN)),
+                CONF_DESTINATION: place_values(user_input.get(CONF_DESTINATION)),
+                **route_dates(user_input),
+            }
+            invalid = validation_error(candidate)
+            if not invalid and user_input.get(CONF_DATE_END) and not user_input.get(CONF_DATE_START):
+                invalid = "missing_date"
+            if not invalid:
+                self._draft = candidate
+                return self._finish()
+            errors["base"] = invalid
         if self._stations is None:
             self._stations = await async_station_suggestions(
                 self.hass, self._draft.get(CONF_COUNTRIES, ["NO"])
             )
         return self.async_show_form(
-            step_id="route", data_schema=route_schema(self._draft, self._stations),
+            step_id="route",
+            data_schema=route_schema(
+                {**self._draft, **(user_input or {})}, self._stations,
+            ),
+            errors=errors,
         )
+
+
 
     async def async_step_date(self, user_input=None):
         """Page three: all dates by default, optional single day or range."""
@@ -290,7 +325,7 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
         )
 
     async def async_step_route(self, user_input=None):
-        """Edit name/country and route in a compact form."""
+        """Edit saved station groups and dates without recreating a watch."""
         errors = {}
         current = self._settings()
         if user_input is not None:
@@ -299,11 +334,13 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
                 CONF_COUNTRIES: [
                     country.upper() for country in user_input.get(CONF_COUNTRIES, [])
                 ],
+                CONF_ORIGIN: place_values(user_input.get(CONF_ORIGIN)),
+                CONF_DESTINATION: place_values(user_input.get(CONF_DESTINATION)),
+                **route_dates(user_input),
             }
-            # Explicit blanks let users remove a previously selected station.
-            user_input.setdefault(CONF_ORIGIN, "")
-            user_input.setdefault(CONF_DESTINATION, "")
             invalid = validation_error(user_input)
+            if not invalid and user_input.get(CONF_DATE_END) and not user_input.get(CONF_DATE_START):
+                invalid = "missing_date"
             if invalid is None:
                 title = user_input.pop(CONF_WATCH_NAME, self.config_entry.title)
                 if title != self.config_entry.title:
@@ -323,6 +360,8 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="route", data_schema=vol.Schema(fields), errors=errors,
         )
+
+
 
     async def async_step_dates(self, user_input=None):
         """Choose any day, a single day, or a date window."""
