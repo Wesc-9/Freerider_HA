@@ -20,7 +20,8 @@ action:
       title: "New Hertz Freerider car"
       message: >-
         {{ trigger.event.data.origin }} → {{ trigger.event.data.destination }}
-        ({{ trigger.event.data.vehicle }})
+        ({{ trigger.event.data.vehicle }}).
+        Tolls may apply; fuel/charging costs may occur. Check Hertz booking conditions.
       data:
         url: "{{ trigger.event.data.booking_url }}"
         clickAction: "{{ trigger.event.data.booking_url }}"

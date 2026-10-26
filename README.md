@@ -42,7 +42,7 @@ When installed, configure any number of independent watched routes, date ranges,
 
 Estimates use **without-AutoPASS-discount** tariffs to better reflect Hertz's Norway FAQ; they **are not the final amount Hertz will invoice** and may differ due to VAT, fees, vehicle category, seasonal tariffs, time of day or deviations from the proposed road route. For an EV, the no-discount EV rate is used when explicitly identified. Ferries, bridges or journeys outside Norway are **not quoted as zero**: they're labeled unknown/not included. The calculation defaults to the current time unless an ISO `start_time` is provided (e.g. `2026-10-27T08:30:00+01:00`). A user-triggered request can consume quota at BompengeAppen.
 
-**Data used:** [BompengeAppen API docs](https://bompengeappen.no/api-docs), [Hertz Norway FAQ](https://www.hertz.no/p/faq), [Hertz Denmark FAQ](https://hertzfreerider.nu/ofte-stillede-sporgsmal/).
+**Provider verification:** a single documented API request on 2026-10-26 returned HTTP 200, route pricing with `tollSmallNoDiscount` and `tollSmallEvNoDiscount`, and charged-station details. This validates the API response format, **not** a successful end-to-end Home Assistant installation.\n\n**Data used:** [BompengeAppen API docs](https://bompengeappen.no/api-docs), [Hertz Norway FAQ](https://www.hertz.no/p/faq), [Hertz Denmark FAQ](https://hertzfreerider.nu/ofte-stillede-sporgsmal/).
 
 ### Refresh service
 
@@ -67,7 +67,7 @@ Import the optional blueprint using the path above; select your mobile notificat
 | Sweden | https://hertzfreerider.se/ | **Public JSON API connected; HA runtime test pending** |
 | Denmark | https://hertzfreerider.nu/ | **Not implemented** |
 
-NO and SE expose public read-only \`/api/transport-routes/?country=NORWAY\` and \`?country=SWEDEN\` endpoints, returning grouped route offers. The Danish catalog is JS-rendered and can list products that are out of stock. No country should be labeled stable until end-to-end testing. Country filtering applies to the listing's source, and **does not prohibit international route destinations**.
+NO and SE expose public read-only `/api/transport-routes/?country=NORWAY` and `?country=SWEDEN` endpoints, returning grouped route offers. The Danish catalog is JS-rendered and can list products that are out of stock. No country should be labeled stable until end-to-end testing. Country filtering applies to the listing's source, and **does not prohibit international route destinations**.
 
 ## Roadmap / release gates
 
