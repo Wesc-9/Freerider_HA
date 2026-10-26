@@ -15,7 +15,8 @@ from zoneinfo import ZoneInfo
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
-from .tolls import TollLookupError, async_estimate_toll
+from .tolls import async_estimate_toll
+from .quote_rules import quote_eligibility
 
 _LOGGER = logging.getLogger(__name__)
 MAX_AUTO_DAILY = 10
@@ -24,16 +25,6 @@ STORE_VERSION = 1
 NORWAY_ZONE = ZoneInfo("Europe/Oslo")
 
 
-def quote_eligibility(ride) -> str:
-    """Return a reason why automatic toll lookup cannot be trusted."""
-    if (ride.pickup_country or "").lower() != "no" or (ride.return_country or "").lower() != "no":
-        return "outside_norway"
-    if ride.vehicle_type in ("van", "minibus"):
-        return "unknown_heavy_vehicle_rate"
-    for coordinate in (ride.pickup_lat, ride.pickup_lon, ride.return_lat, ride.return_lon):
-        if coordinate is None:
-            return "missing_coordinates"
-    return "ok"
 
 
 class RouteQuoteCatalog:
@@ -111,7 +102,7 @@ class RouteQuoteCatalog:
             await self._save_locked()
             try:
                 estimate = await async_estimate_toll(self.hass, ride)
-            except (TollLookupError, Exception) as exc:
+            except Exception as exc:
                 _LOGGER.debug("Toll estimate unavailable for %s: %s", ride.key, exc)
                 return None, "provider_error"
 

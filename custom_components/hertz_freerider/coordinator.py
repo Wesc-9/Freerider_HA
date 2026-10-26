@@ -22,7 +22,8 @@ from .notifications import (
 )
 from .station_catalog import async_get_station_catalog
 from .tolls import async_estimate_toll, TollLookupError
-from .quote_cache import async_get_quote_catalog, quote_eligibility
+from .quote_cache import async_get_quote_catalog
+from .quote_rules import quote_eligibility
 
 _LOGGER = logging.getLogger(__name__)
 MAX_REMEMBERED = 1500
