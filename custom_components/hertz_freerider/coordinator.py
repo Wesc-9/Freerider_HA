@@ -55,7 +55,11 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         loaded = await self.seen_store.async_load()
         if isinstance(loaded, dict) and isinstance(loaded.get("ids"), list):
             self.seen_ids = [str(key) for key in loaded["ids"]][-MAX_REMEMBERED:]
-            self.pending_notification_ids = [str(key) for key in loaded.get("pending", []) if isinstance(key, str)][-80:]
+            previous_pending = loaded.get("pending", [])
+            if isinstance(previous_pending, list):
+                self.pending_notification_ids = [
+                    key for key in previous_pending if isinstance(key, str)
+                ][-80:]
 
     async def _async_update_data(self) -> list[Ride]:
         countries = self.settings.get(CONF_COUNTRIES, ["NO"])
@@ -104,6 +108,7 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         the matching ride is still available.
         """
         previous = set(self.seen_ids) if self.seen_ids is not None else None
+        old_pending = list(self.pending_notification_ids)
         new_rides = [ride for ride in matched if previous is not None and ride.key not in previous]
 
         if self.settings.get(CONF_EVENTS, True):
@@ -126,6 +131,7 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
                 if sent_count >= 8:
                     pending.append(ride.key)
                     continue
+                sent_count += 1
                 try:
                     delivered = await async_send_notification(
                         self.hass, target,
@@ -142,8 +148,6 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
                     delivered = False
                 if not delivered:
                     pending.append(ride.key)
-                else:
-                    sent_count += 1
             self.pending_notification_ids = pending[-80:]
         else:
             self.pending_notification_ids = []
@@ -151,7 +155,7 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         merged = list(dict.fromkeys([
             *(self.seen_ids or []), *(ride.key for ride in matched),
         ]))[-MAX_REMEMBERED:]
-        if merged != self.seen_ids or self.pending_notification_ids:
+        if merged != self.seen_ids or old_pending != self.pending_notification_ids:
             self.seen_ids = merged
             await self.seen_store.async_save({
                 "ids": merged,
