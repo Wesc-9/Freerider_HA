@@ -194,10 +194,30 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         target = self.settings.get(CONF_NOTIFY_TARGET, TARGET_OFF)
         if not target or target == TARGET_OFF:
             return False
-        return await async_send_notification(
-            self.hass, target,
-            test_notification_content(self.entry.title, self.hass.config.language),
-        )
+        language = self.hass.config.language
+        if self.data:
+            # Preview an actual currently matched route (no new offer event
+            # and no additional toll API call just for a test).
+            ride = self.data[0]
+            payload = notification_content(
+                ride,
+                self.entry.title,
+                language,
+                toll_estimate=self.toll_estimates.get(ride.key),
+            )
+            norwegian = language.lower().startswith(("nb", "nn", "no"))
+            payload["title"] = (
+                "🧪 Freerider HA · Testvarsel"
+                if norwegian else "🧪 Freerider HA · Test notification"
+            )
+            payload["message"] += (
+                "\n🧪 Dette er kun en forhåndsvisning, ikke et nytt treff."
+                if norwegian else
+                "\n🧪 Preview only; this is not a new car alert."
+            )
+        else:
+            payload = test_notification_content(self.entry.title, language)
+        return await async_send_notification(self.hass, target, payload)
 
     async def async_calculate_toll(
         self, ride_id: str, start_time: str | None = None
