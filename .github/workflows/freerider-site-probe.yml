@@ -34,8 +34,9 @@ jobs:
                   if url.endswith("robots.txt"):
                       print("ROBOTS", html[:1500].replace("\n", " | "), flush=True)
                       continue
-                  for term in ("toyota-proace-aut-ev75792", "1389", "m-productlist", "m-product", "På lager", "Ikke på lager"):
-                      m=re.search(re.escape(term),html,re.I)
+                  for term in ("Toyota", "booking/3-biler/", "1389", "m-productlist", "m-product", "product-card", "product-item", "product-list", "product_id", "På lager", "Ikke på lager"):
+                      matches=list(re.finditer(re.escape(term),html,re.I))
+                      m=matches[-1] if matches else None
                       if m: print("SNIPPET",term,re.sub(r"\\s+"," ",html[max(0,m.start()-420):m.end()+320])[:900],flush=True)
                   print("SCRIPTS",re.findall(r'<script[^>]+src="([^"]+)"',html,re.I)[-12:],flush=True)
                   print("TITLE", re.findall(r"<title[^>]*>(.*?)</title>", html, flags=re.S|re.I)[:2], flush=True)
