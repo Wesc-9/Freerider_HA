@@ -39,6 +39,11 @@ async def async_estimate_toll(hass, ride: Ride, start_time: str | None = None) -
     The first recommended calculated road route need not match exactly the
     vehicle return instructions from Hertz. Reject cross-border estimates.
     """
+    if ride.vehicle_type in ("van", "minibus"):
+        raise TollLookupError(
+            "Varebil/minibuss: ukjent tillatt totalvekt og bomtakstgruppe. "
+            "Kan ikke gi pålitelig personbilestimat uten registrert kjøretøyklasse."
+        )
     if (ride.pickup_country or "").lower() != "no" or (ride.return_country or "").lower() != "no":
         raise TollLookupError("Norwegian toll estimator supports NO-to-NO journeys only")
     # Country from station metadata, not merely the site the offer appeared on.

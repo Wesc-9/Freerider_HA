@@ -38,10 +38,19 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
     def extra_state_attributes(self):
         """Expose a small list of actionable matches without bloating state."""
         return {
+            "search_name": self.coordinator.entry.title,
             "filters": self.coordinator.settings,
             "source_errors": self.coordinator.last_source_errors,
             "rides": [
-                {**ride.as_event(), "toll_estimate": self.coordinator.toll_estimates.get(ride.key)}
+                {
+                    **ride.as_event(),
+                    "toll_estimate": self.coordinator.toll_estimates.get(ride.key),
+                    "toll_estimate_status": (
+                        "unknown_vehicle_weight_class"
+                        if ride.vehicle_type in ("van", "minibus")
+                        else "not_calculated"
+                    ) if ride.key not in self.coordinator.toll_estimates else "calculated",
+                }
                 for ride in (self.coordinator.data or [])[:20]
             ],
             "total_matches": len(self.coordinator.data or []),
@@ -49,7 +58,7 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
             "notification_enabled": self.coordinator.settings.get("notify_enabled", True),
             "pending_notifications": len(self.coordinator.pending_notification_ids),
             "extra_costs": "Tolls may be payable. Fuel/charging may incur additional costs.",
-            "tolls": "Norway: on-demand estimate from an external routing provider; no automatic batch calls.",
+            "tolls": "Norway: automatic estimates for eligible new cars (quota-limited); manual lookup via button.",
         }
 
 

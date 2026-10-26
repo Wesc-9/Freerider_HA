@@ -202,9 +202,21 @@ def _explicit_fuel(model: str) -> str | None:
 
 
 def _explicit_vehicle_type(model: str) -> str | None:
-    if re.search(r"\b(MINIBUSS|MINIBUS)\b", model, re.I):
+    """Conservative class hints from named commercial vehicle models.
+
+    Vehicle category is NOT a verified Norwegian toll weight class. In
+    particular, a Crafter can have different permitted gross weights; it must
+    not automatically receive a <= 3,500 kg toll estimate.
+    """
+    if re.search(r"\b(MINIBUSS|MINIBUS|MINI[ -]?BUS|\d{2}[ -]?SETER)\b", model, re.I):
         return "minibus"
-    if re.search(r"\b(VAREBIL|VARE|VAN)\b", model, re.I):
+    if re.search(
+        r"\b(CRAFTER|SPRINTER|DUCATO|BOXER|JUMPER|MASTER|MOVANO|"
+        r"VITO|VIVARO|TRAFIC|PROACE|TRANSIT|TRANSPORTER|"
+        r"CADDY|KANGOO|BERLINGO|PARTNER|VAREBIL|VAN|"
+        r"PANEL[ -]?VAN|KASSEVOGN)\b|\b\d{1,2}[ ]?M(?:3|³)\b",
+        model, re.I,
+    ):
         return "van"
     if re.search(r"\b(SUV|PERSONBIL)\b", model, re.I):
         return "car"
