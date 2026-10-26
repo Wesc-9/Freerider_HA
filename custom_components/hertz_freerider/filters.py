@@ -10,6 +10,8 @@ from datetime import date
 import unicodedata
 import re
 
+from .search_enhancements import matches_model, station_in_radius
+
 
 @dataclass(frozen=True)
 class Ride:
@@ -137,15 +139,30 @@ def ride_matches(ride: Ride, config: dict) -> bool:
     # Existing single-string searches are still supported after upgrading.
     wanted_from = place_values(config.get("origin"))
     wanted_to = place_values(config.get("destination"))
+    radius = int(config.get("radius_km", 0) or 0)
+    def _place_ok(names, place, lat, lon, side):
+        center_name=config.get(f"{side}_radius_name")
+        has_radius = radius > 0 and bool(center_name)
+        if not names and not has_radius:
+            return True
+        return (
+            any(station_matches(x,place) for x in names)
+            or (has_radius and station_in_radius(
+                config.get(f"{side}_radius_point"),lat,lon,radius,
+            ))
+        )
+
     forward = (
-        (not wanted_from or any(station_matches(x, ride.origin) for x in wanted_from))
-        and (not wanted_to or any(station_matches(x, ride.destination) for x in wanted_to))
+        _place_ok(wanted_from,ride.origin,ride.pickup_lat,ride.pickup_lon,"origin")
+        and _place_ok(wanted_to,ride.destination,ride.return_lat,ride.return_lon,"destination")
     )
     reverse = (
-        (not wanted_from or any(station_matches(x, ride.destination) for x in wanted_from))
-        and (not wanted_to or any(station_matches(x, ride.origin) for x in wanted_to))
+        _place_ok(wanted_from,ride.destination,ride.return_lat,ride.return_lon,"origin")
+        and _place_ok(wanted_to,ride.origin,ride.pickup_lat,ride.pickup_lon,"destination")
     )
     if not (forward or (config.get("direction") == "either" and reverse)):
+        return False
+    if not matches_model(ride.vehicle, config.get("model_include"), config.get("model_exclude")):
         return False
 
     date_mode = config.get("date_mode", "any")
