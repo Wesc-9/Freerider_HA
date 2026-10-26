@@ -1,62 +1,162 @@
 {
+  "title": "Freerider for Home Assistant",
   "config": {
     "step": {
       "user": {
-        "title": "New Freerider watch",
-        "description": "Norway and Sweden live route feeds connected (developer alpha). Denmark not yet implemented. Choose countries, route, date and vehicle preferences.",
+        "title": "1 · Choose countries",
+        "description": "Independent community project; not developed, endorsed or affiliated with Hertz. Select the Freerider services you want to watch. Norway and Sweden have working route feeds; Denmark is not ready yet.",
         "data": {
-          "watch_name": "Watch name",
-          "countries": "Countries",
-          "origin": "From (leave empty for anywhere)",
-          "destination": "To (leave empty for anywhere)",
-          "direction": "Travel direction",
-          "date_mode": "Preferred date",
-          "date_start": "Date / start of range",
-          "date_end": "End of range",
-          "transmission": "Transmission",
-          "vehicle_type": "Vehicle type",
-          "fuel": "Fuel type",
-          "min_seats": "Minimum seats (0 = any)",
-          "scan_mode": "Update mode",
-          "scan_interval": "Automatic refresh interval (minutes)",
-          "notify_events": "Emit event when a new matching ride appears"
+          "watch_name": "Name of saved search",
+          "countries": "Countries"
+        }
+      },
+      "route": {
+        "title": "2 · Choose route",
+        "description": "Choose a station from the suggested places, or type any city or location. Suggestions come from currently published routes, so they may change. Leave either field empty to include all locations.",
+        "data": {
+          "origin": "From (optional — any location)",
+          "destination": "To (optional — any location)",
+          "direction": "Direction"
+        }
+      },
+      "date": {
+        "title": "3 · When do you want to travel?",
+        "description": "All dates is the simplest option. Choose a specific day or period if needed; the dates describe Hertz's published offer window, not guaranteed bookable pickup times.",
+        "data": {
+          "date_mode": "Date preference"
+        }
+      },
+      "date_window": {
+        "title": "Select travel date(s)",
+        "description": "Choose a date or inclusive date range. Your search can be changed later.",
+        "data": {
+          "date_start": "Date / first date",
+          "date_end": "Last date"
         }
       }
     },
     "error": {
-      "missing_date": "Choose the necessary date(s) for the selected date mode.",
-      "end_before_start": "End date must not precede start date.",
-      "missing_country": "Choose at least one country."
+      "missing_country": "Choose at least one country.",
+      "country_not_ready": "Choose Norway or Sweden. The Denmark data source is not ready yet.",
+      "missing_date": "Choose the required date(s).",
+      "end_before_start": "End date cannot be earlier than start date."
     }
   },
   "options": {
     "step": {
       "init": {
-        "title": "Edit Freerider watch",
-        "description": "Manage route, date, vehicle and notification preferences.",
+        "title": "Manage saved Freerider search",
+        "description": "Change only the part you need. Advanced vehicle options and notification settings stay out of the initial setup.",
+        "menu_options": {
+          "route": "Countries and places",
+          "dates": "Travel dates",
+          "filters": "Vehicle filters (optional)",
+          "updates": "Automatic checks and notifications"
+        }
+      },
+      "route": {
+        "title": "Countries and places",
+        "description": "Choose a suggested station or enter any place. Blank means anywhere.",
         "data": {
-          "watch_name": "Watch name",
+          "watch_name": "Search name",
           "countries": "Countries",
           "origin": "From",
           "destination": "To",
-          "direction": "Direction",
-          "date_mode": "Date filter",
+          "direction": "Direction"
+        }
+      },
+      "dates": {
+        "title": "Travel dates",
+        "description": "All dates, one day, or an inclusive date range.",
+        "data": {
+          "date_mode": "Date preference"
+        }
+      },
+      "date_window": {
+        "title": "Choose dates",
+        "description": "The published offer window may differ from bookable pickup times.",
+        "data": {
           "date_start": "Date / first date",
-          "date_end": "Last date",
-          "transmission": "Transmission",
-          "vehicle_type": "Vehicle type",
-          "fuel": "Fuel",
-          "min_seats": "Minimum seats",
-          "scan_mode": "Update mode",
-          "scan_interval": "Automatic refresh minutes",
-          "notify_events": "Emit new listing events"
+          "date_end": "Last date"
+        }
+      },
+      "filters": {
+        "title": "Vehicle preferences",
+        "description": "All filters are optional. Unknown vehicle details are not guessed.",
+        "data": {
+          "transmission": "Gearbox",
+          "vehicle_type": "Vehicle category",
+          "fuel": "Fuel type",
+          "min_seats": "Minimum seats (0 = any)"
+        }
+      },
+      "updates": {
+        "title": "Checks and notifications",
+        "description": "Automatic checks use a configurable interval. New results trigger a Home Assistant event; phone push requires a mobile notification automation.",
+        "data": {
+          "scan_mode": "Search mode",
+          "scan_interval": "Minutes between automatic checks",
+          "notify_events": "Send event for new matching vehicles"
         }
       }
     },
     "error": {
-      "missing_date": "Choose the necessary date(s).",
-      "end_before_start": "End date must not precede start date.",
-      "missing_country": "Choose at least one country."
+      "missing_country": "Choose at least one country.",
+      "country_not_ready": "Choose Norway or Sweden. The Danish source is not available yet.",
+      "missing_date": "Choose the required dates.",
+      "end_before_start": "End date cannot precede start date."
+    }
+  },
+  "selector": {
+    "countries": {
+      "options": {
+        "NO": "Norway",
+        "SE": "Sweden",
+        "DK": "Denmark · coming later"
+      }
+    },
+    "direction": {
+      "options": {
+        "forward": "From → To",
+        "either": "Both directions"
+      }
+    },
+    "date_mode": {
+      "options": {
+        "any": "All dates",
+        "single": "One day",
+        "range": "Date range"
+      }
+    },
+    "transmission": {
+      "options": {
+        "any": "All gearboxes",
+        "automatic": "Automatic",
+        "manual": "Manual"
+      }
+    },
+    "vehicle_type": {
+      "options": {
+        "any": "All vehicle types",
+        "car": "Car",
+        "van": "Van",
+        "minibus": "Minibus"
+      }
+    },
+    "fuel": {
+      "options": {
+        "any": "All fuel types",
+        "electric": "Electric",
+        "hybrid": "Hybrid",
+        "petrol": "Petrol",
+        "diesel": "Diesel"
+      }
+    },
+    "scan_mode": {
+      "options": {
+        "automatic": "Check automatically",
+        "manual": "Manual refresh only"
+      }
     }
   }
 }

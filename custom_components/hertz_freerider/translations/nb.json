@@ -1,62 +1,162 @@
 {
+  "title": "Freerider for Home Assistant",
   "config": {
     "step": {
       "user": {
-        "title": "Nytt Freerider-søk",
-        "description": "Norske og svenske ruter hentes fra Hertz sitt offentlige grensesnitt (alfaversjon). Danmark har foreløpig ingen fungerende datakilde. Velg land, rute, dato og biltype.",
+        "title": "1 · Velg land",
+        "description": "Uoffisielt brukerprosjekt, ikke utviklet, godkjent eller tilknyttet Hertz. Velg land du vil overvåke. Norge og Sverige har aktive datakilder; Danmark kommer senere.",
         "data": {
-          "watch_name": "Navn på søk",
-          "countries": "Land",
-          "origin": "Fra (tomt = alle steder)",
-          "destination": "Til (tomt = alle steder)",
-          "direction": "Kjøreretning",
-          "date_mode": "Ønsket dato",
+          "watch_name": "Navn på søket",
+          "countries": "Land"
+        }
+      },
+      "route": {
+        "title": "2 · Velg fra og til",
+        "description": "Velg et sted fra forslagene eller skriv inn by/sted selv. Forslagene kommer fra publiserte ruter og kan endres. La et felt stå tomt for å søke overalt.",
+        "data": {
+          "origin": "Fra (valgfritt — alle steder)",
+          "destination": "Til (valgfritt — alle steder)",
+          "direction": "Retning"
+        }
+      },
+      "date": {
+        "title": "3 · Når ønsker du å reise?",
+        "description": "Alle datoer er enklest. Du kan også velge én dato eller et intervall. Tilbudsperioden betyr ikke at hver hentetid kan bestilles.",
+        "data": {
+          "date_mode": "Dato"
+        }
+      },
+      "date_window": {
+        "title": "Velg dato(er)",
+        "description": "Velg en dato eller en periode. Du kan endre søket senere.",
+        "data": {
           "date_start": "Dato / fra dato",
-          "date_end": "Til dato",
-          "transmission": "Girkasse",
-          "vehicle_type": "Biltype",
-          "fuel": "Drivstoff",
-          "min_seats": "Minste antall seter (0 = alle)",
-          "scan_mode": "Oppdateringsmodus",
-          "scan_interval": "Automatisk sjekkintervall (minutter)",
-          "notify_events": "Send hendelse når ny bil matcher"
+          "date_end": "Til dato"
         }
       }
     },
     "error": {
-      "missing_date": "Velg datoene som kreves for dette datofilteret.",
-      "end_before_start": "Sluttdato kan ikke være før startdato.",
-      "missing_country": "Velg minst ett land."
+      "missing_country": "Velg minst ett land.",
+      "country_not_ready": "Velg Norge eller Sverige. Datakilden for Danmark er ikke klar.",
+      "missing_date": "Velg nødvendige datoer.",
+      "end_before_start": "Sluttdato kan ikke være før startdato."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Endre Freerider-søk",
-        "description": "Endre fra/til, dato, bil og varsling.",
+        "description": "Endre bare det du trenger. Avanserte bilvalg og varselinnstillinger er flyttet ut av førstegangsoppsettet.",
+        "menu_options": {
+          "route": "Land og steder",
+          "dates": "Dato og periode",
+          "filters": "Bilpreferanser (valgfritt)",
+          "updates": "Automatiske søk og varsler"
+        }
+      },
+      "route": {
+        "title": "Land og steder",
+        "description": "Velg et foreslått sted eller skriv inn eget sted. Tomt betyr alle steder.",
         "data": {
-          "watch_name": "Navn på søk",
+          "watch_name": "Navn på søket",
           "countries": "Land",
           "origin": "Fra",
           "destination": "Til",
-          "direction": "Retning",
-          "date_mode": "Dato",
+          "direction": "Retning"
+        }
+      },
+      "dates": {
+        "title": "Dato og periode",
+        "description": "Alle datoer, én dag eller et datointervall.",
+        "data": {
+          "date_mode": "Ønsket dato"
+        }
+      },
+      "date_window": {
+        "title": "Velg datoer",
+        "description": "Tilbudsperioden er ikke alltid identisk med mulige hentetidspunkt.",
+        "data": {
           "date_start": "Dato / fra dato",
-          "date_end": "Til dato",
+          "date_end": "Til dato"
+        }
+      },
+      "filters": {
+        "title": "Bilpreferanser",
+        "description": "Alt er valgfritt. Ukjent informasjon om bilene blir ikke gjettet.",
+        "data": {
           "transmission": "Girkasse",
           "vehicle_type": "Biltype",
           "fuel": "Drivstoff",
-          "min_seats": "Minste antall seter",
-          "scan_mode": "Oppdateringsmodus",
-          "scan_interval": "Sjekkintervall (minutter)",
-          "notify_events": "Varsle med hendelse om nye treff"
+          "min_seats": "Minste antall seter (0 = alle)"
+        }
+      },
+      "updates": {
+        "title": "Søk og varslinger",
+        "description": "Automatisk søk bruker valgt tidsintervall. Nye treff utløser en Home Assistant-hendelse. Pushvarsel krever en varslingsautomasjon.",
+        "data": {
+          "scan_mode": "Oppdateringsmåte",
+          "scan_interval": "Minutter mellom automatiske søk",
+          "notify_events": "Hendelse ved nye matchende biler"
         }
       }
     },
     "error": {
+      "missing_country": "Velg minst ett land.",
+      "country_not_ready": "Velg Norge eller Sverige. Danmark er ikke tilgjengelig ennå.",
       "missing_date": "Velg nødvendige datoer.",
-      "end_before_start": "Sluttdato kan ikke være før startdato.",
-      "missing_country": "Velg minst ett land."
+      "end_before_start": "Sluttdato kan ikke være før startdato."
+    }
+  },
+  "selector": {
+    "countries": {
+      "options": {
+        "NO": "Norge",
+        "SE": "Sverige",
+        "DK": "Danmark · kommer senere"
+      }
+    },
+    "direction": {
+      "options": {
+        "forward": "Fra → Til",
+        "either": "Begge retninger"
+      }
+    },
+    "date_mode": {
+      "options": {
+        "any": "Alle datoer",
+        "single": "Én dato",
+        "range": "Datointervall"
+      }
+    },
+    "transmission": {
+      "options": {
+        "any": "Alle girkasser",
+        "automatic": "Automat",
+        "manual": "Manuell"
+      }
+    },
+    "vehicle_type": {
+      "options": {
+        "any": "Alle biltyper",
+        "car": "Personbil",
+        "van": "Varebil",
+        "minibus": "Minibuss"
+      }
+    },
+    "fuel": {
+      "options": {
+        "any": "Alt drivstoff",
+        "electric": "Elektrisk",
+        "hybrid": "Hybrid",
+        "petrol": "Bensin",
+        "diesel": "Diesel"
+      }
+    },
+    "scan_mode": {
+      "options": {
+        "automatic": "Søk automatisk",
+        "manual": "Kun manuell oppdatering"
+      }
     }
   }
 }
