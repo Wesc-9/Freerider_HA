@@ -19,11 +19,15 @@ from .const import (
     CONF_DESTINATION, CONF_DIRECTION, CONF_EVENTS, CONF_FUEL, CONF_MIN_SEATS,
     CONF_ORIGIN, CONF_SCAN_INTERVAL, CONF_SCAN_MODE, CONF_NOTIFY_TARGET, CONF_NOTIFY_ENABLED, CONF_TOLL_IN_NOTIFICATIONS, CONF_TRANSMISSION,
     CONF_VEHICLE_TYPE, CONF_WATCH_NAME, COUNTRIES, DEFAULT_POLL_MINUTES, DOMAIN,
+    CONF_MODEL_INCLUDE, CONF_MODEL_EXCLUDE, CONF_RADIUS_KM,
+    CONF_ALERT_EXISTING, CONF_ALERT_UPDATES, CONF_FUEL_USAGE, CONF_FUEL_PRICE,
+    CONF_ELECTRIC_USAGE, CONF_ELECTRIC_PRICE,
 )
 from .filters import station_candidates, place_values
 from .source import async_fetch_country
 from .notifications import notification_targets, TARGET_OFF
 from .station_catalog import async_get_station_catalog
+from .search_enhancements import distance_km
 
 
 def select(options: list[str], translation_key: str):
@@ -153,6 +157,10 @@ def vehicle_schema(values: dict | None = None) -> vol.Schema:
             selector.NumberSelector(selector.NumberSelectorConfig(
                 min=0, max=12, step=1, mode=selector.NumberSelectorMode.BOX,
             )),
+        vol.Optional(CONF_MODEL_INCLUDE, default=values.get(CONF_MODEL_INCLUDE, "")):
+            selector.TextSelector(),
+        vol.Optional(CONF_MODEL_EXCLUDE, default=values.get(CONF_MODEL_EXCLUDE, "")):
+            selector.TextSelector(),
     })
 
 
@@ -171,7 +179,43 @@ def updates_schema(values: dict | None = None) -> vol.Schema:
             selector.BooleanSelector(),
         vol.Required(CONF_TOLL_IN_NOTIFICATIONS, default=values.get(CONF_TOLL_IN_NOTIFICATIONS, True)):
             selector.BooleanSelector(),
+        vol.Required(CONF_ALERT_EXISTING, default=values.get(CONF_ALERT_EXISTING, False)):
+            selector.BooleanSelector(),
+        vol.Required(CONF_ALERT_UPDATES, default=values.get(CONF_ALERT_UPDATES, True)):
+            selector.BooleanSelector(),
     })
+
+
+def area_schema(values: dict, places: list[str]) -> vol.Schema:
+    """Optional areas centered on a known provider station's GPS coordinate."""
+    choices = sorted(set(places) | {
+        name for key in ("origin_radius_name","destination_radius_name")
+        if (name := values.get(key))
+    })
+    fields = {
+        vol.Required(CONF_RADIUS_KM, default=values.get(CONF_RADIUS_KM, "0")):
+            select(["0","25","50","100"], "radius_km"),
+    }
+    for key in ("origin_radius_name","destination_radius_name"):
+        marker = vol.Optional(key,default=values[key]) if values.get(key) else vol.Optional(key)
+        fields[marker] = selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=choices, mode=selector.SelectSelectorMode.DROPDOWN,
+            )
+        )
+    return vol.Schema(fields)
+
+
+def cost_schema(values: dict) -> vol.Schema:
+    """No invented fuel price or usage: zero means estimate unavailable."""
+    fields={}
+    for key in (CONF_FUEL_USAGE,CONF_FUEL_PRICE,CONF_ELECTRIC_USAGE,CONF_ELECTRIC_PRICE):
+        fields[vol.Required(key,default=values.get(key,0))] = selector.NumberSelector(
+            selector.NumberSelectorConfig(
+                min=0, max=1000, step=0.1, mode=selector.NumberSelectorMode.BOX,
+            )
+        )
+    return vol.Schema(fields)
 
 
 def validation_error(values: dict) -> str | None:
@@ -322,6 +366,15 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NOTIFY_TARGET: TARGET_OFF,
             CONF_NOTIFY_ENABLED: False,
             CONF_TOLL_IN_NOTIFICATIONS: True,
+            CONF_MODEL_INCLUDE: "",
+            CONF_MODEL_EXCLUDE: "",
+            CONF_RADIUS_KM: "0",
+            CONF_ALERT_EXISTING: False,
+            CONF_ALERT_UPDATES: True,
+            CONF_FUEL_USAGE: 0,
+            CONF_FUEL_PRICE: 0,
+            CONF_ELECTRIC_USAGE: 0,
+            CONF_ELECTRIC_PRICE: 0,
         }
         fields.update(self._draft)
         title = fields.pop(CONF_WATCH_NAME, "Freerider")
@@ -346,7 +399,7 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Choose which part of the configuration to change."""
         return self.async_show_menu(
-            step_id="init", menu_options=["route", "dates", "filters", "updates"],
+            step_id="init", menu_options=["route", "dates", "filters", "area", "costs", "updates"],
         )
 
     async def async_step_route(self, user_input=None):
@@ -437,6 +490,46 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
             })
         return self.async_show_form(
             step_id="filters", data_schema=vehicle_schema(self._settings()),
+        )
+
+    async def async_step_area(self, user_input=None):
+        """Select center stations with valid coordinates; no external geocoder."""
+        current=self._settings()
+        countries=current.get(CONF_COUNTRIES,["NO"])
+        catalog=await async_get_station_catalog(self.hass)
+        located=catalog.located_stations(countries)
+        if not located:
+            # Fetch live coordinates the same way initial place suggestions do.
+            await async_station_suggestions(self.hass,countries)
+            located=catalog.located_stations(countries)
+        errors={}
+        if user_input is not None:
+            radius=int(user_input.get(CONF_RADIUS_KM,"0"))
+            opts={CONF_RADIUS_KM:str(radius)}
+            for key in ("origin_radius_name","destination_radius_name"):
+                name=user_input.get(key) or ""
+                point=located.get(name) if name else None
+                if radius and name and point is None:
+                    errors["base"]="radius_station_unavailable"
+                opts[key]=name
+                opts[key.replace("_name","_point")]=point
+            if not errors:
+                return self.async_create_entry(
+                    title="",data={**self.config_entry.options,**opts},
+                )
+        values={**current,**(user_input or {})}
+        return self.async_show_form(
+            step_id="area",data_schema=area_schema(values,list(located)),errors=errors,
+        )
+
+    async def async_step_costs(self, user_input=None):
+        """User-entered assumptions for partial running cost estimates."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="",data={**self.config_entry.options,**user_input},
+            )
+        return self.async_show_form(
+            step_id="costs",data_schema=cost_schema(self._settings()),
         )
 
     async def async_step_updates(self, user_input=None):

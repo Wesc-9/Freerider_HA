@@ -30,3 +30,14 @@ SERVICE_REFRESH = "refresh"
 DEFAULT_POLL_MINUTES = 30
 MIN_POLL_MINUTES = 15
 MAX_POLL_MINUTES = 120
+
+# Advanced filters, meaningful alerts and user-supplied cost assumptions.
+CONF_MODEL_INCLUDE = "model_include"
+CONF_MODEL_EXCLUDE = "model_exclude"
+CONF_RADIUS_KM = "radius_km"
+CONF_ALERT_EXISTING = "alert_existing_first_scan"
+CONF_ALERT_UPDATES = "alert_offer_changes"
+CONF_FUEL_USAGE = "fuel_l_100km"
+CONF_FUEL_PRICE = "fuel_price_nok_l"
+CONF_ELECTRIC_USAGE = "electric_kwh_100km"
+CONF_ELECTRIC_PRICE = "electric_price_nok_kwh"
