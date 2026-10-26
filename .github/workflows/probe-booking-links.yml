@@ -8,30 +8,25 @@ jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
-      - name: Decode locale and query-string modules
+      - name: Verify direct booking routes and pickup validation
         run: |
           python - <<'PY'
           import requests,re
-          base='https://hertzfreerider.no/'
-          js=requests.get(base+'webpack-runtime-8ff3d6a51ee6d9b098e6.js',timeout=25).text
-          pat=r'a.u=function\\(e\\)\\{return(\\{.+?\\})\\[e\\]\\+"-"\\+(\\{.+?\\})\\[e\\]\\+"\\.js"'
-          m=re.search(pat,js)
-          print('RUNTIME_MAP',bool(m),flush=True)
-          print('RUNTIME_SNIPPET',js[js.find('a.u=function'):js.find('a.u=function')+3100],flush=True)
-          runtime=js[js.find('a.u=function'):js.find('a.u=function')+1350]
-          nameset=runtime.split('return{',1)[1].split('}[e]+"-"+',1)
-          names={int(k):v for k,v in re.findall(r'([0-9]+):"([^"]+)"',nameset[0])}
-          hashes={int(k):v for k,v in re.findall(r'([0-9]+):"([^"]+)"',nameset[1].split('}[e]+',1)[0])}
-          chunks=[names[k]+'-'+hashes[k]+'.js' for k in names]
-          print('CHUNKS',chunks,flush=True)
-          for name in chunks:
+          urls=[
+           'https://hertzfreerider.no/booking-flow/no-no',
+           'https://hertzfreerider.se/booking-flow/sv-se',
+           'https://hertzfreerider.no/page-data/booking-flow/no-no/page-data.json',
+           'https://hertzfreerider.se/page-data/booking-flow/sv-se/page-data.json',
+           'https://hertzfreerider.no/component---src-templates-booking-flow-tsx-5ca4adf91cca8b5747e4.js',
+          ]
+          for url in urls:
             try:
-              r=requests.get(base+name,timeout=25)
-            except Exception:continue
-            s=r.text
-            if r.status_code!=200: continue
-            for module in ['9691','758','6141']:
-              needle=module+':function'
-              ix=s.find(needle)
-              if ix>=0:print('MODULE',module,'FILE',name,'JS',s[ix:ix+3300],flush=True)
+              r=requests.get(url,timeout=25)
+              print('RESOURCE',r.status_code,r.url,len(r.content),r.text[:150] if 'page-data/' in url else '',flush=True)
+              if 'component---' in url and r.status_code==200:
+                text=r.text
+                ix=text.find('$=(0,')
+                snippet=text[text.find('notProcessed'):text.find('notProcessed')+5700]
+                print('VALIDATION',snippet[:5500],flush=True)
+            except Exception as e:print('ERROR',repr(e),flush=True)
           PY
