@@ -14,6 +14,10 @@
       this._config = { entity: "sensor.freerider_matching_rides" };
       this._hass = null;
       this._signature = "";
+      this._sortMode = "recommended";
+      this._openMaps = new Set();
+      this._showFavorites = false;
+      this._message = "";
       const style = document.createElement("style");
       style.textContent = `
         :host { display:block; font-family:var(--paper-font-body1_-_font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif); }
@@ -34,6 +38,16 @@
         .notice { color:var(--secondary-text-color,#777); font-size:11px; line-height:1.45; }
         a.book { display:flex; align-items:center; justify-content:center; min-height:40px; border-radius:11px; color:#fff; background:#77654a; text-decoration:none; font-size:13px; font-weight:700; text-align:center; padding:2px 12px; }
         a.book:hover { background:#665338; }
+        .toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+        .chooser { border:1px solid var(--divider-color,#ddd); padding:9px; border-radius:10px; color:var(--primary-text-color); background:var(--card-background-color); font-size:12px; flex:1; min-width:145px; }
+        .actions {display:flex; flex-wrap:wrap; gap:7px; }
+        .mini { border:1px solid var(--divider-color,#ddd); border-radius:9px; padding:8px 10px; font-size:12px; font-weight:600; background:var(--secondary-background-color,#f7f7f7); color:var(--primary-text-color); cursor:pointer; }
+        .mini:focus-visible {outline:2px solid var(--primary-color,#777); }
+        .detail { font-size:12px; color:var(--secondary-text-color,#777); }
+        .map { width:100%; height:245px; border:1px solid var(--divider-color,#ddd); border-radius:10px; }
+        .warning { font-size:12px; font-weight:550; color:var(--warning-color,#995b00); }
+        .favorite-area {display:grid; gap:8px; }
+        .favorite-entry {border-radius:10px; padding:10px; border:1px solid var(--divider-color,#ddd); font-size:12px; }
         .empty { padding:15px; border-radius:12px; background:var(--secondary-background-color,#f6f6f6); font-size:13px; }
         @media (max-width:400px) {.wrap { padding:13px; } .ride {padding:12px;} }
       `;
@@ -93,6 +107,105 @@
       parent.append(area);
     }
 
+    _coord(value) {
+      return typeof value === "number" && Number.isFinite(value) ? value : null;
+    }
+
+    _routeUrl(ride) {
+      const a=[this._coord(ride.pickup_lat),this._coord(ride.pickup_lon)];
+      const b=[this._coord(ride.return_lat),this._coord(ride.return_lon)];
+      if (a.concat(b).some(x=>x===null)) return null;
+      if (Math.abs(a[0])>90 || Math.abs(b[0])>90 || Math.abs(a[1])>180 || Math.abs(b[1])>180) return null;
+      return "https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route="+
+        encodeURIComponent(a.join(",")+";"+b.join(","));
+    }
+
+    _mapEmbed(ride) {
+      const a=[this._coord(ride.pickup_lat),this._coord(ride.pickup_lon)];
+      const b=[this._coord(ride.return_lat),this._coord(ride.return_lon)];
+      if (a.concat(b).some(x=>x===null)) return null;
+      if (Math.abs(a[0])>90 || Math.abs(b[0])>90 || Math.abs(a[1])>180 || Math.abs(b[1])>180) return null;
+      const mid=[(a[0]+b[0])/2,(a[1]+b[1])/2];
+      const pad=.3;
+      const bbox=[Math.max(-180,Math.min(a[1],b[1])-pad),Math.max(-90,Math.min(a[0],b[0])-pad),
+        Math.min(180,Math.max(a[1],b[1])+pad),Math.min(90,Math.max(a[0],b[0])+pad)];
+      return "https://www.openstreetmap.org/export/embed.html?bbox="+bbox.join("%2C")+
+        "&layer=mapnik&marker="+mid.join("%2C");
+    }
+
+    _saveCalendar(ride) {
+      // The provider's earliest availability and return deadline describe
+      // an UNCONFIRMED window, not a booking. Label it unambiguously.
+      const parse=(s) => typeof s === "string" && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s)
+        ? s.slice(0,19).replace(/[-:]/g,"").replace("T","T").padEnd(15,"0")
+        : null;
+      const start=parse(ride.available_at), end=parse(ride.latest_return_at);
+      if (!start || !end || end<=start) {
+        this._message="Calendar requires provider pickup and return timestamps.";
+        this._render();
+        return;
+      }
+      const escape=(v)=>String(v||"").replace(/\\/g,"\\\\").replace(/;/g,"\\;").replace(/,/g,"\\,").replace(/\n/g,"\\n");
+      const title="Mulig Freerider-tur (IKKE BESTILT)";
+      const description=escape(ride.vehicle+" | "+ride.origin+" → "+ride.destination+
+        " | VIKTIG: Bare et mulig tidsvindu, ingen bekreftet reservasjon. Bekreft hentetid og retur hos leverandør. "+this._safeUrl(ride));
+      const ics=[
+        "BEGIN:VCALENDAR","VERSION:2.0","PRODID:-//Freerider HA//EN",
+        "BEGIN:VEVENT","UID:"+escape(ride.id||ride.key||"offer")+"@freerider-ha",
+        "DTSTAMP:"+new Date().toISOString().replace(/[-:]/g,"").split(".")[0]+"Z",
+        "DTSTART:"+start,"DTEND:"+end,
+        "SUMMARY:"+escape(title),"LOCATION:"+escape(ride.origin),
+        "DESCRIPTION:"+description,"STATUS:TENTATIVE","END:VEVENT","END:VCALENDAR",""
+      ].join("\r\n");
+      const url=URL.createObjectURL(new Blob([ics],{type:"text/calendar;charset=utf-8"}));
+      const link=document.createElement("a");
+      link.href=url;link.download="freerider-ikke-bestilt.ics";
+      this.shadowRoot.append(link);link.click();link.remove();
+      // Defer revocation until after the browser has initiated the download.
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+    }
+
+    _localSort(rides, mode) {
+      if (mode==="recommended") return rides;
+      const hav=(r) => {
+        const latitude=this._hass?.config?.latitude;
+        const longitude=this._hass?.config?.longitude;
+        if (![latitude,longitude,r.pickup_lat,r.pickup_lon].every(x=>typeof x==="number")) return null;
+        const rad=(x)=>x*Math.PI/180;
+        const dlat=rad(r.pickup_lat-latitude),dlon=rad(r.pickup_lon-longitude);
+        const h=Math.sin(dlat/2)**2+Math.cos(rad(latitude))*Math.cos(rad(r.pickup_lat))*Math.sin(dlon/2)**2;
+        return 6371*2*Math.asin(Math.min(1,Math.sqrt(h)));
+      };
+      const get=(r) => {
+        if(mode==="short_drive")return r.drive_minutes;
+        if(mode==="short_route")return r.distance_km;
+        if(mode==="nearest_pickup")return hav(r);
+        if(mode==="low_cost")return r.estimated_trip_costs?.known_subtotal_nok;
+        if(mode==="best_margin")return r.time_feasibility?.margin_minutes == null
+          ? null : -r.time_feasibility.margin_minutes;
+        return null;
+      };
+      return [...rides].sort((a,b) => {
+        const av=get(a),bv=get(b);
+        if(typeof av!=="number"||!Number.isFinite(av))return 1;
+        if(typeof bv!=="number"||!Number.isFinite(bv))return -1;
+        return av-bv;
+      });
+    }
+
+    _makeButton(text,click) {
+      const node=this._text("button","mini",text);
+      node.type="button";node.addEventListener("click",click);
+      return node;
+    }
+
+    _favorite(entryId,rideId,favorite) {
+      if (!entryId || !rideId) return;
+      this._hass.callService("hertz_freerider","set_favorite",{
+        entry_id:entryId,ride_id:rideId,favorite,
+      }).catch((err)=>{this._message="Could not save favorite: "+String(err);this._render();});
+    }
+
     _render() {
       if (!this.shadowRoot || !this._hass || !this._config) return;
       const state = this._hass.states?.[this._config.entity];
@@ -114,7 +227,53 @@
       } else if (["unavailable","unknown"].includes(state.state)) {
         content.append(this._text("div","empty",tr("Datakilden er utilgjengelig. Siste kjente treff kan være utdaterte.","Data source unavailable. Previously seen cars may be outdated.")));
       } else {
-        const rides = Array.isArray(state.attributes?.rides) ? state.attributes.rides : [];
+        const raw = Array.isArray(state.attributes?.rides) ? state.attributes.rides : [];
+        const toolbar=this._text("div","toolbar","");
+        const sort=document.createElement("select");
+        sort.className="chooser";
+        sort.setAttribute("aria-label",tr("Sorter biltilbud","Sort car offers"));
+        const modes=[
+          ["recommended",tr("Anbefalt rekkefølge","Recommended order")],
+          ["short_drive",tr("Korteste kjøretid","Shortest driving time")],
+          ["short_route",tr("Korteste distanse","Shortest distance")],
+          ["nearest_pickup",tr("Nærmeste hentested (luftlinje)","Nearest pickup (air distance)")],
+          ["low_cost",tr("Laveste kjente kostnad","Lowest known cost")],
+          ["best_margin",tr("Størst tidsmargin","Largest time margin")],
+        ];
+        for(const [value,label] of modes) {
+          const option=document.createElement("option");option.value=value;option.textContent=label;
+          sort.append(option);
+        }
+        sort.value=this._sortMode;
+        sort.addEventListener("change",()=>{
+          this._sortMode=sort.value;this._render();
+        });
+        toolbar.append(sort);
+        toolbar.append(this._makeButton(
+          this._showFavorites ? tr("Skjul favoritter","Hide favorites") : tr("Vis favoritter","Show favorites"),
+          ()=>{this._showFavorites=!this._showFavorites;this._render();}
+        ));
+        content.append(toolbar);
+        const rides = this._localSort(raw,this._sortMode);
+        const favIds=new Set(state.attributes?.favorite_ids||[]);
+        const entryId=state.attributes?.entry_id;
+        if(this._message)content.append(this._text("div","warning",this._message));
+        if(this._showFavorites) {
+          const favArea=this._text("div","favorite-area","");
+          for(const item of state.attributes?.favorite_offers||[]) {
+            const row=this._text("div","favorite-entry","");
+            row.append(this._text("div","value",item.vehicle||"Vehicle"));
+            row.append(this._text("div","sub",(item.origin||"?")+" → "+(item.destination||"?")));
+            if(!raw.some(r=>r.id===item.id))row.append(this._text("div","warning",tr(
+              "Ikke i siste treffliste – tilgjengelighet ubekreftet","Not in latest results – availability unconfirmed"
+            )));
+            row.append(this._makeButton(tr("Fjern favoritt","Remove favorite"),
+              ()=>this._favorite(entryId,item.id,false)));
+            favArea.append(row);
+          }
+          if(!favArea.children.length)favArea.append(this._text("div","sub",tr("Ingen lagrede favoritter.","No saved favorites.")));
+          content.append(favArea);
+        }
         if (!rides.length) content.append(this._text("div","empty",tr("Ingen biler matcher søket akkurat nå.","No matching cars right now.")));
         const km = (x) => typeof x === "number" && x > 0 ? (""+x).replace(".",",")+" km" : "—";
         const duration = (x) => {
@@ -137,6 +296,18 @@
           this._metric(metrics,tr("Tilgjengelig fra","Available from"),this._date(ride.available_at || ride.date_start));
           this._metric(metrics,tr("Seneste retur","Return deadline"),this._date(ride.latest_return_at));
           card.append(metrics);
+          const viability=ride.time_feasibility||{};
+          if(viability.status==="comfortable"||viability.status==="tight"||viability.status==="insufficient") {
+            const margin=viability.margin_minutes;
+            const label=viability.status==="insufficient"
+              ? tr("For liten tidsmargin","Insufficient travel window")
+              : (viability.status==="tight"?tr("Stram tidsmargin","Tight travel window")
+                :tr("Beregnet tidsmargin","Estimated spare time"));
+            card.append(this._text("div","warning",label+": "+(margin>=0?"+":"")+margin+" min · "+tr(
+              "30 min hente-/leveringsbuffer, ikke bekreftet booking",
+              "30 min pickup buffer, not confirmed booking"
+            )));
+          }
           const toll = this._text("div","toll","");
           toll.append(this._text("span","label",tr("Bompenger","Road tolls")));
           const estimate = ride.toll_estimate;
@@ -185,6 +356,44 @@
               ? "Opens the provider's booking flow with car ID and suggested pickup time. Availability requires confirmation."
               : "An exact offer link is unavailable. Opens Freerider for manual selection."
           )));
+          const actions=this._text("div","actions","");
+          actions.append(this._makeButton(
+            favIds.has(ride.id)?"★ "+tr("Favoritt","Favorite"):"☆ "+tr("Lagre favoritt","Save favorite"),
+            ()=>this._favorite(entryId,ride.id,!favIds.has(ride.id)),
+          ));
+          const mapUrl=this._routeUrl(ride);
+          if(mapUrl){
+            actions.append(this._makeButton(
+              this._openMaps.has(ride.id)?tr("Skjul kart","Hide map"):tr("Vis kart","Show map"),
+              ()=>{
+                if(this._openMaps.has(ride.id))this._openMaps.delete(ride.id);
+                else this._openMaps.add(ride.id);
+                this._render();
+              }
+            ));
+          }
+          actions.append(this._makeButton(
+            tr("Legg i kalender (.ics)","Add to calendar (.ics)"),
+            ()=>this._saveCalendar(ride),
+          ));
+          card.append(actions);
+          if(mapUrl && this._openMaps.has(ride.id)) {
+            const mapSrc=this._mapEmbed(ride);
+            if(mapSrc) {
+              const map=document.createElement("iframe");
+              map.className="map";map.src=mapSrc;map.loading="lazy";
+              map.setAttribute("title",tr("Kart over området rundt ruten","Map around the route"));
+              map.referrerPolicy="no-referrer";
+              card.append(map);
+              const link=this._text("a","detail",tr("Åpne veibeskrivelse (OpenStreetMap)","Open road directions (OpenStreetMap)"));
+              link.href=mapUrl;link.target="_blank";link.rel="noopener noreferrer";
+              card.append(link);
+              card.append(this._text("div","notice",tr(
+                "Kartet viser området, ikke en bekreftet kjørerute. Veibeskrivelse åpnes separat.",
+                "Map shows the area, not a verified driving route. Directions open separately."
+              )));
+            }
+          }
           content.append(card);
         }
         if (Number(state.state)>rides.length) content.append(this._text("div","sub",tr("Viser de 20 første treffene. Filtrer søket for å se flere.","Showing the first 20 offers. Narrow the search to see more.")));
