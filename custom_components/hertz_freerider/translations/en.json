@@ -12,13 +12,15 @@
       },
       "route": {
         "title": "2 · From, to and travel dates",
-        "description": "Station suggestions are remembered as new routes appear, including after an offer expires. Select multiple places or type your own. Selected chips are hidden from the initial suggestions when the form is reopened. Dates are optional.",
+        "description": "Choose multiple departure and arrival places and optional dates. At the bottom, enable alerts and select a mobile device registered in Home Assistant. You can change it later.",
         "data": {
           "origin": "From – select several places (optional)",
           "destination": "To – select several places (optional)",
           "direction": "Direction",
           "date_start": "Date / first date (optional)",
-          "date_end": "Last date (optional, for a range)"
+          "date_end": "Last date (optional, for a range)",
+          "notify_enabled": "Notify me about new cars",
+          "notify_target": "Send notifications to"
         }
       },
       "date": {
@@ -41,7 +43,8 @@
       "missing_country": "Choose at least one country.",
       "country_not_ready": "Choose Norway or Sweden. The Denmark data source is not ready yet.",
       "missing_date": "Choose the required date(s).",
-      "end_before_start": "End date cannot be earlier than start date."
+      "end_before_start": "End date cannot be earlier than start date.",
+      "notification_device_required": "Choose a notification device before enabling alerts."
     }
   },
   "options": {
@@ -50,15 +53,15 @@
         "title": "Manage saved Freerider search",
         "description": "Change only the part you need. Advanced vehicle options and notification settings stay out of the initial setup.",
         "menu_options": {
-          "route": "Countries, places and dates",
+          "route": "Places, dates and notifications",
           "dates": "Travel dates",
           "filters": "Vehicle filters (optional)",
-          "updates": "Automatic checks and notifications"
+          "updates": "Refresh interval and events"
         }
       },
       "route": {
         "title": "Places and dates",
-        "description": "Station suggestions are remembered as new routes appear, including after an offer expires. Select multiple places or type your own. Selected chips are hidden from the initial suggestions when the form is reopened. Dates are optional.",
+        "description": "Edit locations, dates, alert toggle and receiving phone together. Select a recipient before enabling alerts.",
         "data": {
           "watch_name": "Search name",
           "countries": "Countries",
@@ -66,7 +69,9 @@
           "destination": "To – select several places (optional)",
           "direction": "Direction",
           "date_start": "Date / first date (optional)",
-          "date_end": "Last date (optional, for a range)"
+          "date_end": "Last date (optional, for a range)",
+          "notify_enabled": "Notify me about new cars",
+          "notify_target": "Send notifications to"
         }
       },
       "dates": {
@@ -96,12 +101,11 @@
       },
       "updates": {
         "title": "Checks and notifications",
-        "description": "Choose a mobile app recipient for push. Selecting a recipient enables the New car alerts switch automatically. You can disable/enable alerts using the switch under your Freerider HA search device. Press the Test notification button to verify.",
+        "description": "Choose how often listings refresh. To change the notification recipient or enable/disable alerts, select Places, dates and notifications.",
         "data": {
           "scan_mode": "Search mode",
           "scan_interval": "Minutes between automatic checks",
-          "notify_events": "Also emit events for HA automations",
-          "notify_target": "Send notifications to"
+          "notify_events": "Also emit events for HA automations"
         }
       }
     },
@@ -109,7 +113,8 @@
       "missing_country": "Choose at least one country.",
       "country_not_ready": "Choose Norway or Sweden. The Danish source is not available yet.",
       "missing_date": "Choose the required dates.",
-      "end_before_start": "End date cannot precede start date."
+      "end_before_start": "End date cannot precede start date.",
+      "notification_device_required": "Choose a notification device before enabling alerts."
     }
   },
   "selector": {
