@@ -114,14 +114,8 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     def async_get_options_flow(config_entry):
         """Allow adjustments without reinstalling."""
-        return FreeriderOptionsFlow(config_entry)
-
-
-class FreeriderOptionsFlow(config_entries.OptionsFlow):
+        # Recent Home Assistant versions provide selclass FreeriderOptionsFlow(config_entries.OptionsFlow):
     """Edit every filter/scan setting in Home Assistant."""
-
-    def __init__(self, config_entry):
-        self._entry = config_entry
 
     async def async_step_init(self, user_input=None):
         """Accept changed route settings."""
@@ -129,16 +123,15 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
         if user_input is not None:
             invalid = validation_error(user_input)
             if not invalid:
-                # Entry name is stored in data on create; the UI displays it.
-                # Changing this option updates the presentation title on reload.
-                self.hass.config_entries.async_update_entry(
-                    self._entry, title=user_input.get(CONF_WATCH_NAME, self._entry.title),
-                )
-                user_input.pop(CONF_WATCH_NAME, None)
+                name = user_input.pop(CONF_WATCH_NAME, self.config_entry.title)
+                if name != self.config_entry.title:
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry, title=name,
+                    )
                 return self.async_create_entry(title="", data=user_input)
             errors["base"] = invalid
-        original = {**self._entry.data, **self._entry.options}
-        original[CONF_WATCH_NAME] = self._entry.title
+        original = {**self.config_entry.data, **self.config_entry.options}
+        original[CONF_WATCH_NAME] = self.config_entry.title
         return self.async_show_form(
             step_id="init", data_schema=build_schema(user_input or original),
             errors=errors,
