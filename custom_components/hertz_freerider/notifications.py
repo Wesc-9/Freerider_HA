@@ -44,31 +44,139 @@ def official_url(value: str | None, country: str) -> str:
     return KNOWN_LANDING.get(country, KNOWN_LANDING["NO"])
 
 
-def notification_content(ride: Ride, name: str, language: str = "nb") -> dict:
-    """One concise notification with route details and a trusted official URL."""
+def _local_datetime(value: str | None) -> str | None:
+    """Format a published source timestamp without pretending timezone is known."""
+    from datetime import datetime
+
+    if not value or not isinstance(value, str):
+        return None
+    try:
+        parsed = datetime.fromisoformat(value)
+    except ValueError:
+        return None
+    return parsed.strftime("%d.%m kl. %H:%M")
+
+
+def _drive_summary(ride: Ride, language: str) -> str:
+    """Use Hertz's own drive time and distance, never crow-flies estimates."""
+    norwegian = language.lower().startswith(("nb", "nn", "no"))
+    distance = ride.distance_km
+    minutes = ride.drive_minutes
+    parts = []
+    if distance is not None and distance > 0:
+        parts.append(f"{distance:g} km")
+    if minutes is not None and minutes > 0:
+        rounded = int(round(minutes))
+        hours, mins = divmod(rounded, 60)
+        duration = (f"{hours} t {mins} min" if hours else f"{mins} min") if norwegian else (
+            f"{hours}h {mins}m" if hours else f"{mins}m"
+        )
+        parts.append(("ca. " if norwegian else "approx. ") + duration)
+    return " · ".join(parts) if parts else (
+        "Kjøretid og distanse ikke oppgitt" if norwegian else
+        "Driving time and distance not provided"
+    )
+
+
+def _toll_summary(quote: dict | None, reason: str, language: str) -> str:
+    """Show cost only when backed by a successful Norwegian estimate."""
+    norwegian = language.lower().startswith(("nb", "nn", "no"))
+    if quote is not None and quote.get("amount_nok") is not None:
+        amount = float(quote["amount_nok"])
+        formatted = f"{amount:,.0f}".replace(",", " ")
+        result = (
+            f"Bom ca. {formatted} kr (anslag, uten AutoPASS-rabatt)"
+            if norwegian else
+            f"Tolls approx. NOK {formatted} (estimate, no AutoPASS discount)"
+        )
+        if quote.get("ferry_count"):
+            result += (
+                " · Ferge ikke inkludert" if norwegian
+                else " · Ferries not included"
+            )
+        if quote.get("vehicle_warning"):
+            result += (
+                " · Biltakst usikker" if norwegian
+                else " · Vehicle tariff uncertain"
+            )
+        return result
+
+    if reason == "outside_norway":
+        return (
+            "Bom: Ikke beregnet utenfor Norge"
+            if norwegian else "Tolls: Not calculated outside Norway"
+        )
+    if reason == "unknown_heavy_vehicle_rate":
+        return (
+            "Bom: Ukjent takst for større kjøretøy"
+            if norwegian else "Tolls: Heavy-vehicle rate unknown"
+        )
+    if reason in ("daily_limit", "scan_limit"):
+        return (
+            "Bom: Ikke beregnet (daglig grense)"
+            if norwegian else "Tolls: Not calculated (usage cap)"
+        )
+    return (
+        "Bom: Estimat ikke tilgjengelig" if norwegian
+        else "Tolls: Estimate unavailable"
+    )
+
+
+def notification_content(
+    ride: Ride,
+    name: str,
+    language: str = "nb",
+    toll_estimate: dict | None = None,
+    toll_status: str = "not_calculated",
+) -> dict:
+    """Detailed and readable push with real vehicle/route/travel data."""
     url = official_url(ride.booking_url, ride.source_country)
     norwegian = language.lower().startswith(("nb", "nn", "no"))
+    available = _local_datetime(ride.available_at)
+    latest_return = _local_datetime(ride.latest_return_at)
+    expiry = _local_datetime(ride.offer_expires_at)
     if norwegian:
-        when = f" · Tilgjengelig fra {ride.available_start}" if ride.available_start else ""
-        title = f"Freerider HA · Ny bil ({name})"
-        body = (
-            f"{ride.origin} → {ride.destination}\\n"
-            f"{ride.vehicle}{when}\\n"
-            f"Tilbuds-ID: {ride.key}\\n"
-            "Trykk for å åpne Freerider og velge bilen. "
-            "Bom og drivstoff/lading kan forekomme."
-        )
+        title = "🚗 Ny Freerider-bil!"
+        lines = [
+            f"📍 {ride.origin} → {ride.destination}",
+            f"🚙 {ride.vehicle}",
+            f"🛣️ {_drive_summary(ride, language)}",
+        ]
+        if available:
+            lines.append(f"📅 Tilgjengelig fra {available}")
+        if expiry:
+            lines.append(f"⏳ Tilbudet utløper {expiry}")
+        if latest_return:
+            lines.append(f"🏁 Siste retur {latest_return}")
+        lines.extend([
+            f"💳 {_toll_summary(toll_estimate, toll_status, language)}",
+            "⛽ Drivstoff/lading kan forekomme",
+            f"Tilbud {ride.key} · Trykk for å åpne Freerider",
+        ])
     else:
-        when = f" · Available from {ride.available_start}" if ride.available_start else ""
-        title = f"Freerider HA · New car ({name})"
-        body = (
-            f"{ride.origin} → {ride.destination}\\n"
-            f"{ride.vehicle}{when}\\n"
-            f"Offer ID: {ride.key}\\n"
-            "Tap to open Freerider and select the car. "
-            "Tolls and fuel/charging costs may apply."
-        )
-    return {"title": title, "message": body, "url": url}
+        title = "🚗 New Freerider car!"
+        lines = [
+            f"📍 {ride.origin} → {ride.destination}",
+            f"🚙 {ride.vehicle}",
+            f"🛣️ {_drive_summary(ride, language)}",
+        ]
+        if available:
+            lines.append(f"📅 Available from {available}")
+        if expiry:
+            lines.append(f"⏳ Offer expires {expiry}")
+        if latest_return:
+            lines.append(f"🏁 Return by {latest_return}")
+        lines.extend([
+            f"💳 {_toll_summary(toll_estimate, toll_status, language)}",
+            "⛽ Fuel/charging costs may apply",
+            f"Offer {ride.key} · Tap to open Freerider",
+        ])
+    return {
+        "title": title,
+        "message": "\n".join(lines),
+        "url": url,
+        "route": f"{ride.origin} → {ride.destination}",
+    }
 
 
 def test_notification_content(name: str, language: str = "nb") -> dict:
