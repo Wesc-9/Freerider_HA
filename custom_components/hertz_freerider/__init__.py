@@ -7,8 +7,10 @@ import logging
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import DOMAIN, SERVICE_REFRESH
+from .tolls import TollLookupError
 from .coordinator import FreeriderCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,6 +33,28 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     hass.services.async_register(
         DOMAIN, SERVICE_REFRESH, refresh,
         schema=vol.Schema({vol.Optional("entry_id"): str}),
+    )
+    async def estimate_toll(call: ServiceCall) -> None:
+        """Manual toll estimate for the exact route in a saved watch."""
+        entry_id = call.data["entry_id"]
+        ride_id = call.data["ride_id"]
+        coordinator = hass.data.get(DOMAIN, {}).get(entry_id)
+        if coordinator is None:
+            raise HomeAssistantError("Freerider watch entry not found")
+        try:
+            await coordinator.async_calculate_toll(
+                ride_id, call.data.get("start_time")
+            )
+        except TollLookupError as exc:
+            raise HomeAssistantError(str(exc)) from exc
+
+    hass.services.async_register(
+        DOMAIN, "estimate_toll", estimate_toll,
+        schema=vol.Schema({
+            vol.Required("entry_id"): str,
+            vol.Required("ride_id"): str,
+            vol.Optional("start_time"): str,
+        }),
     )
     return True
 

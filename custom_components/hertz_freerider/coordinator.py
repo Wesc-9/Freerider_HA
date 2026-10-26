@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import timedelta
+from time import monotonic
 import logging
 
 from homeassistant.helpers.storage import Store
@@ -15,6 +16,7 @@ from .const import (
 )
 from .filters import Ride, filter_rides
 from .source import async_fetch_country
+from .tolls import async_estimate_toll, TollLookupError
 
 _LOGGER = logging.getLogger(__name__)
 MAX_REMEMBERED = 1500
@@ -29,6 +31,9 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         self.seen_store = Store(hass, 1, f"{DOMAIN}_seen_{entry.entry_id}")
         self.seen_ids: list[str] | None = None
         self.last_source_errors: dict[str, str] = {}
+        self.toll_estimates: dict[str, dict] = {}
+        self._toll_cache: dict[tuple[str, str], tuple[float, dict]] = {}
+        self.last_toll_estimate: dict | None = None
         automatic = self.settings.get(CONF_SCAN_MODE, "automatic") == "automatic"
         interval = max(15, min(120, int(self.settings.get(
             CONF_SCAN_INTERVAL, DEFAULT_POLL_MINUTES
@@ -94,3 +99,28 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         if merged != self.seen_ids:
             self.seen_ids = merged
             await self.seen_store.async_save({"ids": merged})
+
+    async def async_calculate_toll(
+        self, ride_id: str, start_time: str | None = None
+    ) -> dict:
+        """Run a manually requested toll lookup for an exact matching ride."""
+        match = next((ride for ride in (self.data or []) if ride.key == ride_id), None)
+        if match is None:
+            raise TollLookupError("Ride ID is not in the current matching results")
+        key = (ride_id, start_time or "")
+        stored = self._toll_cache.get(key)
+        if stored and monotonic() - stored[0] < 3600:
+            estimate = dict(stored[1])
+        else:
+            estimate = await async_estimate_toll(self.hass, match, start_time)
+            self._toll_cache[key] = (monotonic(), dict(estimate))
+            # Limit in-memory cache size (quotas belong to external provider).
+            if len(self._toll_cache) > 100:
+                self._toll_cache.pop(next(iter(self._toll_cache)))
+
+        self.toll_estimates[ride_id] = estimate
+        self.last_toll_estimate = estimate
+        # Notify Home Assistant sensors; do not emit a new-car event for a toll
+        # calculation, which would otherwise trigger spurious push notifications.
+        self.async_set_updated_data(list(self.data or []))
+        return estimate

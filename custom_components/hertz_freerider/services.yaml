@@ -8,3 +8,30 @@ refresh:
       example: 123456abcdef
       selector:
         text:
+
+estimate_toll:
+  name: Estimate Freerider road toll
+  description: >
+    Manually calculate approximate no-discount Norwegian tolls for a
+    matching NO-to-NO ride. May consume one request from the toll service quota.
+    Ferries, fuel, charging and provider invoicing adjustments are excluded.
+  fields:
+    entry_id:
+      name: Freerider profile entry ID
+      required: true
+      selector:
+        text:
+    ride_id:
+      name: Matching ride ID
+      description: ID displayed in the matching-rides sensor, e.g. NO:67718.
+      required: true
+      example: "NO:67718"
+      selector:
+        text:
+    start_time:
+      name: Planned departure (optional)
+      description: ISO 8601 date and time; if empty the provider uses the current Norwegian time.
+      required: false
+      example: "2026-10-27T08:30:00+01:00"
+      selector:
+        text:
