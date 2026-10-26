@@ -1,18 +1,28 @@
-# Freerider HA 0.6.2
+# Freerider HA 0.7.0 — richer car alerts and automatic Norwegian toll estimates
 
-## Notifications now part of search registration
+## Your mobile alert now includes
+- **From → to**: actual Freerider departure and arrival stations.
+- **Vehicle**: the original car model/name, not a generic vehicle class.
+- **Distance and journey time**: published Freerider kilometres and estimated driving minutes.
+- **Dates and deadlines**: available-from time, offer expiry and latest allowed return if provided.
+- **Norway road tolls**: best-effort estimated NOK using no-AutoPASS-discount passenger-car tariffs.
+- **Fuel/charging notice**, plus the offer ID and an official provider-site link that opens when the push is tapped.
 
-After choosing name and countries, the **From / To / Dates** screen also offers:
+## Toll calculation — safe and transparent
+- Uses BompengeAppen's public route calculator from real Freerider station coordinates for eligible domestic NO→NO passenger-car routes.
+- Quota-aware: maximum **10 new automatic lookups per day for the entire Home Assistant installation** and **2 fresh lookups per feed scan**, reusing a 20-hour persistent cache for repeated station pairs.
+- Calculation can take time and may fail or be limited. **New car alerts are delivered anyway** with an explicit unavailable/unsupported toll status, never a fabricated 0 kr.
+- Car fuel category/weight, toll scheme, time of day, ferries and the road route can change final charges.
+- Swedish/cross-border trips and uncertain heavy-vehicle classes don't receive a misleading Norwegian car toll quote.
+- Toggle automatic toll estimates on/off under Configure → Refresh interval and events.
 
-- **Notify me about new cars** — on/off switch (off by default).
-- **Send notifications to** — select your registered Home Assistant Companion app phone, Home Assistant in-app notifications, or Off.
+## Test notification
+If the watch has a real matching car, pressing **Test notification** previews the complete expanded alert for that car, clearly labeled as a **test**, without spending toll-API calls. Otherwise it sends a simple connectivity test.
 
-To receive new-car push alerts, choose your mobile device **and enable the toggle** before creating the saved search. The setup will warn if alerts are on but no recipient is chosen. There is no need for a separate notification configuration step.
+## Important
+This is **Freerider HA**, an unofficial community integration, not affiliated with Hertz. The notification opens the official Freerider website for that country, **not an unverified direct checkout/deep link for a specific car**. Confirm actual car availability and booking conditions before traveling.
 
-For **existing searches**, open Freerider HA → Configure → **Places, dates and notifications**. Update the same settings there; previous route filters and entities are preserved. A corresponding New car alerts entity switch remains available on the search device for turning notifications on and off later.
+The setup supports Norway and Sweden; Denmark data source remains pending. End-to-end delivery on a real user's phone should still be validated.
 
-The Test notification button can confirm delivery. New matching cars generate messages containing route, vehicle, date, offer ID and a link to the correct Freerider country's booking site. Due to the provider's session-based booking UI, the link is **not** yet a verified individual-car checkout link.
-
-This is an unofficial community project, not affiliated with Hertz. Norway and Sweden data feeds supported; Denmark pending. Fuel/charging and toll costs may apply.
-
-Install 0.6.2 from HACS and restart Home Assistant.
+## Updating
+Install **0.7.0** in HACS, restart Home Assistant, then use the Test notification button on your search device.

@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.7.0 (2026-10-26) — detailed journey alerts
+- Parse real Freerider distance (km) and drive time (minutes), include along with vehicle model, route and date deadlines in push messages.
+- Use real station coordinates for optional Norwegian toll estimates on new matching car alerts.
+- Shared per-installation daily limit (10) and per-scan fresh-lookup cap (2); persisted 20-hour quote cache.
+- Fail-open notification: never suppress new car alerts when toll API is unavailable or rate-limited.
+- Accurate no-AutoPASS-discount quote or explicit unsupported/unavailable label; never show invented zero.
+- Separate estimates from Freerider drive distance/time; no claim of live driving ETA.
+- Test notification previews a real car with the rich alert layout, clearly marked test.
+- Norwegian and English messages, controls and regression tests.
+
+
 ## 0.6.2 (2026-10-26) — select phone and notifications during registration
 - Added **Notify me about new cars** toggle and **Send notifications to** mobile dropdown directly to the new search's From/To/Date screen.
 - Warns before submission when notifications are enabled without a receiving device.
