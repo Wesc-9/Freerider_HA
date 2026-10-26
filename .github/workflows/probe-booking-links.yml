@@ -3,39 +3,43 @@ on:
   push:
     paths:
       - '.github/workflows/probe-booking-links.yml'
-  workflow_dispatch:
 permissions:
   contents: read
 jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
-      - name: Inspect public landing and route navigation JavaScript
+      - name: Inspect actual Freerider Gatsby route and booking flow
         run: |
           python - <<'PY'
-          import requests,re,html
+          import requests,re
           from urllib.parse import urljoin
           base='https://hertzfreerider.no'
-          page=requests.get(base+'/no-no/',timeout=25)
-          print('PAGE',page.status_code,len(page.content),page.url,flush=True)
-          body=page.text
-          scripts=re.findall(r'<script[^>]+src=["\\\']([^"\\\']+)',body)
-          print('SCRIPT_COUNT',len(scripts),flush=True)
-          print('SCRIPT_SAMPLES',scripts[:25],flush=True)
-          extra=re.findall(r'component---[\\w-]+\\.js',body)
-          print('COMPONENTS',extra[:20],flush=True)
-          urls=list(dict.fromkeys([urljoin(base,x) for x in scripts]+[urljoin(base,'/'+x) for x in extra]))
-          for url in urls[:45]:
-            try:
-              js=requests.get(url,timeout=25).text
-            except Exception:continue
-            if any(word in js for word in ('selectedRoute','transportOfferId','booking_flow','reserveRoute')):
-              print('FOUND',url,'BYTES',len(js),flush=True)
-              for pattern in ('selectedRoute','booking_flow','transportOfferId','handleClick:async','navigator','location.href','window.open','/no-no','/booking','/book','state:{','navigate('):
-                hits=list(re.finditer(re.escape(pattern),js,re.I))[:5]
-                if hits:
-                  print('PATTERN',pattern,'HITS',len(hits),flush=True)
-                  for m in hits[:3]:
-                    print('CONTEXT',js[max(0,m.start()-390):m.end()+600].replace('\\n',' ')[:1150],flush=True)
-              print('URL_CANDIDATES',sorted(set(re.findall(r'["\\\'](/[^"\\\']{2,90})["\\\']',js)))[:90],flush=True)
+          urls=[
+              base+'/component---src-templates-start-tsx-711208a1da0171ccda5f.js',
+              base+'/page-data/no-no/page-data.json',
+              base+'/page-data/index/page-data.json',
+              base+'/page-data/app-data.json',
+              base+'/webpack-runtime-8ff3d6a51ee6d9b098e6.js'
+          ]
+          for url in urls:
+              try:
+                r=requests.get(url,timeout=25)
+                print('RESOURCE',r.status_code,r.url,len(r.content),r.headers.get('content-type'),flush=True)
+                text=r.text
+                if 'javascript' not in r.headers.get('content-type','') and url.endswith('.js') and len(text)<10000:
+                  print('CONTENT',text[:400],flush=True)
+                if 'page-data' in url:
+                  print('CONTENT',text[:1900],flush=True)
+                if 'webpack-runtime' in url:
+                  for term in ('component---src-templates-start','711208a1da0171ccda5f','104:'):
+                    ix=text.find(term)
+                    print('LOOKUP',term,ix,text[max(0,ix-160):ix+260] if ix>=0 else '',flush=True)
+                if r.status_code!=200 or len(text)<30000: continue
+                for term in ('selectedRoute','booking_flow','sessionStorage.setItem','setSelectedRoute','handleClick:async','transportOfferId','/book','/booking','/no-no','/sv-se','navigateTo'):
+                  hits=list(re.finditer(re.escape(term),text,re.I))
+                  print('TERM',term,len(hits),flush=True)
+                  for h in hits[:9]:
+                    print('CONTEXT',text[max(0,h.start()-250):h.end()+350][:690],flush=True)
+              except Exception as e:print('ERROR',str(e),flush=True)
           PY
