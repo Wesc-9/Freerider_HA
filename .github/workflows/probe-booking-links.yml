@@ -9,37 +9,26 @@ jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
-      - name: Inspect actual Freerider Gatsby route and booking flow
+      - name: Inspect URL and persisted selected offer in Gatsby
         run: |
           python - <<'PY'
           import requests,re
-          from urllib.parse import urljoin
           base='https://hertzfreerider.no'
           urls=[
-              base+'/component---src-templates-start-tsx-711208a1da0171ccda5f.js',
-              base+'/page-data/no-no/page-data.json',
-              base+'/page-data/index/page-data.json',
-              base+'/page-data/app-data.json',
-              base+'/webpack-runtime-8ff3d6a51ee6d9b098e6.js'
+            base+'/component---src-templates-start-tsx-711208a1da0171ccda5f.js',
+            base+'/component---src-templates-booking-flow-tsx-5ca4adf91cca8b5747e4.js',
+            base+'/app-39437c55b75f4d1a2470.js'
           ]
           for url in urls:
-              try:
-                r=requests.get(url,timeout=25)
-                print('RESOURCE',r.status_code,r.url,len(r.content),r.headers.get('content-type'),flush=True)
-                text=r.text
-                if 'javascript' not in r.headers.get('content-type','') and url.endswith('.js') and len(text)<10000:
-                  print('CONTENT',text[:400],flush=True)
-                if 'page-data' in url:
-                  print('CONTENT',text[:1900],flush=True)
-                if 'webpack-runtime' in url:
-                  for term in ('component---src-templates-start','711208a1da0171ccda5f','104:'):
-                    ix=text.find(term)
-                    print('LOOKUP',term,ix,text[max(0,ix-160):ix+260] if ix>=0 else '',flush=True)
-                if r.status_code!=200 or len(text)<30000: continue
-                for term in ('selectedRoute','booking_flow','sessionStorage.setItem','setSelectedRoute','handleClick:async','transportOfferId','/book','/booking','/no-no','/sv-se','navigateTo'):
-                  hits=list(re.finditer(re.escape(term),text,re.I))
-                  print('TERM',term,len(hits),flush=True)
-                  for h in hits[:9]:
-                    print('CONTEXT',text[max(0,h.start()-250):h.end()+350][:690],flush=True)
-              except Exception as e:print('ERROR',str(e),flush=True)
+            response=requests.get(url,timeout=25)
+            js=response.text
+            print('RESOURCE',response.status_code,url,len(js),flush=True)
+            if response.status_code!=200: continue
+            pats=['selectedRoute','sessionStorage.getItem','sessionStorage.setItem','window.location.search','URLSearchParams','location.search','booking_flow','booking-flow','transportOfferId','routeId','selectedCarDrawer','setSelectedRoute','navigate(','queryParams','queryString']
+            for pat in pats:
+              hits=list(re.finditer(re.escape(pat),js,re.I))
+              if hits:print('PATTERN',pat,'COUNT',len(hits),flush=True)
+              for m in hits[:7]:
+                before=js[max(0,m.start()-280):m.end()+430]
+                print('EXCERPT',pat,before[:740],flush=True)
           PY
