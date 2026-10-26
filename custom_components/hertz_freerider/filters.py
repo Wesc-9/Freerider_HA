@@ -46,14 +46,22 @@ class Ride:
         return f"{self.source_country}:{self.source_id}"
 
     def as_event(self) -> dict:
-        """JSON-safe details for Home Assistant events and attributes."""
+        """JSON-safe listing details with a car-specific booking link."""
+        if __package__:
+            from .booking_links import official_car_booking_url
+        else:
+            from booking_links import official_car_booking_url
+
+        booking_url, deep_link = official_car_booking_url(self)
         return {
             "id": self.key,
             "country": self.source_country,
             "origin": self.origin,
             "destination": self.destination,
             "vehicle": self.vehicle,
-            "booking_url": self.booking_url,
+            "booking_url": booking_url,
+            "official_site_url": self.booking_url,
+            "direct_booking_link": deep_link,
             "date_start": self.available_start,
             "date_end": self.available_end,
             "transmission": self.transmission,
