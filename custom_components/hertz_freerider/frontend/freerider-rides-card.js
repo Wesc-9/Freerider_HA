@@ -148,19 +148,42 @@
           }
           toll.append(this._text("div","value",price));
           card.append(toll);
+          const costs = ride.estimated_trip_costs || {};
+          const fmtNok = (x) => typeof x === "number" && Number.isFinite(x)
+            ? new Intl.NumberFormat(nb ? "nb-NO" : "en-US", {maximumFractionDigits:0}).format(x)+" kr"
+            : "—";
+          if (typeof costs.energy_nok === "number") {
+            const energy = this._text("div","toll","");
+            energy.append(this._text("span","label",tr("Beregnet drivstoff/lading","Estimated fuel/charging")));
+            energy.append(this._text("div","value",fmtNok(costs.energy_nok)));
+            card.append(energy);
+          }
+          if (typeof costs.known_subtotal_nok === "number") {
+            const partial = this._text("div","toll","");
+            partial.append(this._text("span","label",tr("Kjente kostnader – delanslag","Known costs – partial estimate")));
+            partial.append(this._text("div","value",fmtNok(costs.known_subtotal_nok)));
+            card.append(partial);
+          }
           card.append(this._text("div","notice",tr(
             "Bom kan variere etter bilens tillatte totalvekt, kjørerute og tidspunkt. Drivstoff/lading og ferge kan komme i tillegg.",
             "Tolls vary by vehicle weight, route and timing. Fuel/charging and ferries may cost extra."
           )));
-          const a = this._text("a","book",tr("Se bilen på Freerider","View on Freerider"));
+          const direct = ride.direct_booking_link === true;
+          const a = this._text("a","book",direct
+            ? tr("Åpne bestilling for denne bilen","Open booking for this car")
+            : tr("Se bilen på Freerider","View on Freerider"));
           a.href = this._safeUrl(ride);
           a.target = "_blank";
           a.rel = "noopener noreferrer";
-          a.setAttribute("aria-label",tr("Åpne riktig Freerider-nettside","Open official Freerider website"));
+          a.setAttribute("aria-label",tr("Åpne hos Freerider","Open at Freerider"));
           card.append(a);
           card.append(this._text("div","notice",tr(
-            "Åpner leverandørens oversikt. Dette er ikke direktebestilling av bilen.",
-            "Opens the provider's listing, not direct checkout for this offer."
+            direct
+              ? "Åpner leverandørens bestillingsflyt med bil-ID og foreslått hentetid. Tilgjengelighet må bekreftes hos Freerider."
+              : "Bestillingslenke ikke bekreftet for dette tilbudet. Åpner Freerider for manuelt søk.",
+            direct
+              ? "Opens the provider's booking flow with car ID and suggested pickup time. Availability requires confirmation."
+              : "An exact offer link is unavailable. Opens Freerider for manual selection."
           )));
           content.append(card);
         }
