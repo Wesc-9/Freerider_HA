@@ -16,6 +16,7 @@ from .const import (
 )
 from .filters import Ride, filter_rides
 from .source import async_fetch_country
+from .station_catalog import async_get_station_catalog
 from .tolls import async_estimate_toll, TollLookupError
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,6 +75,14 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
             raise UpdateFailed("; ".join(
                 f"{c}: {err}" for c, err in self.last_source_errors.items()
             ) or "No active Freerider source")
+
+        # Learn stations from ALL successfully fetched routes, not only those
+        # matching this particular saved search. The catalog survives restarts
+        # and is shared between every Freerider profile in this HA instance.
+        catalog = await async_get_station_catalog(self.hass)
+        for country, result in zip(countries, results):
+            if isinstance(result, list):
+                await catalog.async_learn(country, result)
 
         # One offer can be exposed by several provider views: de-duplicate IDs.
         unique = {ride.key: ride for ride in valid}
