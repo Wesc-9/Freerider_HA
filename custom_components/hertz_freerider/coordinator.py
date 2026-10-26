@@ -196,6 +196,9 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
                 )
 
         target=self.settings.get(CONF_NOTIFY_TARGET,TARGET_OFF)
+        wall_time=datetime.now(ZoneInfo("Europe/Oslo")).replace(tzinfo=None)
+        quiet=quiet_now(self.settings.get(CONF_QUIET_START),
+                        self.settings.get(CONF_QUIET_END),wall_time)
         enabled=target != TARGET_OFF and self.settings.get(CONF_NOTIFY_ENABLED,True)
         queued={ride.key:kind for ride,kind in alerts if
                 kind!="updated" or self.settings.get(CONF_ALERT_UPDATES,True)}
@@ -213,6 +216,16 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
                     # Never notify from a stale cached feed after source outage.
                     still_pending.append(ride.key)
                     continue
+                if quiet and not (
+                    self.settings.get(CONF_QUIET_URGENT,False)
+                    and is_urgent(ride,wall_time)
+                ):
+                    still_pending.append(ride.key)
+                    continue
+                if self.settings.get(CONF_ONLY_FEASIBLE,False):
+                    feasibility=journey_feasibility(ride,wall_time)
+                    if feasibility["status"] in ("insufficient","expired"):
+                        continue
                 if attempts>=8:
                     still_pending.append(ride.key)
                     continue
@@ -238,6 +251,13 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
                             toll_status="provider_error"
                             _LOGGER.exception("Freerider toll enrichment failed for %s",ride.key)
                 cost=cost_breakdown(ride,quote,self.settings)
+                maximum=float(self.settings.get(CONF_MAX_TOLL,0) or 0)
+                if maximum > 0:
+                    if quote is None or quote.get("amount_nok") is None:
+                        still_pending.append(ride.key)
+                        continue
+                    if float(quote["amount_nok"]) > maximum:
+                        continue
                 try:
                     delivered=await async_send_notification(
                         self.hass,target,notification_content(
