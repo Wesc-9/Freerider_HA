@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.1 (2026-10-26) — easy notification controls
+- Added a dedicated **New car alerts** switch for each saved watch in Home Assistant.
+- Added the **Test notification** button to verify your selected phone.
+- Groups every watch's sensor(s), refresh, toll and notification controls under one Home Assistant device instead of "Ungrouped".
+- Phone selection enables alerts automatically. Toggle can later disable them without clearing the chosen phone.
+- Preserves failed mobile alerts in local storage and retries if the offer is still available.
+- Limits dispatch attempts to eight per refresh to prevent large notification bursts.
+- Adds tests for mobile push URLs and destination selection.
+
+
 ## 0.6.0 (2026-10-26) — mobile notifications and booking website links
 - Choose a specific Home Assistant mobile-app notification service in the integration's existing settings UI.
 - Get push alerts with route, vehicle, date and official country booking-site link when a new matching car appears.

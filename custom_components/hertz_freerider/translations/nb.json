@@ -96,7 +96,7 @@
       },
       "updates": {
         "title": "Søk og varslinger",
-        "description": "Velg mobil direkte i listen nedenfor for pushvarsler når nye biler matcher søket. Mobilen må være registrert i Home Assistant-appen. Ingen egen automasjon er nødvendig. Første oppdatering etablerer en startliste og sender ikke gamle treff.",
+        "description": "Velg mobil for pushvarsler. Mobilen må være registrert i Home Assistant-appen. Når du velger en mottaker, slås varslingsbryteren på automatisk. Bryteren kan deretter slås av/på under enheten Freerider HA. Bruk Testvarsel-knappen for å kontrollere.",
         "data": {
           "scan_mode": "Oppdateringsmåte",
           "scan_interval": "Minutter mellom automatiske søk",

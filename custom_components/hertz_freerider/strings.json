@@ -96,7 +96,7 @@
       },
       "updates": {
         "title": "Checks and notifications",
-        "description": "Choose your mobile app directly below to get push notifications for new matching cars. Your phone must be registered with the Home Assistant companion app. No separate automation is needed. The initial refresh establishes a baseline without alerting on all existing cars.",
+        "description": "Choose a mobile app recipient for push. Selecting a recipient enables the New car alerts switch automatically. You can disable/enable alerts using the switch under your Freerider HA search device. Press the Test notification button to verify.",
         "data": {
           "scan_mode": "Search mode",
           "scan_interval": "Minutes between automatic checks",

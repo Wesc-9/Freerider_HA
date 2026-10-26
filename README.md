@@ -13,7 +13,7 @@ Use **Settings → Devices & services → Freerider HA → Configure → Automat
 
 Notifications are sent only when **new matching cars** appear after the first successful scan. The message contains departure, destination, vehicle, available-from date, and the offer ID. Tapping a mobile push opens the **official Freerider website for that country**, where you can select the matching offer and complete booking. The public route API currently does **not** expose a proven, direct per-car booking URL; do not misrepresent the link as a direct reservation of that specific car.
 
-Use the new **Test notification** button in the Freerider entity list to send a clearly labeled sample and verify that the selected phone works. Errors or disconnected phones do not stop route updates; failed alerts can retry on later successful scans while the car is still matching. Up to eight phone alerts per scan are attempted to avoid a notification storm; remaining alerts are queued for a later successful refresh.
+Use the **Test notification** button on your Freerider search device (all controls now appear under one device instead of Ungrouped) to send a clearly labeled sample and verify that the selected phone works. The **New car alerts** switch on the same device lets you pause/resume direct notifications without losing the chosen phone. Choosing a phone turns alerts on automatically. Errors or disconnected phones do not stop route updates; failed alerts can retry on later successful scans while the car is still matching. Up to eight phone alerts per scan are attempted to avoid a notification storm; remaining alerts are queued for a later successful refresh.
 
 This integration is unofficial and not associated with Hertz. Tolls and fuel/charging costs may apply.
 
