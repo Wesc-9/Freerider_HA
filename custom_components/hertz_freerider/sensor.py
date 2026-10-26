@@ -13,6 +13,7 @@ from .const import DOMAIN
 from .offer_view import device_offers, offer_entity_name, offer_entity_state
 from .trip_costs import cost_breakdown
 from datetime import datetime, timedelta
+from time import monotonic
 from zoneinfo import ZoneInfo
 from .trip_planner import journey_feasibility, km_airline
 
@@ -267,7 +268,18 @@ class FreeriderSearchStatus(CoordinatorEntity,SensorEntity):
                 next_estimate=(datetime.fromisoformat(c.last_success_utc)+interval).isoformat()
             except (TypeError,ValueError):
                 pass
+        shared_feeds=c.hass.data.get(f"{DOMAIN}_shared_country_feeds",{})
+        feed_status={
+            country:{
+                "cached_routes":len(feed.items or []),
+                "requests_since_restart":feed.requests,
+                "last_actual_http_request_utc":feed.last_attempt_utc,
+                "retry_in_seconds":max(0,round(feed.blocked_until-monotonic())),
+            }
+            for country,feed in shared_feeds.items()
+        }
         return {
+            "shared_feed_status":feed_status,
             "last_attempt_utc":c.last_attempt_utc,
             "last_successful_check_utc":c.last_success_utc,
             "estimated_next_check_utc":next_estimate,
