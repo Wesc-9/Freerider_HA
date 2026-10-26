@@ -117,7 +117,11 @@ class FreeriderLiveOffer(CoordinatorEntity, SensorEntity):
             "bom_estimat_nok": toll.get("amount_nok") if toll else None,
             "beregnet_reisekostnad":cost_breakdown(offer,toll,self.coordinator.settings),
             "sist_bekreftet_i_rutelisten":self.coordinator.last_success_utc,
-            "lenkestatus":"Tilbud observert sist søk; bestilling må bekreftes hos Freerider",
+            "lenkestatus":(
+                "Datakilden er utilgjengelig; kontroller bilen på Freerider"
+                if offer.source_country in self.coordinator.last_source_errors
+                else "Tilbud observert i siste kildesøk; bestilling må bekreftes hos Freerider"
+            ),
             "bom_merknad": (
                 "Takstgruppe ukjent for større kjøretøy"
                 if offer.vehicle_type in ("van", "minibus")
@@ -157,6 +161,10 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
                 {
                     **ride.as_event(),
                     "toll_estimate": self.coordinator.toll_estimates.get(ride.key),
+                    "listing_source_status":(
+                        "stale" if ride.source_country in self.coordinator.last_source_errors
+                        else "latest_successful_scan"
+                    ),
                     "estimated_trip_costs":cost_breakdown(
                         ride,self.coordinator.toll_estimates.get(ride.key),
                         self.coordinator.settings,
