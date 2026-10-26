@@ -102,7 +102,7 @@
       const content = this._text("div","wrap","");
       const head = this._text("div","head","");
       const titles = document.createElement("div");
-      titles.append(this._text("div","title",tr("Tilgjengelige biler","Available cars")));
+      titles.append(this._text("div","title",tr("Tilgjengelige biltilbud","Available car offers")));
       const name = state?.attributes?.search_name || (state?.attributes?.friendly_name || this._config.entity);
       titles.append(this._text("div","sub",name));
       head.append(titles);

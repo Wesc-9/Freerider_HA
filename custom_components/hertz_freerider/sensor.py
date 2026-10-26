@@ -58,12 +58,12 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
             "notification_enabled": self.coordinator.settings.get("notify_enabled", True),
             "pending_notifications": len(self.coordinator.pending_notification_ids),
             "extra_costs": "Tolls may be payable. Fuel/charging may incur additional costs.",
-            "tolls": "Norway: automatic estimates for eligible new cars (quota-limited); manual lookup via button.",
+            "tolls": "Norway: automatic estimates for eligible new cars (quota-limited); manual lookup via button. Van/minibus needs verified weight class.",
         }
 
 
 class FreeriderLastTollEstimate(CoordinatorEntity, SensorEntity):
-    """Latest manually calculated toll quote; unavailable is not zero."""
+    """Latest manual or automatic Norwegian quote; unavailable is not zero."""
 
     _attr_icon = "mdi:cash"
     _attr_native_unit_of_measurement = "NOK"
@@ -76,7 +76,7 @@ class FreeriderLastTollEstimate(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        """Return the last amount, if a user explicitly requested one."""
+        """Last successfully computed toll amount, manual or automatic."""
         quote = self.coordinator.last_toll_estimate
         return quote.get("amount_nok") if quote else None
 
@@ -85,6 +85,6 @@ class FreeriderLastTollEstimate(CoordinatorEntity, SensorEntity):
         """Make charging assumptions and station details visible in HA."""
         return self.coordinator.last_toll_estimate or {
             "status": "not_calculated",
-            "info": "Use the toll estimate button or hertz_freerider.estimate_toll service.",
+            "info": "Computed for eligible Norwegian passenger-car routes on new alerts; manual estimate button also available. Unknown is not free.",
             "fuel_charging_note": "Fuel/charging costs may apply.",
         }

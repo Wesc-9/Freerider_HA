@@ -153,6 +153,7 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
                             toll_quote, toll_status = await quote_catalog.async_quote(ride)
                             if toll_quote is not None:
                                 self.toll_estimates[ride.key] = toll_quote
+                                self.last_toll_estimate = toll_quote
                         except Exception:
                             # Even if the toll API fails, never lose the car alert.
                             _LOGGER.exception("Freerider toll enrichment failed for %s", ride.key)
