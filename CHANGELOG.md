@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.6.0 (2026-10-26) — mobile notifications and booking website links
+- Choose a specific Home Assistant mobile-app notification service in the integration's existing settings UI.
+- Get push alerts with route, vehicle, date and official country booking-site link when a new matching car appears.
+- Added a test-notification button to make setup easy to verify.
+- Default direct notifications to Off until a recipient is selected; legacy event automations remain supported.
+- Initial first scan establishes a baseline. Missed push attempts can be retried if the offer stays available.
+- Up to eight alerts sent per scan to avoid flooding phones; additional new matching offers are queued.
+- No invented per-car deep links: current official site uses browser session state for booking selection.
+
+
 ## 0.5.1 (2026-10-26) — remembered stations
 - A shared, local station catalog automatically records every distinct station discovered while checking the Norwegian and Swedish Freerider feeds.
 - Remembered stations survive Home Assistant restarts and remain selectable after offers disappear.

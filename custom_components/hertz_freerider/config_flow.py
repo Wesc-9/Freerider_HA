@@ -17,11 +17,12 @@ from homeassistant.helpers import selector
 from .const import (
     CONF_COUNTRIES, CONF_DATE_END, CONF_DATE_MODE, CONF_DATE_START,
     CONF_DESTINATION, CONF_DIRECTION, CONF_EVENTS, CONF_FUEL, CONF_MIN_SEATS,
-    CONF_ORIGIN, CONF_SCAN_INTERVAL, CONF_SCAN_MODE, CONF_TRANSMISSION,
+    CONF_ORIGIN, CONF_SCAN_INTERVAL, CONF_SCAN_MODE, CONF_NOTIFY_TARGET, CONF_TRANSMISSION,
     CONF_VEHICLE_TYPE, CONF_WATCH_NAME, COUNTRIES, DEFAULT_POLL_MINUTES, DOMAIN,
 )
 from .filters import station_candidates, place_values
 from .source import async_fetch_country
+from .notifications import notification_targets, TARGET_OFF
 from .station_catalog import async_get_station_catalog
 
 
@@ -143,7 +144,7 @@ def vehicle_schema(values: dict | None = None) -> vol.Schema:
     })
 
 
-def updates_schema(values: dict | None = None) -> vol.Schema:
+def updates_schema(values: dict | None = None, targets: list[tuple[str, str]] | None = None) -> vol.Schema:
     values = values or {}
     return vol.Schema({
         vol.Required(CONF_SCAN_MODE, default=values.get(CONF_SCAN_MODE, "automatic")):
@@ -156,6 +157,14 @@ def updates_schema(values: dict | None = None) -> vol.Schema:
             )),
         vol.Required(CONF_EVENTS, default=values.get(CONF_EVENTS, True)):
             selector.BooleanSelector(),
+        vol.Required(CONF_NOTIFY_TARGET, default=values.get(CONF_NOTIFY_TARGET, TARGET_OFF)):
+            selector.SelectSelector(selector.SelectSelectorConfig(
+                options=[
+                    selector.SelectOptionDict(value=value, label=label)
+                    for value, label in (targets if targets is not None else [(TARGET_OFF, "Off")])
+                ],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+            )),
     })
 
 
@@ -422,6 +431,10 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
             return self.async_create_entry(title="", data={
                 **self.config_entry.options, **user_input,
             })
+        values = self._settings()
+        targets = notification_targets(
+            self.hass, values.get(CONF_NOTIFY_TARGET),
+        )
         return self.async_show_form(
-            step_id="updates", data_schema=updates_schema(self._settings()),
+            step_id="updates", data_schema=updates_schema(values, targets),
         )

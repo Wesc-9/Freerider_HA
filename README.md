@@ -7,6 +7,16 @@
 
 Independent community project; not affiliated with or endorsed by Hertz.
 
+## Direct notifications with booking-site link
+
+Use **Settings → Devices & services → Freerider HA → Configure → Automatic checks and notifications** to pick an actual Home Assistant Companion app phone. Available phone-specific `notify.mobile_app_*` services are discovered automatically and shown by name; alternatively choose **Home Assistant notifications** for messages in the HA UI. `Off` disables direct notification, while the existing new-ride event/automation blueprint still works. Automatic checks can be enabled or disabled independently.
+
+Notifications are sent only when **new matching cars** appear after the first successful scan. The message contains departure, destination, vehicle, available-from date, and the offer ID. Tapping a mobile push opens the **official Freerider website for that country**, where you can select the matching offer and complete booking. The public route API currently does **not** expose a proven, direct per-car booking URL; do not misrepresent the link as a direct reservation of that specific car.
+
+Use the new **Test notification** button in the Freerider entity list to send a clearly labeled sample and verify that the selected phone works. Errors or disconnected phones do not stop route updates; failed alerts can retry on later successful scans while the car is still matching. Up to eight phone alerts per scan are attempted to avoid a notification storm; remaining alerts are queued for a later successful refresh.
+
+This integration is unofficial and not associated with Hertz. Tolls and fuel/charging costs may apply.
+
 ## Automatically learned stations
 
 The origin/destination dropdown combines live stations with a **local Home Assistant-wide history** of stations seen on earlier scans. The same existing 15–120 minute route scans automatically add new stations, regardless of whether they match a saved search. Previously discovered stations remain selectable when listings expire and after Home Assistant restarts. Station history is stored **locally** by Home Assistant; it is not uploaded to a community-wide database or bundled with the GitHub repository. Other installations learn their own stations independently.

@@ -22,6 +22,7 @@ CONF_MIN_SEATS = "min_seats"
 CONF_SCAN_MODE = "scan_mode"
 CONF_SCAN_INTERVAL = "scan_interval"
 CONF_EVENTS = "notify_events"
+CONF_NOTIFY_TARGET = "notify_target"
 EVENT_NEW_RIDE = "hertz_freerider_new_ride"
 SERVICE_REFRESH = "refresh"
 DEFAULT_POLL_MINUTES = 30

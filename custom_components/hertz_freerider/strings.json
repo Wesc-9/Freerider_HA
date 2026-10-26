@@ -96,11 +96,12 @@
       },
       "updates": {
         "title": "Checks and notifications",
-        "description": "Automatic checks use a configurable interval. New results trigger a Home Assistant event; phone push requires a mobile notification automation.",
+        "description": "Choose your mobile app directly below to get push notifications for new matching cars. Your phone must be registered with the Home Assistant companion app. No separate automation is needed. The initial refresh establishes a baseline without alerting on all existing cars.",
         "data": {
           "scan_mode": "Search mode",
           "scan_interval": "Minutes between automatic checks",
-          "notify_events": "Send event for new matching vehicles"
+          "notify_events": "Also emit events for HA automations",
+          "notify_target": "Send notifications to"
         }
       }
     },

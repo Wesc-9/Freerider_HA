@@ -96,11 +96,12 @@
       },
       "updates": {
         "title": "Søk og varslinger",
-        "description": "Automatisk søk bruker valgt tidsintervall. Nye treff utløser en Home Assistant-hendelse. Pushvarsel krever en varslingsautomasjon.",
+        "description": "Velg mobil direkte i listen nedenfor for pushvarsler når nye biler matcher søket. Mobilen må være registrert i Home Assistant-appen. Ingen egen automasjon er nødvendig. Første oppdatering etablerer en startliste og sender ikke gamle treff.",
         "data": {
           "scan_mode": "Oppdateringsmåte",
           "scan_interval": "Minutter mellom automatiske søk",
-          "notify_events": "Hendelse ved nye matchende biler"
+          "notify_events": "Publiser også hendelser til Home Assistant-automasjoner",
+          "notify_target": "Send varsel til"
         }
       }
     },

@@ -12,10 +12,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import (
     CONF_COUNTRIES, CONF_EVENTS, CONF_SCAN_INTERVAL, CONF_SCAN_MODE,
-    DEFAULT_POLL_MINUTES, DOMAIN, EVENT_NEW_RIDE,
+    DEFAULT_POLL_MINUTES, DOMAIN, EVENT_NEW_RIDE, CONF_NOTIFY_TARGET,
 )
 from .filters import Ride, filter_rides
 from .source import async_fetch_country
+from .notifications import (
+    TARGET_OFF, async_send_notification, notification_content, test_notification_content,
+)
 from .station_catalog import async_get_station_catalog
 from .tolls import async_estimate_toll, TollLookupError
 
@@ -31,6 +34,7 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         self.settings = {**entry.data, **entry.options}
         self.seen_store = Store(hass, 1, f"{DOMAIN}_seen_{entry.entry_id}")
         self.seen_ids: list[str] | None = None
+        self.pending_notification_ids: list[str] = []
         self.last_source_errors: dict[str, str] = {}
         self.toll_estimates: dict[str, dict] = {}
         self._toll_cache: dict[tuple[str, str], tuple[float, dict]] = {}
@@ -51,6 +55,7 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         loaded = await self.seen_store.async_load()
         if isinstance(loaded, dict) and isinstance(loaded.get("ids"), list):
             self.seen_ids = [str(key) for key in loaded["ids"]][-MAX_REMEMBERED:]
+            self.pending_notification_ids = [str(key) for key in loaded.get("pending", []) if isinstance(key, str)][-80:]
 
     async def _async_update_data(self) -> list[Ride]:
         countries = self.settings.get(CONF_COUNTRIES, ["NO"])
@@ -91,23 +96,77 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         return matched
 
     async def _remember_and_notify(self, matched: list[Ride]) -> None:
-        new_ids = {ride.key for ride in matched}
+        """Emit events and deliver chosen mobile push for genuinely new rides.
+
+        The very first successful feed scan establishes a baseline, rather
+        than notifying about every already available car. Failed mobile push
+        attempts are remembered and retried on the next successful scan while
+        the matching ride is still available.
+        """
         previous = set(self.seen_ids) if self.seen_ids is not None else None
-        if previous is not None and self.settings.get(CONF_EVENTS, True):
+        new_rides = [ride for ride in matched if previous is not None and ride.key not in previous]
+
+        if self.settings.get(CONF_EVENTS, True):
+            for ride in new_rides:
+                self.hass.bus.async_fire(EVENT_NEW_RIDE, {
+                    "entry_id": self.entry.entry_id,
+                    "watch_name": self.entry.title,
+                    **ride.as_event(),
+                })
+
+        target = self.settings.get(CONF_NOTIFY_TARGET, TARGET_OFF)
+        if target != TARGET_OFF and previous is not None:
+            queued = set(self.pending_notification_ids)
+            next_ids = {ride.key for ride in new_rides} | queued
+            pending: list[str] = []
+            sent_count = 0
             for ride in matched:
-                if ride.key not in previous:
-                    self.hass.bus.async_fire(EVENT_NEW_RIDE, {
-                        "entry_id": self.entry.entry_id,
-                        "watch_name": self.entry.title,
-                        **ride.as_event(),
-                    })
-        # First successful update establishes a baseline without flooding alerts.
+                if ride.key not in next_ids:
+                    continue
+                if sent_count >= 8:
+                    pending.append(ride.key)
+                    continue
+                try:
+                    delivered = await async_send_notification(
+                        self.hass, target,
+                        notification_content(
+                            ride, self.entry.title, self.hass.config.language,
+                        ),
+                    )
+                except Exception:
+                    # An unavailable phone must never break the main sensor.
+                    _LOGGER.exception(
+                        "Freerider HA could not send a mobile notification for %s",
+                        ride.key,
+                    )
+                    delivered = False
+                if not delivered:
+                    pending.append(ride.key)
+                else:
+                    sent_count += 1
+            self.pending_notification_ids = pending[-80:]
+        else:
+            self.pending_notification_ids = []
+
         merged = list(dict.fromkeys([
-            *(self.seen_ids or []), *(ride.key for ride in matched)
+            *(self.seen_ids or []), *(ride.key for ride in matched),
         ]))[-MAX_REMEMBERED:]
-        if merged != self.seen_ids:
+        if merged != self.seen_ids or self.pending_notification_ids:
             self.seen_ids = merged
-            await self.seen_store.async_save({"ids": merged})
+            await self.seen_store.async_save({
+                "ids": merged,
+                "pending": self.pending_notification_ids,
+            })
+
+    async def async_send_test_notification(self) -> bool:
+        """User-triggered validation of the selected mobile destination."""
+        target = self.settings.get(CONF_NOTIFY_TARGET, TARGET_OFF)
+        if not target or target == TARGET_OFF:
+            return False
+        return await async_send_notification(
+            self.hass, target,
+            test_notification_content(self.entry.title, self.hass.config.language),
+        )
 
     async def async_calculate_toll(
         self, ride_id: str, start_time: str | None = None
