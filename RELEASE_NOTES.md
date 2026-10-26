@@ -1,47 +1,32 @@
-# Freerider HA 0.9.0
+# Freerider HA 0.10.0 — safer shared searches and smarter trip choices
 
-A six-part update to search quality, mobile alerts and diagnostics. **Existing saved searches, Home Assistant entities and notification devices are preserved.**
+## Six improvements
 
-## New capabilities
+1. **Shared, rate-conscious Norwegian/Swedish feed fetching.** All saved searches on one HA server use a shared per-country snapshot (minimum 15 minutes between ordinary source requests), conditional HTTP requests with ETag / If-Modified-Since when available, and backoff on provider errors. HTTP 429/503 honors Retry-After. HTTP 403 pauses automated requests for four hours. Manual refresh is limited to one forced country fetch per five minutes; it can return locally cached data in between. Initial/default watch interval remains 30 minutes. **This is load reduction, not proof of permission** to scrape or poll public Hertz endpoints.
+2. **Offer ranking.** Configure → Vehicle preferences → Sort offers by: earliest date, shortest travel time, shortest distance, nearest pickup to your HA home (straight-line only), lowest known cost (partial estimates), or greatest available time margin. A local sort menu is also available on the dashboard card.
+3. **Feasibility warnings.** Each offer carries an estimated travel-margin status using provider available-from/return deadlines and driving duration, plus an assumed 30-minute pickup/return buffer. This is not confirmed pickup availability and does not account for all opening hours, traffic, or pauses.
+4. **Smart alert rules.** Configure → Alert preferences and quiet hours: e.g. 22:00–07:00 Norwegian time; optional urgent override for offers expiring within three hours, estimated toll ceiling, or feasible-only alerts. Unknown toll prices do **not** pass a user-imposed toll ceiling. Quiet-hour notifications remain pending until a subsequent successful scheduled scan.
+5. **Favorites and calendar.** Save individual currently matching car offers as favorites directly from the dashboard; saved metadata persists locally across HA restarts. Favorite status does NOT reserve or guarantee a vehicle. Export an `.ics` placeholder for the provider's published availability/return window, prominently labeled "NOT BOOKED". This is a calendar file download, not a direct write to a user's connected calendar.
+6. **Maps.** Expand a result's OpenStreetMap geographic view and open external OpenStreetMap road directions from the offer's source station coordinates. The embedded map shows the general area, **not** an exact booked or driven road route; the external directions provider calculates a suggested road route.
 
-### Smarter notifications
-- New vehicles trigger alerts after the normal first baseline check.
-- Optionally alert for vehicles that are *already* available on the first scan (off by default).
-- Date/availability changes to an existing vehicle can trigger an updated-offer alert (on by default).
-- Confirmed removed/returned offers are recorded and returning offers can trigger a new alert.
-- An outage in one country does not falsely mark its cars as removed or send stale-car alerts.
+### How to use
+1. Update from HACS to **0.10.0** and restart Home Assistant.
+2. Open Freerider HA → Configure → Vehicle preferences to select the default order.
+3. Open Configure → Alert preferences and quiet hours for optional push restrictions.
+4. Add or reopen the dashboard's Freerider card:
 
-### Booking-link reliability
-- Official NO/SE car-specific booking links are retained where an eligible pickup time can be constructed.
-- Latest source health is shown alongside results; stale-source cars are labeled and the dashboard falls back to the official country homepage.
-- Final availability is still checked by the provider. Neither a link nor a notification constitutes a reservation.
+```yaml
+type: custom:freerider-rides-card
+entity: sensor.freerider_matching_rides
+```
 
-### Vehicle model filter
-- New include/exclude model name fields in **Configure → Vehicle preferences**.
-- Semicolon-separated terms (for example `Crafter; Transporter`); exclusions take precedence.
+If the card is unavailable, register `/freerider-ha/freerider-rides-card.js?v=0.10.0` as a Lovelace JavaScript module in Dashboard Resources (replace the sensor entity ID with your search's matching-rides sensor).
 
-### Trip cost breakdown
-- **Configure → Trip cost assumptions**: enter petrol/diesel litres/100 km and NOK/litre; EV kWh/100 km and NOK/kWh.
-- Defaults are blank/unknown (0), not guessed figures.
-- Cars and phone notifications show estimated road toll and driving energy, plus a **partial subtotal** when components are known.
-- Ferries, fees, provider billings and actual consumption remain excluded/uncertain.
+### Important
+- Home Assistant native entity dialogs remain native; map, card sorting, favorites and .ics export are in the **optional dashboard card**, not in the built-in entity popup.
+- Existing per-car entities on the Freerider device page remain in place.
+- Direct booking links are not booking confirmations. Do not assume any offer remains available until the provider verifies it.
+- A real end-to-end test in a user's Home Assistant installation, including push delivery and frontend resource registration, has **not** been completed by CI.
+- This is an unofficial community integration, not affiliated with or endorsed by Hertz. We have not established permission for any specific public-endpoint polling frequency.
 
-### Radius-based station discovery
-- **Configure → Search radius around stations** selects a verified station, plus 25, 50 or 100 km.
-- Origin and destination areas may be configured independently; the same radius value applies.
-- Straight-line GPS radius, not road travel distance. Existing manually selected stations remain eligible.
-
-### Operational status and recent activity
-- **Search status** diagnostic entity shows last attempted/successful scan, estimated next check, source errors, recent changes, successful/pending mobile notifications and the last push error.
-- Bounded history of the 100 most recent changes, persisted locally across restarts.
-
-## Install
-1. Update the custom Freerider HA repository in HACS to **0.9.0**.
-2. Restart Home Assistant.
-3. Open **Settings → Devices & services → Freerider HA → Configure**, and choose the optional filters, radius, cost or notification pages.
-4. Inspect the new **Search status** diagnostic entity under your watch device.
-
-## Remaining limitations
-This is an **independent community project, not endorsed by Hertz**. The API only supports Norwegian and Swedish source feeds. The provider's booking flow can still demand sign-in and reject a stale offer. Toll lookups for Norway have daily quotas and limited vehicle-weight information. No end-to-end user Home Assistant/mobile runtime trial is claimed by this release.
-
-Report bugs at https://github.com/Wesc-9/Freerider_HA/issues .
+Tests: Python regression tests, Node frontend behavioral tests and Home Assistant hassfest. HACS publication validation still needs GitHub repository Topics metadata.

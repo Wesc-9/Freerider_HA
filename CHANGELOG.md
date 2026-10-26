@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.10.0 (2026-10-26) — shared source cache, trip choices, maps and favorites
+- Shared per-Home-Assistant per-country source cache with ETag conditional requests, 15-minute TTL, five-minute manual throttle, Retry-After and capped exponential backoff. HTTP 403 stops fetch attempts for four hours.
+- Sort confirmed matches by pickup availability, shortest travel time/distance, Home Assistant home-to-pickup air distance, known partial travel cost or greatest estimated return-time margin.
+- Pure feasibility/margin function (published source times, drive minutes and 30-minute buffer), clearly marked non-guaranteed.
+- Optional user-configurable quiet hours, urgent-expiry override, feasible-only notifications and max estimated toll; unknown costs aren't treated as zero.
+- Persistent locally saved favorites, editable from the dashboard card; favorites aren't reservations.
+- .ics calendar-file export with explicit UNCONFIRMED/NOT BOOKED status; no connected-calendar edits.
+- On-demand OpenStreetMap area map and external road directions in the custom results card.
+- Search status diagnostics now report per-country shared requests, cached route counts and active backoff.
+- Added Node behavioral card tests and Python planner/ranking tests. Current watch profiles/IDs remain unchanged.
+- Polling on public provider endpoints is not a representation of authorized usage or a promise of third-party service stability.
+
+
 ## 0.9.0 (2026-10-26) — comprehensive search, alerts and diagnostics
 - Smarter alerts: optional existing offers on first scan, default alerts on date changes, and notifications for confirmed returned offers.
 - Local 100-event history of newly seen, updated and removed offer IDs; no false removal when a country feed is down.

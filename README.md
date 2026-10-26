@@ -1,5 +1,18 @@
 # Freerider HA
 
+## What's new in 0.10.0 — smarter searches, maps and favorites
+
+**The underlying search engine is now shared across every saved watch:** only one cached public feed per country per Home Assistant server is used for ordinary checks. The normal minimum source cache age is **15 minutes**; the default automatic watch interval remains 30 minutes. Manual refresh can fetch only once per country per five minutes. Respect provider Retry-After, exponential backoff, and a four-hour stop on HTTP 403. **No automated-data-use permission has yet been established with Freerider**; treat this as a cautious community prototype, not an approved polling integration.
+
+Under **Configure → Vehicle preferences**, choose a default ranking: first available, shortest drive, shortest distance, nearest pickup to HA's configured home (air distance only), lowest **known** partial travel cost, or largest estimated driving-time margin. Unknown metrics sort last. Each offer also shows a time-margin assessment: time between an earliest available pickup and last return minus provider driving minutes and a 30-minute planning buffer, **not** a confirmed bookable trip or traffic prediction.
+
+Under **Configure → Alert preferences and quiet hours**, optionally set Norwegian-local HH:MM quiet hours, urgent exception for offers expiring in 3 hours, feasible-only alerts, or a max estimated toll. Unknown tolls never pass a specified cost ceiling; deferred notifications are reconsidered at the next successful scan if still matching. Default quiet hours/caps are off.
+
+The optional **Freerider dashboard card** now supports a sort dropdown, favorites (persisted inside local Home Assistant storage), a view-on-map action with OpenStreetMap and external road directions, and **Download calendar (.ics)**. The calendar entry is labeled **NOT BOOKED** and records a possible pickup-to-return window; it never books a car or modifies your calendar account directly. OpenStreetMap's embedded view is an area map, not a guaranteed road route. Both booking links and provider car names remain unchanged.
+
+To use these functions after upgrading to **0.10.0**, restart Home Assistant and add/refresh the dashboard resource `/freerider-ha/freerider-rides-card.js?v=0.10.0`. Existing watch profiles and sensors are preserved. Home Assistant's native entity dialog cannot display the custom map; use the dashboard card instead.
+
+
 ## What's new in 0.9.0 — six practical improvements
 
 All enhancements are opt-in or conservative by default and preserve existing watch profiles.
