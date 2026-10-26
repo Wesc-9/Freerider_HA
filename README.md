@@ -1,6 +1,6 @@
 # Hertz Freerider for Home Assistant
 
-> **Alpha / development scaffold. Not yet a working availability monitor.** The Home Assistant setup UI, multi-country route/date/vehicle filters, refresh button, event/notification wiring and test framework are implemented. The NO/SE feeds now return actual public route data without login. Denmark remains unavailable, and the code should be validated in a running Home Assistant instance before relying on notifications.
+> **Developer alpha: live Norway/Sweden feeds connected, Home Assistant runtime not yet tested.** Verified public Hertz route JSON endpoints returned real offers without login on 2026-10-26. Denmark is listed in setup but has no working adapter. Do not rely on mobile notifications until end-to-end testing.
 
 Independent community project; not affiliated with or endorsed by Hertz.
 
@@ -9,14 +9,14 @@ Independent community project; not affiliated with or endorsed by Hertz.
 - Multiple independent watch profiles (each one a Home Assistant config entry).
 - Countries: **Norway, Sweden, Denmark** (the currently confirmed Freerider-specific services), multi-select. This list is extendable after official verification of additional countries; regular Hertz rental locations are not automatically Freerider countries.
 - Origin and destination free-text filters, either strict direction or **either direction**; leave either blank to match any location.
-- Travel date: **any**, **one day**, or **inclusive range**. Matches a known listing's pickup/booking window; when dates are missing from source, restricted-date matches are excluded rather than guessed.
+- Travel date: **any**, **one day**, or **inclusive range**. In NO/SE, matches from published availableAt through offer expireTime. This is NOT a guaranteed selectable pickup window. Missing dates are excluded.
 - Transmission: **any**, **automatic**, **manual**. Optional vehicle type (car/van/minibus), fuel type, and minimum seats; unknown listing metadata does not masquerade as a match.
 - **Automatic** background polling (minimum 15 minutes, configurable 15–120 min) or **manual** via a refresh button or `hertz_freerider.refresh` service.
 - A Home Assistant count sensor with matched ride details and booking links, plus an event for genuinely new matching rides (once a source is operational). New-ride IDs are persisted locally to avoid duplicate push notifications on restart.
 - English and Norwegian UI translations; event automation blueprint for notifying any phone using a Home Assistant notification service.
 - No Hertz credentials requested or stored. The NO/SE read-only JSON paths were discovered in the published Freerider frontend and tested with HTTP 200 responses. No secret/private endpoints are used.
 
-## Install for development only
+## Install for development / personal testing (not stable)
 
 Copy `custom_components/hertz_freerider` into `<config>/custom_components/` and restart Home Assistant. Add **Hertz Freerider** under **Settings → Devices & services → Add integration**. Use **Configure** to modify filters. Create additional integration entries for more saved routes.
 

@@ -1,7 +1,7 @@
 """Shared configuration constants."""
 
 DOMAIN = "hertz_freerider"
-COUNTRIES = {"NO": "Norway", "SE": "Sweden", "DK": "Denmark"}
+COUNTRIES = {"NO": "Norway", "SE": "Sweden", "DK": "Denmark (source not ready)"}
 OFFICIAL_SITES = {
     "NO": "https://hertzfreerider.no/",
     "SE": "https://hertzfreerider.se/",

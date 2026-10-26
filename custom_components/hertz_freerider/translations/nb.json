@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Nytt Freerider-søk",
-        "description": "Velg land, rute, dato og biltype. MERK: Datakilder for ledige Hertz-biler er ennå ikke klare i denne alfaversjonen.",
+        "description": "Norske og svenske ruter hentes fra Hertz sitt offentlige grensesnitt (alfaversjon). Danmark har foreløpig ingen fungerende datakilde. Velg land, rute, dato og biltype.",
         "data": {
           "watch_name": "Navn på søk",
           "countries": "Land",

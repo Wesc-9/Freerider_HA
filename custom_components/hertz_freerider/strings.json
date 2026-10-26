@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "New Freerider watch",
-        "description": "Choose countries, route, date and vehicle preferences. NOTE: live Hertz listing adapters are not yet available in this alpha version.",
+        "description": "Norway and Sweden live route feeds connected (developer alpha). Denmark not yet implemented. Choose countries, route, date and vehicle preferences.",
         "data": {
           "watch_name": "Watch name",
           "countries": "Countries",

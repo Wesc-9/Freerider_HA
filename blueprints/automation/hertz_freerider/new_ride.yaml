@@ -2,7 +2,7 @@ blueprint:
   name: Hertz Freerider - new matching ride
   description: >
     Send a push alert when a new matching Freerider offer appears.
-    Requires a functioning source adapter, which is NOT yet in this alpha.
+    Requires a working route source. NO and SE are connected, but HA runtime validation is pending.
     Choose your existing Home Assistant notification service.
   domain: automation
   input:
