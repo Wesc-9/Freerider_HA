@@ -289,3 +289,46 @@ def station_candidates(rides: list[Ride]) -> list[str]:
             if name and key:
                 names.setdefault(key, name)
     return sorted(names.values(), key=normalized)
+
+
+def merge_station_history(
+    history: dict[str, list[str]], country: str, rides: list[Ride]
+) -> tuple[dict[str, list[str]], int]:
+    """Add new station names without losing ones from expired offers.
+
+    No cross-user network storage; data is kept locally in Home Assistant.
+    Country key is the official Freerider source, not necessarily a geographic
+    boundary (cross-border routes may legitimately appear in either feed).
+    """
+    if country not in ("NO", "SE", "DK"):
+        return history, 0
+    original = history.get(country, [])
+    names: dict[str, str] = {}
+    for item in original:
+        if isinstance(item, str):
+            item = item.strip()
+            if item and len(item) <= 160:
+                names.setdefault(normalized(item), item)
+    before = len(names)
+    for item in station_candidates(rides):
+        if len(item) <= 160:
+            names.setdefault(normalized(item), item)
+    added = len(names) - before
+    if not added:
+        return history, 0
+    merged = dict(history)
+    merged[country] = sorted(names.values(), key=normalized)
+    return merged, added
+
+
+def known_station_names(
+    history: dict[str, list[str]], countries: list[str]
+) -> list[str]:
+    """Unique station dropdown choices for requested sources, including old."""
+    names: dict[str, str] = {}
+    for country in countries:
+        for item in history.get(country, []):
+            if isinstance(item, str) and item.strip():
+                item = item.strip()
+                names.setdefault(normalized(item), item)
+    return sorted(names.values(), key=normalized)
