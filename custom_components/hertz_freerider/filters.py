@@ -130,38 +130,38 @@ def filter_rides(rides: list[Ride], config: dict) -> list[Ride]:
 
 def _explicit_transmission(model: str) -> str | None:
     """Recognize explicitly labeled gearboxes; never guess from the model."""
-    if re.search(r"\\bMAN(?:UAL|UELL)?\\b", model, re.I):
+    if re.search(r"\bMAN(?:UAL|UELL)?\b", model, re.I):
         return "manual"
-    if re.search(r"\\bAUT(?:OMAT(?:IC)?)?\\b", model, re.I):
+    if re.search(r"\bAUT(?:OMAT(?:IC)?)?\b", model, re.I):
         return "automatic"
     return None
 
 
 def _explicit_fuel(model: str) -> str | None:
     """Only classify fuel from recognizable words in the public model string."""
-    if re.search(r"\\b(PHEV|HEV|HYBRID|LADDHYBRID)\\b", model, re.I):
+    if re.search(r"\b(PHEV|HEV|HYBRID|LADDHYBRID)\b", model, re.I):
         return "hybrid"
-    if re.search(r"\\b(ELECTRIC|ELECTRI|ELBIL|ELBILEN|EL)\\b", model, re.I):
+    if re.search(r"\b(ELECTRIC|ELECTRI|ELBIL|ELBILEN|EL)\b", model, re.I):
         return "electric"
-    if re.search(r"\\b(DIESEL|TDCI)\\b", model, re.I):
+    if re.search(r"\b(DIESEL|TDCI)\b", model, re.I):
         return "diesel"
-    if re.search(r"\\b(BENSIN|BENS|PETROL)\\b", model, re.I):
+    if re.search(r"\b(BENSIN|BENS|PETROL)\b", model, re.I):
         return "petrol"
     return None
 
 
 def _explicit_vehicle_type(model: str) -> str | None:
-    if re.search(r"\\b(MINIBUSS|MINIBUS)\\b", model, re.I):
+    if re.search(r"\b(MINIBUSS|MINIBUS)\b", model, re.I):
         return "minibus"
-    if re.search(r"\\b(VAREBIL|VARE|VAN)\\b", model, re.I):
+    if re.search(r"\b(VAREBIL|VARE|VAN)\b", model, re.I):
         return "van"
-    if re.search(r"\\b(SUV|PERSONBIL)\\b", model, re.I):
+    if re.search(r"\b(SUV|PERSONBIL)\b", model, re.I):
         return "car"
     return None
 
 
 def _explicit_seats(model: str) -> int | None:
-    match = re.search(r"\\b(\\d{1,2})[ -]?(?:SETER|SITS|SITTPLASSER|SEATER)\\b", model, re.I)
+    match = re.search(r"\b(\d{1,2})[ -]?(?:SETER|SITS|SITTPLASSER|SEATER)\b", model, re.I)
     return int(match.group(1)) if match else None
 
 
