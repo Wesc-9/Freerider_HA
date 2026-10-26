@@ -1,6 +1,6 @@
 {
   "domain": "hertz_freerider",
-  "name": "Hertz Freerider",
+  "name": "Freerider HA",
   "codeowners": [
     "@Wesc-9"
   ],
@@ -10,5 +10,5 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/Wesc-9/Freerider_HA/issues",
   "requirements": [],
-  "version": "0.4.0"
+  "version": "0.5.0"
 }

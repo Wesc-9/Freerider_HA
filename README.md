@@ -44,9 +44,9 @@ This official *My Home Assistant* link opens the repository in the user's own in
 
 **2. Add the integration after installation:**
 
-[![Set up Hertz Freerider](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=hertz_freerider)
+[![Set up Freerider HA](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=hertz_freerider)
 
-Or use Settings → Devices & services → Add integration → Hertz Freerider.
+Or use Settings → Devices & services → Add integration → Freerider HA.
 
 **Alternative manual installation:** copy `custom_components/hertz_freerider` into `<config>/custom_components/`, restart Home Assistant, and add the integration.
 

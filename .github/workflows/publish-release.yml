@@ -46,13 +46,13 @@ jobs:
         run: |
           set -euo pipefail
           version=$(python -c 'import json; print(json.load(open("custom_components/hertz_freerider/manifest.json"))["version"])')
-          tag="v${version}"
+          tag="${version}"
           if gh release view "$tag" >/dev/null 2>&1; then
             echo "Release $tag already exists; refusing to republish"
             exit 0
           fi
           gh release create "$tag" \
             --target "$GITHUB_SHA" \
-            --title "Freerider for Home Assistant $tag" \
+            --title "Freerider HA $tag" \
             --notes-file RELEASE_NOTES.md
           echo "Published $tag"
