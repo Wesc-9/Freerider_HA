@@ -73,7 +73,7 @@
     _safeUrl(ride) {
       const fallback = ride?.country === "SE" ? "https://hertzfreerider.se/sv-se/" : "https://hertzfreerider.no/no-no/";
       try {
-        const url = new URL(ride?.booking_url || fallback);
+        const url = new URL(ride?.listing_source_status === "stale" ? fallback : (ride?.booking_url || fallback));
         if (url.protocol !== "https:" || !["hertzfreerider.no","www.hertzfreerider.no","hertzfreerider.se","www.hertzfreerider.se"].includes(url.hostname))
           return fallback;
         return url.href;
@@ -168,7 +168,7 @@
             "Bom kan variere etter bilens tillatte totalvekt, kjørerute og tidspunkt. Drivstoff/lading og ferge kan komme i tillegg.",
             "Tolls vary by vehicle weight, route and timing. Fuel/charging and ferries may cost extra."
           )));
-          const direct = ride.direct_booking_link === true;
+          const direct = ride.direct_booking_link === true && ride.listing_source_status !== "stale";
           const a = this._text("a","book",direct
             ? tr("Åpne bestilling for denne bilen","Open booking for this car")
             : tr("Se bilen på Freerider","View on Freerider"));
