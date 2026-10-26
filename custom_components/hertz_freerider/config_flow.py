@@ -17,7 +17,7 @@ from homeassistant.helpers import selector
 from .const import (
     CONF_COUNTRIES, CONF_DATE_END, CONF_DATE_MODE, CONF_DATE_START,
     CONF_DESTINATION, CONF_DIRECTION, CONF_EVENTS, CONF_FUEL, CONF_MIN_SEATS,
-    CONF_ORIGIN, CONF_SCAN_INTERVAL, CONF_SCAN_MODE, CONF_NOTIFY_TARGET, CONF_NOTIFY_ENABLED, CONF_TRANSMISSION,
+    CONF_ORIGIN, CONF_SCAN_INTERVAL, CONF_SCAN_MODE, CONF_NOTIFY_TARGET, CONF_NOTIFY_ENABLED, CONF_TOLL_IN_NOTIFICATIONS, CONF_TRANSMISSION,
     CONF_VEHICLE_TYPE, CONF_WATCH_NAME, COUNTRIES, DEFAULT_POLL_MINUTES, DOMAIN,
 )
 from .filters import station_candidates, place_values
@@ -169,6 +169,8 @@ def updates_schema(values: dict | None = None) -> vol.Schema:
             )),
         vol.Required(CONF_EVENTS, default=values.get(CONF_EVENTS, True)):
             selector.BooleanSelector(),
+        vol.Required(CONF_TOLL_IN_NOTIFICATIONS, default=values.get(CONF_TOLL_IN_NOTIFICATIONS, True)):
+            selector.BooleanSelector(),
     })
 
 
@@ -319,6 +321,7 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_EVENTS: True,
             CONF_NOTIFY_TARGET: TARGET_OFF,
             CONF_NOTIFY_ENABLED: False,
+            CONF_TOLL_IN_NOTIFICATIONS: True,
         }
         fields.update(self._draft)
         title = fields.pop(CONF_WATCH_NAME, "Freerider")

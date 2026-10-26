@@ -58,7 +58,7 @@ async def async_estimate_toll(hass, ride: Ride, start_time: str | None = None) -
             ROUTE_API,
             params=params,
             headers={"Accept": "application/json"},
-            timeout=aiohttp.ClientTimeout(total=30),
+            timeout=aiohttp.ClientTimeout(total=15),
         ) as response:
             if response.status in (401, 403, 429):
                 raise TollLookupError(

@@ -13,6 +13,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     CONF_COUNTRIES, CONF_EVENTS, CONF_SCAN_INTERVAL, CONF_SCAN_MODE,
     DEFAULT_POLL_MINUTES, DOMAIN, EVENT_NEW_RIDE, CONF_NOTIFY_TARGET, CONF_NOTIFY_ENABLED,
+    CONF_TOLL_IN_NOTIFICATIONS,
 )
 from .filters import Ride, filter_rides
 from .source import async_fetch_country
@@ -21,6 +22,7 @@ from .notifications import (
 )
 from .station_catalog import async_get_station_catalog
 from .tolls import async_estimate_toll, TollLookupError
+from .quote_cache import async_get_quote_catalog, quote_eligibility
 
 _LOGGER = logging.getLogger(__name__)
 MAX_REMEMBERED = 1500
@@ -125,6 +127,8 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
             next_ids = {ride.key for ride in new_rides} | queued
             pending: list[str] = []
             sent_count = 0
+            fresh_quote_limit = 2  # At most two new paid/quota API calls per scan
+            quote_catalog = None
             for ride in matched:
                 if ride.key not in next_ids:
                     continue
@@ -132,11 +136,33 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
                     pending.append(ride.key)
                     continue
                 sent_count += 1
+                toll_quote = self.toll_estimates.get(ride.key)
+                toll_status = "cached" if toll_quote is not None else "not_calculated"
+                if toll_quote is None and self.settings.get(CONF_TOLL_IN_NOTIFICATIONS, True):
+                    reason = quote_eligibility(ride)
+                    if reason != "ok":
+                        toll_status = reason
+                    elif fresh_quote_limit <= 0:
+                        toll_status = "scan_limit"
+                    else:
+                        fresh_quote_limit -= 1
+                        try:
+                            if quote_catalog is None:
+                                quote_catalog = await async_get_quote_catalog(self.hass)
+                            toll_quote, toll_status = await quote_catalog.async_quote(ride)
+                            if toll_quote is not None:
+                                self.toll_estimates[ride.key] = toll_quote
+                        except Exception:
+                            # Even if the toll API fails, never lose the car alert.
+                            _LOGGER.exception("Freerider toll enrichment failed for %s", ride.key)
+                            toll_status = "provider_error"
+
                 try:
                     delivered = await async_send_notification(
                         self.hass, target,
                         notification_content(
                             ride, self.entry.title, self.hass.config.language,
+                            toll_estimate=toll_quote, toll_status=toll_status,
                         ),
                     )
                 except Exception:

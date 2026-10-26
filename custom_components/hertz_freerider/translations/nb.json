@@ -101,11 +101,12 @@
       },
       "updates": {
         "title": "Søk og varslinger",
-        "description": "Velg hvordan integrasjonen oppdaterer bilene. Mottaker og av/på-bryter for varslinger finner du under «Steder, dato og varsler».",
+        "description": "Velg sjekkintervall og om bompenger skal beregnes i mobilvarsler. For norske ruter beregnes bom automatisk ved nye treff, med en forsiktig daglig API-grense. Ukjent beløp vises aldri som 0 kr. Varslingsenhet velges under «Steder, dato og varsler».",
         "data": {
           "scan_mode": "Oppdateringsmåte",
           "scan_interval": "Minutter mellom automatiske søk",
-          "notify_events": "Publiser også hendelser til Home Assistant-automasjoner"
+          "notify_events": "Publiser også hendelser til Home Assistant-automasjoner",
+          "toll_in_notifications": "Inkluder bompengeestimat i nye bilvarsler (Norge)"
         }
       }
     },

@@ -101,11 +101,12 @@
       },
       "updates": {
         "title": "Checks and notifications",
-        "description": "Choose how often listings refresh. To change the notification recipient or enable/disable alerts, select Places, dates and notifications.",
+        "description": "Configure refresh frequency and automatic Norwegian toll estimates for new-car notifications. A small daily API request cap applies. Missing estimates are never displayed as zero. Select your phone under Places, dates and notifications.",
         "data": {
           "scan_mode": "Search mode",
           "scan_interval": "Minutes between automatic checks",
-          "notify_events": "Also emit events for HA automations"
+          "notify_events": "Also emit events for HA automations",
+          "toll_in_notifications": "Include estimated tolls in new car alerts (Norway)"
         }
       }
     },

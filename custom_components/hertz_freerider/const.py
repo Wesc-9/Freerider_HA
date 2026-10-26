@@ -24,6 +24,7 @@ CONF_SCAN_INTERVAL = "scan_interval"
 CONF_EVENTS = "notify_events"
 CONF_NOTIFY_TARGET = "notify_target"
 CONF_NOTIFY_ENABLED = "notify_enabled"
+CONF_TOLL_IN_NOTIFICATIONS = "toll_in_notifications"
 EVENT_NEW_RIDE = "hertz_freerider_new_ride"
 SERVICE_REFRESH = "refresh"
 DEFAULT_POLL_MINUTES = 30
