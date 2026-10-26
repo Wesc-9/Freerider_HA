@@ -24,8 +24,8 @@
         .sub { font-size:12px; color:var(--secondary-text-color,#777); line-height:1.5; }
         .pill { background:var(--secondary-background-color,#f1f1f1); border-radius:999px; padding:7px 11px; font-weight:650; font-size:12px; white-space:nowrap; }
         .ride { border:1px solid var(--divider-color,#e7e7e7); border-radius:16px; padding:15px; display:grid; gap:11px; background:var(--card-background-color,#fff); }
-        .route { font-size:15px; font-weight:700; line-height:1.35; overflow-wrap:anywhere; }
-        .vehicle { color:var(--secondary-text-color,#777); font-size:13px; margin-top:4px; overflow-wrap:anywhere; }
+        .route { font-size:13px; font-weight:500; line-height:1.45; color:var(--secondary-text-color,#777); overflow-wrap:anywhere; }
+        .vehicle { color:var(--primary-text-color,#222); font-size:16px; font-weight:750; line-height:1.35; margin-bottom:5px; overflow-wrap:anywhere; }
         .metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
         .label { font-size:11px; color:var(--secondary-text-color,#777); display:block; margin-bottom:2px; }
         .value { font-size:13px; font-weight:600; overflow-wrap:anywhere; }
@@ -126,8 +126,10 @@
           if (!ride || typeof ride !== "object") continue;
           const card = this._text("section","ride","");
           const label = document.createElement("div");
+          // The vehicle is displayed verbatim from the Freerider carModel
+          // API field. Do NOT replace it with guessed types like "van".
+          label.append(this._text("div","vehicle",ride.vehicle || tr("Bilmodell ikke oppgitt","Vehicle name not provided")));
           label.append(this._text("div","route",(ride.origin || "?")+" → "+(ride.destination || "?")));
-          label.append(this._text("div","vehicle",ride.vehicle || tr("Bilmodell ukjent","Unknown car model")));
           card.append(label);
           const metrics = this._text("div","metrics","");
           this._metric(metrics,tr("Distanse","Distance"),km(ride.distance_km));
