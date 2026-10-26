@@ -4,10 +4,10 @@ The legacy mobile_app notification service supports the clickAction/url fields
 used by iOS and Android. This integration deliberately uses services whose
 names are already registered in Home Assistant, not arbitrary external APIs.
 
-The Freerider site currently uses a browser session for selecting routes. The
-public transport routes API does not guarantee a direct single-offer URL.
-Only link to known official Freerider domains and include enough text to find
-the matching offer; never fabricate a deep link.
+Freerider's public booking-flow page supports a hash containing route ID
+and pickup time. Prefer this first-party link for actual car alerts, while
+retaining a safe fallback for stale offers or the generic test notification.
+A direct link does not bypass authentication or guarantee booking.
 """
 
 from __future__ import annotations
@@ -130,7 +130,12 @@ def notification_content(
     toll_status: str = "not_calculated",
 ) -> dict:
     """Detailed and readable push with real vehicle/route/travel data."""
-    url = official_url(ride.booking_url, ride.source_country)
+    if __package__:
+        from .booking_links import official_car_booking_url
+    else:
+        from booking_links import official_car_booking_url
+
+    url, direct = official_car_booking_url(ride)
     norwegian = language.lower().startswith(("nb", "nn", "no"))
     available = _local_datetime(ride.available_at)
     latest_return = _local_datetime(ride.latest_return_at)
@@ -151,7 +156,8 @@ def notification_content(
         lines.extend([
             f"💳 {_toll_summary(toll_estimate, toll_status, language)}",
             "⛽ Drivstoff/lading kan forekomme",
-            f"Tilbud {ride.key} · Trykk for å åpne Freerider",
+            (f"Tilbud {ride.key} · Trykk for å åpne denne bilen"
+             if direct else f"Tilbud {ride.key} · Åpne Freerider og finn bilen"),
         ])
     else:
         title = "🚗 New Freerider car!"
@@ -169,13 +175,15 @@ def notification_content(
         lines.extend([
             f"💳 {_toll_summary(toll_estimate, toll_status, language)}",
             "⛽ Fuel/charging costs may apply",
-            f"Offer {ride.key} · Tap to open Freerider",
+            (f"Offer {ride.key} · Tap to open this car"
+             if direct else f"Offer {ride.key} · Open Freerider to find this car"),
         ])
     return {
         "title": title,
         "message": "\n".join(lines),
         "url": url,
         "route": f"{ride.origin} → {ride.destination}",
+        "direct_car_link": direct,
     }
 
 
@@ -185,9 +193,9 @@ def test_notification_content(name: str, language: str = "nb") -> dict:
     return {
         "title": "Freerider HA · Testvarsel" if norwegian else "Freerider HA · Test notification",
         "message": (
-            f"Varsler for «{name}» er aktivert. Nye biler sendes hit med rute og lenke."
+            f"Testvarsel for «{name}». Dette er ikke en konkret bil. Ekte treff åpner bestillingsflyten for den aktuelle bilen."
             if norwegian else
-            f"Notifications for “{name}” are enabled. New cars will appear here with their route and link."
+            f"Test for “{name}”. No car is attached to this test. Real car alerts link to that specific car's booking flow."
         ),
         "url": KNOWN_LANDING["NO"],
     }
