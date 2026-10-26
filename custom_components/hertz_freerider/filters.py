@@ -75,6 +75,25 @@ def normalized(value: str | None) -> str:
     ).casefold().strip()
 
 
+def place_values(value: object) -> list[str]:
+    """Normalize multi-select values, keeping old single-string entries.
+
+    Do not split on commas, which can occur inside station names.
+    """
+    if isinstance(value, str):
+        items = [value]
+    elif isinstance(value, (list, tuple)):
+        items = [item for item in value if isinstance(item, str)]
+    else:
+        items = []
+    places: dict[str, str] = {}
+    for item in items:
+        item = item.strip()
+        if item:
+            places.setdefault(normalized(item), item)
+    return list(places.values())
+
+
 def ride_matches(ride: Ride, config: dict) -> bool:
     """Evaluate location, date, transmission and optional vehicle filters.
 
@@ -86,12 +105,20 @@ def ride_matches(ride: Ride, config: dict) -> bool:
     if ride.source_country not in countries:
         return False
 
-    wanted_from = normalized(config.get("origin", ""))
-    wanted_to = normalized(config.get("destination", ""))
+    # OR across alternatives in a column, AND between From and To columns.
+    # Existing single-string searches are still supported after upgrading.
+    wanted_from = [normalized(x) for x in place_values(config.get("origin"))]
+    wanted_to = [normalized(x) for x in place_values(config.get("destination"))]
     origin = normalized(ride.origin)
     destination = normalized(ride.destination)
-    forward = wanted_from in origin and wanted_to in destination
-    reverse = wanted_from in destination and wanted_to in origin
+    forward = (
+        (not wanted_from or any(x in origin for x in wanted_from))
+        and (not wanted_to or any(x in destination for x in wanted_to))
+    )
+    reverse = (
+        (not wanted_from or any(x in destination for x in wanted_from))
+        and (not wanted_to or any(x in origin for x in wanted_to))
+    )
     if not (forward or (config.get("direction") == "either" and reverse)):
         return False
 
