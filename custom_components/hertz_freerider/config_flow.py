@@ -174,7 +174,7 @@ async def async_station_suggestions(hass, countries: list[str]) -> list[str]:
 class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Short guided setup with free-text-compatible station suggestions."""
 
-    VERSION = 2
+    VERSION = 1
 
     def __init__(self) -> None:
         self._draft: dict = {}
