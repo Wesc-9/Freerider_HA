@@ -17,7 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 
 RESOURCE_BASE = "/freerider-ha"
 RESOURCE_PATH = f"{RESOURCE_BASE}/freerider-rides-card.js"
-VERSION = "0.7.1"
+VERSION = "0.8.0"
 
 
 async def async_setup_dashboard(hass) -> None:

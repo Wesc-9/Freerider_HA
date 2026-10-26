@@ -1,4 +1,4 @@
-"""Hertz Freerider Home Assistant integration (alpha foundation)."""
+"""Freerider HA: unofficial route monitoring, notifications and optional UI."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from homeassistant.helpers import config_validation as cv
 from .const import DOMAIN, SERVICE_REFRESH
 from .tolls import TollLookupError
 from .coordinator import FreeriderCoordinator
+from .dashboard import async_setup_dashboard
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor", "button", "switch"]
@@ -20,7 +21,8 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Register a safe manual refresh action for all or one saved watch."""
+    """Register services and expose the optional results dashboard card."""
+    await async_setup_dashboard(hass)
 
     async def refresh(call: ServiceCall) -> None:
         entry_id = call.data.get("entry_id")

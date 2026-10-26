@@ -27,6 +27,7 @@ jobs:
         run: |
           python -m compileall -q custom_components/hertz_freerider
           PYTHONPATH=custom_components/hertz_freerider python -m unittest discover -s tests -v
+          node --check custom_components/hertz_freerider/frontend/freerider-rides-card.js
       - name: Validate manifest and version
         shell: bash
         run: |
