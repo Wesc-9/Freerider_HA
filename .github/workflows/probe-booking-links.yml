@@ -1,0 +1,41 @@
+name: Probe Freerider booking links
+on:
+  push:
+    paths:
+      - '.github/workflows/probe-booking-links.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Inspect public landing and route navigation JavaScript
+        run: |
+          python - <<'PY'
+          import requests,re,html
+          from urllib.parse import urljoin
+          base='https://hertzfreerider.no'
+          page=requests.get(base+'/no-no/',timeout=25)
+          print('PAGE',page.status_code,len(page.content),page.url,flush=True)
+          body=page.text
+          scripts=re.findall(r'<script[^>]+src=["\\\']([^"\\\']+)',body)
+          print('SCRIPT_COUNT',len(scripts),flush=True)
+          print('SCRIPT_SAMPLES',scripts[:25],flush=True)
+          extra=re.findall(r'component---[\\w-]+\\.js',body)
+          print('COMPONENTS',extra[:20],flush=True)
+          urls=list(dict.fromkeys([urljoin(base,x) for x in scripts]+[urljoin(base,'/'+x) for x in extra]))
+          for url in urls[:45]:
+            try:
+              js=requests.get(url,timeout=25).text
+            except Exception:continue
+            if any(word in js for word in ('selectedRoute','transportOfferId','booking_flow','reserveRoute')):
+              print('FOUND',url,'BYTES',len(js),flush=True)
+              for pattern in ('selectedRoute','booking_flow','transportOfferId','handleClick:async','navigator','location.href','window.open','/no-no','/booking','/book','state:{','navigate('):
+                hits=list(re.finditer(re.escape(pattern),js,re.I))[:5]
+                if hits:
+                  print('PATTERN',pattern,'HITS',len(hits),flush=True)
+                  for m in hits[:3]:
+                    print('CONTEXT',js[max(0,m.start()-390):m.end()+600].replace('\\n',' ')[:1150],flush=True)
+              print('URL_CANDIDATES',sorted(set(re.findall(r'["\\\'](/[^"\\\']{2,90})["\\\']',js)))[:90],flush=True)
+          PY
