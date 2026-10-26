@@ -1,6 +1,7 @@
 """Unit tests for safe, clickable Freerider notification content."""
 
 import unittest
+from datetime import datetime
 
 from filters import Ride
 from notifications import (
@@ -34,14 +35,20 @@ class NotificationTests(unittest.TestCase):
         )
 
     def test_route_model_and_link(self):
-        payload = notification_content(self.ride, "Trondheim to Bodø")
+        payload = notification_content(
+            self.ride, "Trondheim to Bodø", now=datetime(2026,10,28,9,0)
+        )
         self.assertIn("TRONDHEIM SLUPPEN → BODØ LUFTHAVN", payload["message"])
         self.assertIn("VOLVO XC40 AUT", payload["message"])
         self.assertIn("28.10 kl. 11:30", payload["message"])
         self.assertIn("346 km", payload["message"])
         self.assertIn("4 t 38 min", payload["message"])
         self.assertIn("Siste retur 30.10", payload["message"])
-        self.assertEqual(payload["url"], "https://hertzfreerider.no/no-no/")
+        self.assertEqual(
+            payload["url"],
+            "https://hertzfreerider.no/booking-flow/no-no/#id=123&date=2026-10-28T11%3A30",
+        )
+        self.assertTrue(payload["direct_car_link"])
 
     def test_toll_cost_is_explicit_estimate(self):
         quote = {"amount_nok": 215.5, "ferry_count": 0}
