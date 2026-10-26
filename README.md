@@ -7,6 +7,12 @@
 
 Independent community project; not affiliated with or endorsed by Hertz.
 
+## Automatically learned stations
+
+The origin/destination dropdown combines live stations with a **local Home Assistant-wide history** of stations seen on earlier scans. The same existing 15–120 minute route scans automatically add new stations, regardless of whether they match a saved search. Previously discovered stations remain selectable when listings expire and after Home Assistant restarts. Station history is stored **locally** by Home Assistant; it is not uploaded to a community-wide database or bundled with the GitHub repository. Other installations learn their own stations independently.
+
+Selected places are removed from the suggestions when reopening a search form. Home Assistant's built-in multi-select handles selections inside an already open dropdown; the integration cannot force the UI to update its choices without reloading the form. Likewise, native date picker closing behavior is controlled by the Home Assistant frontend and cannot be overridden by a backend integration. The date inputs remain the native HA date controls.
+
 ## Simple, bilingual setup (Norwegian / English)
 
 The current Home Assistant setup is a **2-step native wizard**:

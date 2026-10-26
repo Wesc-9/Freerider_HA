@@ -12,7 +12,7 @@
       },
       "route": {
         "title": "2 · Velg fra, til og dato",
-        "description": "Velg flere avreisesteder og destinasjoner i samme felt, eller skriv egne stedsnavn. Vi søker på alle kombinasjoner. La et felt stå tomt for alle steder. Datoene er valgfrie: bare fra-dato gir én dato, fra- og til-dato gir periode.",
+        "description": "Stedsforslag lagres automatisk når nye ruter oppdages, også etter at tilbudene forsvinner. Velg flere steder eller skriv inn egne. Valgte steder vises som brikker; de er skjult fra de opprinnelige forslagene når skjemaet åpnes på nytt. Dato er valgfritt.",
         "data": {
           "origin": "Fra – velg flere steder (valgfritt)",
           "destination": "Til – velg flere steder (valgfritt)",
@@ -58,7 +58,7 @@
       },
       "route": {
         "title": "Steder og dato",
-        "description": "Legg til eller fjern flere steder under Fra og Til, og velg dato eller periode. Alle kombinasjoner overvåkes.",
+        "description": "Stedsforslag lagres automatisk når nye ruter oppdages, også etter at tilbudene forsvinner. Velg flere steder eller skriv inn egne. Valgte steder vises som brikker; de er skjult fra de opprinnelige forslagene når skjemaet åpnes på nytt. Dato er valgfritt.",
         "data": {
           "watch_name": "Navn på søket",
           "countries": "Land",

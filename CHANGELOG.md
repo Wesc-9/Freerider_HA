@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.1 (2026-10-26) — remembered stations
+- A shared, local station catalog automatically records every distinct station discovered while checking the Norwegian and Swedish Freerider feeds.
+- Remembered stations survive Home Assistant restarts and remain selectable after offers disappear.
+- Newly discovered cities/stations become available the next time the configuration/options form opens.
+- Previously selected stations are omitted from the initial available suggestions when editing, while their selected chips remain displayed.
+- Selectors still support free-text multi-select for places not yet discovered.
+- Does not change the frequency of existing network polling or publish a shared internet-wide database.
+- Home Assistant's native frontend controls live dropdown updates and date-calendar auto-dismissal; the integration does not inject unsupported frontend code.
+
+
 ## 0.5.0 (2026-10-26) — multiple locations, dates in one screen and neutral branding
 
 - Renamed the **displayed** integration to **Freerider HA** throughout Home Assistant, HACS and the README (the internal domain remains `hertz_freerider` for backwards compatibility).

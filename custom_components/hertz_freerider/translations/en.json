@@ -12,7 +12,7 @@
       },
       "route": {
         "title": "2 · From, to and travel dates",
-        "description": "Select multiple departure and arrival places, or type your own. All combinations are searched. Leave either field empty for anywhere. Dates are optional: first date only means one day; both dates mean a range.",
+        "description": "Station suggestions are remembered as new routes appear, including after an offer expires. Select multiple places or type your own. Selected chips are hidden from the initial suggestions when the form is reopened. Dates are optional.",
         "data": {
           "origin": "From – select several places (optional)",
           "destination": "To – select several places (optional)",
@@ -58,7 +58,7 @@
       },
       "route": {
         "title": "Places and dates",
-        "description": "Add or remove places in From and To, and select a day or date range. All combinations are monitored.",
+        "description": "Station suggestions are remembered as new routes appear, including after an offer expires. Select multiple places or type your own. Selected chips are hidden from the initial suggestions when the form is reopened. Dates are optional.",
         "data": {
           "watch_name": "Search name",
           "countries": "Countries",
