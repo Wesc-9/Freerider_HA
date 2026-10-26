@@ -121,6 +121,13 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
 
         # One offer can be exposed by several provider views: de-duplicate IDs.
         unique = {ride.key: ride for ride in valid}
+        # A partial provider outage must not make previously reported cars
+        # disappear from sensors. Retain their last cached offers, but mark
+        # the overall search status as partial/stale.
+        failed_countries=set(self.last_source_errors)
+        for ride in self.data or []:
+            if ride.source_country in failed_countries:
+                unique.setdefault(ride.key,ride)
         matched = filter_rides(list(unique.values()), self.settings)
         await self._remember_and_notify(
             matched,
