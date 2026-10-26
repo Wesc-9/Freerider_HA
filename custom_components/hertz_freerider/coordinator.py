@@ -287,15 +287,41 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         self.seen_ids=merged
         # Save after every successful fetch to persist history and diagnostics,
         # even if no new offer happens on this scan.
+        await self._save_watch_state()
+
+    async def _save_watch_state(self) -> None:
+        """Persist monitoring and saved favorites without external services."""
         await self.seen_store.async_save({
-            "ids":merged,
+            "ids":self.seen_ids or [],
             "pending":self.pending_notification_ids,
             "snapshots":self.offer_snapshots,
             "history":self.offer_history,
             "last_success_utc":self.last_success_utc,
             "last_alert_utc":self.last_alert_utc,
             "sent_alert_count":self.sent_alert_count,
+            "favorite_offers":self.favorite_offers,
         })
+
+    async def async_set_favorite(self, ride_id: str, favorite: bool) -> None:
+        """Store an offer bookmark locally; no vehicle is reserved."""
+        if favorite:
+            ride=next((r for r in self.data or [] if r.key==ride_id),None)
+            if ride is None:
+                raise ValueError("Selected offer is no longer available")
+            self.favorite_offers[ride_id]={
+                **ride.as_event(),
+                "saved_at":datetime.now(timezone.utc).isoformat(),
+            }
+            self.favorite_offers=dict(list(self.favorite_offers.items())[-80:])
+        else:
+            self.favorite_offers.pop(ride_id,None)
+        await self._save_watch_state()
+        self.async_set_updated_data(list(self.data or []))
+
+    async def async_force_refresh(self) -> None:
+        """Manual refresh bypasses the feed age, but not 60s cooldown."""
+        self._force_source_fetch=True
+        await self.async_request_refresh()
 
     async def async_send_test_notification(self) -> bool:
         """User-triggered validation of the selected mobile destination."""
