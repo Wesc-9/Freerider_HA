@@ -128,6 +128,7 @@ def notification_content(
     language: str = "nb",
     toll_estimate: dict | None = None,
     toll_status: str = "not_calculated",
+    now=None,
 ) -> dict:
     """Detailed and readable push with real vehicle/route/travel data."""
     if __package__:
@@ -135,7 +136,7 @@ def notification_content(
     else:
         from booking_links import official_car_booking_url
 
-    url, direct = official_car_booking_url(ride)
+    url, direct = official_car_booking_url(ride, now=now)
     norwegian = language.lower().startswith(("nb", "nn", "no"))
     available = _local_datetime(ride.available_at)
     latest_return = _local_datetime(ride.latest_return_at)
