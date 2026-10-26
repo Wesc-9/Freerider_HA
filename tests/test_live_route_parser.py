@@ -20,6 +20,8 @@ class PublicFeedParserTest(unittest.TestCase):
                 "expireTime": "2026-11-02T17:00:00",
                 "latestReturn": "2026-11-03T12:00:00",
                 "carModel": "VOLVO XC40 AUT ELECTRIC",
+                "distance": 346.0,
+                "travelTime": 278,
             }],
         }]
         rides = parse_transport_routes(payload, "NO", "https://hertzfreerider.no/no-no/")
@@ -32,6 +34,9 @@ class PublicFeedParserTest(unittest.TestCase):
         self.assertEqual(ride.latest_return_at, "2026-11-03T12:00:00")
         self.assertEqual(ride.transmission, "automatic")
         self.assertEqual(ride.fuel, "electric")
+        self.assertEqual(ride.distance_km, 346.0)
+        self.assertEqual(ride.drive_minutes, 278.0)
+        self.assertEqual(ride.as_event()["distance_km"], 346.0)
         self.assertTrue(ride_matches(ride, {
             "countries": ["NO"], "origin": "trondheim", "destination": "bodo",
             "transmission": "automatic", "date_mode": "single",
