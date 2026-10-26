@@ -5,6 +5,7 @@ from __future__ import annotations
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.exceptions import HomeAssistantError
 
+from .device import watch_device_info
 from .const import DOMAIN, CONF_NOTIFY_TARGET, CONF_NOTIFY_ENABLED
 from .notifications import TARGET_OFF
 
@@ -21,6 +22,7 @@ class FreeriderAlertSwitch(SwitchEntity):
 
     def __init__(self, entry) -> None:
         self._entry = entry
+        self._attr_device_info = watch_device_info(entry)
         self._attr_name = f"{entry.title} new car alerts"
         self._attr_unique_id = f"hertz_freerider_{entry.entry_id}_new_car_alerts"
 

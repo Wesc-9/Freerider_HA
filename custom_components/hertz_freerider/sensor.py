@@ -5,6 +5,7 @@ from __future__ import annotations
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .device import watch_device_info
 from .const import DOMAIN
 
 
@@ -24,6 +25,7 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
 
     def __init__(self, coordinator, entry) -> None:
         super().__init__(coordinator)
+        self._attr_device_info = watch_device_info(entry)
         self._attr_name = f"{entry.title} matching rides"
         self._attr_unique_id = f"hertz_freerider_{entry.entry_id}_count"
 
@@ -59,6 +61,7 @@ class FreeriderLastTollEstimate(CoordinatorEntity, SensorEntity):
 
     def __init__(self, coordinator, entry) -> None:
         super().__init__(coordinator)
+        self._attr_device_info = watch_device_info(entry)
         self._attr_name = f"{entry.title} last toll estimate"
         self._attr_unique_id = f"hertz_freerider_{entry.entry_id}_toll_nok"
 

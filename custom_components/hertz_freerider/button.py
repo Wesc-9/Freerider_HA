@@ -7,6 +7,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .tolls import TollLookupError
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .device import watch_device_info
 from .const import DOMAIN
 
 
@@ -26,6 +27,7 @@ class FreeriderRefresh(CoordinatorEntity, ButtonEntity):
 
     def __init__(self, coordinator, entry) -> None:
         super().__init__(coordinator)
+        self._attr_device_info = watch_device_info(entry)
         self._attr_name = f"{entry.title} refresh listings"
         self._attr_unique_id = f"hertz_freerider_{entry.entry_id}_refresh"
 
@@ -46,6 +48,7 @@ class FreeriderEstimateFirstToll(CoordinatorEntity, ButtonEntity):
 
     def __init__(self, coordinator, entry) -> None:
         super().__init__(coordinator)
+        self._attr_device_info = watch_device_info(entry)
         self._attr_name = f"{entry.title} estimate toll for first match"
         self._attr_unique_id = f"hertz_freerider_{entry.entry_id}_estimate_toll"
 
@@ -71,6 +74,7 @@ class FreeriderTestNotification(CoordinatorEntity, ButtonEntity):
 
     def __init__(self, coordinator, entry) -> None:
         super().__init__(coordinator)
+        self._attr_device_info = watch_device_info(entry)
         self._attr_name = f"{entry.title} test notification"
         self._attr_unique_id = f"hertz_freerider_{entry.entry_id}_test_notification"
 
