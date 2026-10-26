@@ -13,9 +13,11 @@ the matching offer; never fabricate a deep link.
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING
 from urllib.parse import urlsplit
 
-from .filters import Ride
+if TYPE_CHECKING:
+    from .filters import Ride
 
 _LOGGER = logging.getLogger(__name__)
 
