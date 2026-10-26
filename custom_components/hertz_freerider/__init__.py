@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, SERVICE_REFRESH
 from .tolls import TollLookupError
@@ -15,6 +16,7 @@ from .coordinator import FreeriderCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor", "button"]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
