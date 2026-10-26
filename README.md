@@ -1,23 +1,24 @@
-# Hertz Freerider for Home Assistant
+# Freerider HA
 
 [Latest GitHub release](https://github.com/Wesc-9/Freerider_HA/releases/latest) · [Changelog](https://github.com/Wesc-9/Freerider_HA/blob/main/CHANGELOG.md)
 
 
-> **v0.4.0 community test release.** Norway/Sweden live read-only feeds are connected; end-to-end Home Assistant runtime testing is still needed. Denmark is not yet implemented. Please verify booking details on Hertz before relying on any alert.
+> **Community test integration.** Norway/Sweden live read-only feeds are connected; end-to-end Home Assistant runtime testing is still needed. Denmark is not yet implemented. Please verify booking details on Hertz before relying on any alert.
 
 Independent community project; not affiliated with or endorsed by Hertz.
 
 ## Simple, bilingual setup (Norwegian / English)
 
-The current Home Assistant setup is a short **native 3-step wizard** (and a fourth step only when a date is needed):
+The current Home Assistant setup is a **2-step native wizard**:
 
-1. **Countries and watch name** — choose Norway and/or Sweden. Denmark is labeled as pending and cannot be the only country yet.
-2. **From / to** — searchable station suggestions are fetched from the currently published Hertz routes. Type a different town/station name if it is missing. Leave an origin or destination blank to search anywhere.
-3. **Date** — all dates by default, or choose one date or a date range. Date fields appear only when selected.
+1. **Name and countries** — select Norway and/or Sweden. Denmark is listed as coming later.
+2. **From / to and dates** — select *several* stations in each input, or type custom station names. The integration monitors any chosen departure → any chosen arrival combination. Leave an input empty to match anywhere. Choose no dates (all), only the first date (one day), or both dates (an inclusive range).
 
-After setup, use **Settings → Devices & services → Freerider → Configure** to independently edit **Route**, **Dates**, **Optional vehicle filters**, or **Automatic checks and notifications**. Existing searches are editable; no need to delete and start over. Automatic polling defaults to 30 minutes. Multiple saved routes work as separate integration entries.
+After setup, use **Settings → Devices & services → Freerider → Configure** to independently edit **Places and dates**, **Dates**, **Optional vehicle filters**, or **Automatic checks and notifications**. Existing searches are editable; no need to delete and start over. Automatic polling defaults to 30 minutes. Multiple saved routes work as separate integration entries.
 
 The integration follows the user's Home Assistant **light/dark theme**; it cannot impose a separate bright design over the native Home Assistant modal. Configure Home Assistant to use Light appearance for the Apple-like, neutral look. The source UI follows the Home Assistant locale and includes Norwegian Bokmål (`nb`) and English (`en`) translations.
+
+The public integration name is **Freerider HA** (no Hertz branding in the title). The internal Home Assistant domain remains `hertz_freerider` to retain existing installation and entity IDs.
 
 This is an **independent, unofficial community project**. It is not developed, operated, sponsored, licensed or endorsed by Hertz. Hertz and Freerider names are used solely to identify the supported service; do not mistake this project for an official integration.
 
@@ -25,7 +26,7 @@ This is an **independent, unofficial community project**. It is not developed, o
 
 - Multiple independent watch profiles (each one a Home Assistant config entry).
 - Countries: **Norway, Sweden, Denmark** (the currently confirmed Freerider-specific services), multi-select. This list is extendable after official verification of additional countries; regular Hertz rental locations are not automatically Freerider countries.
-- Searchable suggestions for departure/arrival from live route station lists **plus free-text input** for places not listed. Either strict direction or **either direction**; leave a field blank to match any location.
+- Searchable multi-select departure/arrival inputs (with typed free-text options). Choose several origins and several destinations in one saved search. All combinations match; empty means anywhere. Both-direction matching is optional.
 - Travel date: **any**, **one day**, or **inclusive range**. In NO/SE, matches from published availableAt through offer expireTime. This is NOT a guaranteed selectable pickup window. Missing dates are excluded.
 - Transmission: **any**, **automatic**, **manual**. Optional vehicle type (car/van/minibus), fuel type, and minimum seats; unknown listing metadata does not masquerade as a match.
 - **Automatic** background polling (minimum 15 minutes, configurable 15–120 min) or **manual** via a refresh button or `hertz_freerider.refresh` service.

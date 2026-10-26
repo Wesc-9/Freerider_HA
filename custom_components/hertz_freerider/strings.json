@@ -1,22 +1,24 @@
 {
-  "title": "Freerider for Home Assistant",
+  "title": "Freerider HA",
   "config": {
     "step": {
       "user": {
         "title": "1 · Choose countries",
-        "description": "Independent community project; not developed, endorsed or affiliated with Hertz. Select the Freerider services you want to watch. Norway and Sweden have working route feeds; Denmark is not ready yet.",
+        "description": "Freerider HA is an unofficial project for easier searches for available Freerider cars. Not developed, endorsed or affiliated with Hertz. Choose the countries to search.",
         "data": {
           "watch_name": "Name of saved search",
           "countries": "Countries"
         }
       },
       "route": {
-        "title": "2 · Choose route",
-        "description": "Choose a station from the suggested places, or type any city or location. Suggestions come from currently published routes, so they may change. Leave either field empty to include all locations.",
+        "title": "2 · From, to and travel dates",
+        "description": "Select multiple departure and arrival places, or type your own. All combinations are searched. Leave either field empty for anywhere. Dates are optional: first date only means one day; both dates mean a range.",
         "data": {
-          "origin": "From (optional — any location)",
-          "destination": "To (optional — any location)",
-          "direction": "Direction"
+          "origin": "From – select several places (optional)",
+          "destination": "To – select several places (optional)",
+          "direction": "Direction",
+          "date_start": "Date / first date (optional)",
+          "date_end": "Last date (optional, for a range)"
         }
       },
       "date": {
@@ -48,21 +50,23 @@
         "title": "Manage saved Freerider search",
         "description": "Change only the part you need. Advanced vehicle options and notification settings stay out of the initial setup.",
         "menu_options": {
-          "route": "Countries and places",
+          "route": "Countries, places and dates",
           "dates": "Travel dates",
           "filters": "Vehicle filters (optional)",
           "updates": "Automatic checks and notifications"
         }
       },
       "route": {
-        "title": "Countries and places",
-        "description": "Choose a suggested station or enter any place. Blank means anywhere.",
+        "title": "Places and dates",
+        "description": "Add or remove places in From and To, and select a day or date range. All combinations are monitored.",
         "data": {
           "watch_name": "Search name",
           "countries": "Countries",
-          "origin": "From",
-          "destination": "To",
-          "direction": "Direction"
+          "origin": "From – select several places (optional)",
+          "destination": "To – select several places (optional)",
+          "direction": "Direction",
+          "date_start": "Date / first date (optional)",
+          "date_end": "Last date (optional, for a range)"
         }
       },
       "dates": {
