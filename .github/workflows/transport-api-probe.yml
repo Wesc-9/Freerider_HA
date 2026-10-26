@@ -34,6 +34,20 @@ jobs:
                               print('ITEM',json.dumps(v[0],ensure_ascii=False)[:1800],flush=True)
                   elif isinstance(result,list):
                       print('COUNT',len(result),flush=True)
+                      offers=[route for group in result if isinstance(group,dict) for route in group.get('routes',[])]
+                      print('ROUTES_TOTAL',len(offers),flush=True)
+                      if offers:
+                          ride=offers[0]
+                          print('ROUTE_KEYS',list(ride),flush=True)
+                          for k,v in ride.items():
+                              if not isinstance(v,(dict,list)):
+                                  print('ROUTE_FIELD',k,repr(v)[:350],flush=True)
+                              elif isinstance(v,dict):
+                                  print('ROUTE_NESTED_KEYS',k,list(v)[:35],flush=True)
+                          for x in offers[1:]:
+                              if x.get('transportOfferId') != ride.get('transportOfferId'):
+                                  print('ALT_VALUES',[(k,repr(v)[:150]) for k,v in x.items() if not isinstance(v,(dict,list))],flush=True)
+                                  break
                       for x in result[:2]:print('ITEM',json.dumps(x,ensure_ascii=False)[:1800],flush=True)
               except Exception as e:
                   print('ERROR',type(e).__name__,str(e)[:350],flush=True)
