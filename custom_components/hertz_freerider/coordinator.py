@@ -14,6 +14,8 @@ from .const import (
     CONF_COUNTRIES, CONF_EVENTS, CONF_SCAN_INTERVAL, CONF_SCAN_MODE,
     DEFAULT_POLL_MINUTES, DOMAIN, EVENT_NEW_RIDE, CONF_NOTIFY_TARGET, CONF_NOTIFY_ENABLED,
     CONF_TOLL_IN_NOTIFICATIONS, CONF_ALERT_EXISTING, CONF_ALERT_UPDATES,
+    CONF_SORT_BY, CONF_QUIET_START, CONF_QUIET_END, CONF_QUIET_URGENT,
+    CONF_MAX_TOLL, CONF_ONLY_FEASIBLE,
 )
 from .filters import Ride, filter_rides
 from .source import async_fetch_country
@@ -26,6 +28,8 @@ from .quote_cache import async_get_quote_catalog
 from .quote_rules import quote_eligibility
 from .search_enhancements import classify_offers
 from .trip_costs import cost_breakdown
+from .trip_planner import sort_offers, journey_feasibility, quiet_now, is_urgent
+from zoneinfo import ZoneInfo
 
 _LOGGER = logging.getLogger(__name__)
 MAX_REMEMBERED = 1500
@@ -40,6 +44,8 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         self.seen_store = Store(hass, 1, f"{DOMAIN}_seen_{entry.entry_id}")
         self.seen_ids: list[str] | None = None
         self.pending_notification_ids: list[str] = []
+        self.favorite_offers: dict[str, dict] = {}
+        self._force_source_fetch = False
         self.offer_snapshots: dict[str,dict] | None = None
         self.offer_history: list[dict] = []
         self.last_success_utc: str | None = None
@@ -84,13 +90,19 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
             self.last_success_utc=loaded.get("last_success_utc")
             self.last_alert_utc=loaded.get("last_alert_utc")
             self.sent_alert_count=int(loaded.get("sent_alert_count") or 0)
+            fav=loaded.get("favorite_offers")
+            if isinstance(fav,dict):
+                self.favorite_offers={key:value for key,value in list(fav.items())[:80]
+                                      if isinstance(key,str) and isinstance(value,dict)}
 
 
     async def _async_update_data(self) -> list[Ride]:
         self.last_attempt_utc = datetime.now(timezone.utc).isoformat()
         countries = self.settings.get(CONF_COUNTRIES, ["NO"])
+        force=self._force_source_fetch
+        self._force_source_fetch=False
         results = await asyncio.gather(
-            *(async_fetch_country(self.hass, country) for country in countries),
+            *(async_fetch_country(self.hass, country, force=force) for country in countries),
             return_exceptions=True,
         )
         valid: list[Ride] = []
@@ -129,6 +141,18 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
             if ride.source_country in failed_countries:
                 unique.setdefault(ride.key,ride)
         matched = filter_rides(list(unique.values()), self.settings)
+        cost_by_id = {
+            ride.key: cost_breakdown(ride,self.toll_estimates.get(ride.key),self.settings)
+            for ride in matched
+        }
+        home = None
+        if self.settings.get(CONF_SORT_BY) == "nearest_pickup":
+            lat,lon=self.hass.config.latitude,self.hass.config.longitude
+            if lat is not None and lon is not None:
+                home=(float(lat),float(lon))
+        matched=sort_offers(
+            matched,self.settings.get(CONF_SORT_BY,"date"),cost_by_id,home=home,
+        )
         await self._remember_and_notify(
             matched,
             {country for country, result in zip(countries, results)
