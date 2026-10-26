@@ -1,6 +1,9 @@
 # Hertz Freerider for Home Assistant
 
-> **Developer alpha: live Norway/Sweden feeds connected, Home Assistant runtime not yet tested.** Verified public Hertz route JSON endpoints returned real offers without login on 2026-10-26. Denmark is listed in setup but has no working adapter. Do not rely on mobile notifications until end-to-end testing.
+[Latest GitHub release](https://github.com/Wesc-9/Freerider_HA/releases/latest) · [Changelog](https://github.com/Wesc-9/Freerider_HA/blob/main/CHANGELOG.md)
+
+
+> **v0.4.0 community test release.** Norway/Sweden live read-only feeds are connected; end-to-end Home Assistant runtime testing is still needed. Denmark is not yet implemented. Please verify booking details on Hertz before relying on any alert.
 
 Independent community project; not affiliated with or endorsed by Hertz.
 

@@ -1,0 +1,58 @@
+name: Publish HACS release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'custom_components/hertz_freerider/manifest.json'
+      - '.github/workflows/publish-release.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: publish-hacs-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Check code and tests
+        run: |
+          python -m compileall -q custom_components/hertz_freerider
+          PYTHONPATH=custom_components/hertz_freerider python -m unittest discover -s tests -v
+      - name: Validate manifest and version
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest=json.loads(Path('custom_components/hertz_freerider/manifest.json').read_text())
+          version=manifest.get('version')
+          if not version or version.startswith('v'):
+              raise SystemExit('manifest.version must be a nonempty, unprefixed semantic version')
+          print('Release version:', version)
+          PY
+      - name: Publish GitHub release and version tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          version=$(python -c 'import json; print(json.load(open("custom_components/hertz_freerider/manifest.json"))["version"])')
+          tag="v${version}"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "Release $tag already exists; refusing to republish"
+            exit 0
+          fi
+          gh release create "$tag" \
+            --target "$GITHUB_SHA" \
+            --title "Freerider for Home Assistant $tag" \
+            --notes-file RELEASE_NOTES.md
+          echo "Published $tag"
