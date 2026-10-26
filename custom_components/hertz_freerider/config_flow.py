@@ -68,12 +68,17 @@ def _place_selector(names: list[str]):
 def route_schema(values: dict | None, stations: list[str]) -> vol.Schema:
     """Origin and destination can be left blank for all locations."""
     values = values or {}
-    return vol.Schema({
-        vol.Optional(CONF_ORIGIN, default=values.get(CONF_ORIGIN, "")): _place_selector(stations),
-        vol.Optional(CONF_DESTINATION, default=values.get(CONF_DESTINATION, "")): _place_selector(stations),
-        vol.Required(CONF_DIRECTION, default=values.get(CONF_DIRECTION, "forward")):
-            select(["forward", "either"], "direction"),
-    })
+    fields = {}
+    for key in (CONF_ORIGIN, CONF_DESTINATION):
+        field = (
+            vol.Optional(key, default=values[key])
+            if values.get(key) else vol.Optional(key)
+        )
+        fields[field] = _place_selector(stations)
+    fields[vol.Required(
+        CONF_DIRECTION, default=values.get(CONF_DIRECTION, "forward")
+    )] = select(["forward", "either"], "direction")
+    return vol.Schema(fields)
 
 
 def date_mode_schema(values: dict | None = None) -> vol.Schema:
@@ -295,6 +300,9 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
                     country.upper() for country in user_input.get(CONF_COUNTRIES, [])
                 ],
             }
+            # Explicit blanks let users remove a previously selected station.
+            user_input.setdefault(CONF_ORIGIN, "")
+            user_input.setdefault(CONF_DESTINATION, "")
             invalid = validation_error(user_input)
             if invalid is None:
                 title = user_input.pop(CONF_WATCH_NAME, self.config_entry.title)
