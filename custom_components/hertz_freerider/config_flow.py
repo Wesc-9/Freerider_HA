@@ -39,9 +39,11 @@ def countries_schema(values: dict | None = None) -> vol.Schema:
     return vol.Schema({
         vol.Required(CONF_WATCH_NAME, default=values.get(CONF_WATCH_NAME, "Freerider")):
             selector.TextSelector(),
-        vol.Required(CONF_COUNTRIES, default=values.get(CONF_COUNTRIES, ["NO"])):
+        vol.Required(CONF_COUNTRIES, default=[
+            country.lower() for country in values.get(CONF_COUNTRIES, ["NO"])
+        ]):
             selector.SelectSelector(selector.SelectSelectorConfig(
-                options=list(COUNTRIES),
+                options=[country.lower() for country in COUNTRIES],
                 multiple=True,
                 mode=selector.SelectSelectorMode.LIST,
                 translation_key="countries",
@@ -184,6 +186,12 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Page one: name and countries."""
         errors = {}
         if user_input is not None:
+            user_input = {
+                **user_input,
+                CONF_COUNTRIES: [
+                    country.upper() for country in user_input.get(CONF_COUNTRIES, [])
+                ],
+            }
             invalid = validation_error(user_input)
             if invalid is None:
                 self._draft.update(user_input)
@@ -281,6 +289,12 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
         errors = {}
         current = self._settings()
         if user_input is not None:
+            user_input = {
+                **user_input,
+                CONF_COUNTRIES: [
+                    country.upper() for country in user_input.get(CONF_COUNTRIES, [])
+                ],
+            }
             invalid = validation_error(user_input)
             if invalid is None:
                 title = user_input.pop(CONF_WATCH_NAME, self.config_entry.title)

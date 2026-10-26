@@ -110,9 +110,9 @@
   "selector": {
     "countries": {
       "options": {
-        "NO": "Norge",
-        "SE": "Sverige",
-        "DK": "Danmark · kommer senere"
+        "no": "Norge",
+        "se": "Sverige",
+        "dk": "Danmark · kommer senere"
       }
     },
     "direction": {
