@@ -10,7 +10,10 @@ from datetime import date
 import unicodedata
 import re
 
-from .search_enhancements import matches_model, station_in_radius
+if __package__:
+    from .search_enhancements import matches_model, station_in_radius
+else:
+    from search_enhancements import matches_model, station_in_radius
 
 
 @dataclass(frozen=True)
