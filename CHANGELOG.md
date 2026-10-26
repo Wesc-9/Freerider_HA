@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.0 (2026-10-26) — readable offers and exact car model names
+- Optional Home Assistant dashboard card shows separate offer cards rather than raw sensor attribute lists.
+- Original provider `carModel` string displayed prominently and unmodified (including VW CRAFTER 14M3 4MOTION TDI VA).
+- Show actual route, provider distance, duration, pickup availability, return deadline, current toll estimate, and official Freerider listing link.
+- Recognize VW Crafter and other known cargo-van models internally, but **never** replace their visible car model with a derived generic vehicle type.
+- Block automatic and manual small-passenger-car toll pricing when van/minibus weight or toll class is unverified; do not misrepresent an unavailable price as zero.
+- Preserve existing matching-rides sensor ID, entity attributes, configured searches and mobile alert routing.
+- Register optional dashboard JavaScript resource in storage mode; document manual resource setup fallback.
+- Add frontend syntax checking and unit test coverage for true car model preservation.
+
+
 ## 0.7.0 (2026-10-26) — detailed journey alerts
 - Parse real Freerider distance (km) and drive time (minutes), include along with vehicle model, route and date deadlines in push messages.
 - Use real station coordinates for optional Norwegian toll estimates on new matching car alerts.

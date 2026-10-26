@@ -7,6 +7,33 @@
 
 Independent community project; not affiliated with or endorsed by Hertz.
 
+## Visual offer list on a Home Assistant dashboard (0.8.0)
+
+The default Home Assistant entity-details dialog shows the `rides` sensor as raw attributes. Freerider HA now adds an **optional dashboard card** for an understandable list of offers, without changing how the existing sensors and alerts work.
+
+In each offer card, the **full vehicle name is shown verbatim** from Freerider's published `carModel` field — for example **VW CRAFTER 14M3 4MOTION TDI VA**. It is **not shortened to "Crafter" or replaced with "varebil"/"van"**. The technical van classification is used *only behind the scenes* to avoid assuming an unsupported passenger-car toll tariff. The dashboard also shows the full route, provider distance, estimated driving time, availability/return deadlines, toll status, and the official Freerider website link.
+
+**To add to a dashboard:**
+
+1. Update to **0.8.0** through HACS, then restart Home Assistant.
+2. Open any Dashboard → Edit dashboard → Add card → **Manual (YAML)**.
+3. Paste (replace the entity ID if your search has a custom name):
+
+```yaml
+type: custom:freerider-rides-card
+entity: sensor.freerider_matching_rides
+```
+
+The integration attempts to register the JavaScript dashboard resource in the normal storage-managed Lovelace mode. If you see **Custom element doesn't exist**, add a dashboard resource manually under **Settings → Dashboards → Resources** (or in YAML mode's `lovelace:` resources) as **JavaScript module** with URL:
+
+```text
+/freerider-ha/freerider-rides-card.js?v=0.8.0
+```
+
+The card follows Home Assistant's selected **light/dark theme** and adapts to mobile widths. There is no external frontend package, login, or extra network request. It renders existing Freerider sensor attributes and updates when that sensor changes.
+
+**Important:** Home Assistant's standard entity detail dialog remains unchanged; a custom integration cannot turn its raw attribute list into a custom modal without replacing core frontend UI. Use the dashboard card for the new results view. For safety, clicking a car opens the **official Freerider country listing**, not an unverified exact-car checkout URL.
+
 ## Direct notifications with booking-site link
 
 During **new Freerider search registration**, the **From / To / Dates** screen now also contains **Notify me about new cars** (toggle) and **Send notifications to** (a dropdown of actual Home Assistant Companion app phones, plus an in-app notification option). Select your phone and turn on notifications before submitting the search. For existing searches, open **Settings → Devices & services → Freerider HA → Configure → Places, dates and notifications**; the same controls are available there. Update frequency and Home Assistant event options remain under **Refresh interval and events**. Available phone-specific `notify.mobile_app_*` services are discovered automatically and shown by name; alternatively choose **Home Assistant notifications** for messages in the HA UI. `Off` disables direct notification, while the existing new-ride event/automation blueprint still works. Automatic checks can be enabled or disabled independently.
