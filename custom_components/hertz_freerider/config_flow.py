@@ -68,7 +68,7 @@ def _place_selector(names: list[str]):
     ))
 
 
-def route_schema(values: dict | None, stations: list[str]) -> vol.Schema:
+def route_schema(values: dict | None, stations: list[str], targets=None) -> vol.Schema:
     """Show departure, destination and travel dates together."""
     values = values or {}
     fields = {}
@@ -88,6 +88,18 @@ def route_schema(values: dict | None, stations: list[str]) -> vol.Schema:
             fields[vol.Optional(key, default=values[key])] = selector.DateSelector()
         else:
             fields[vol.Optional(key)] = selector.DateSelector()
+
+    target = values.get(CONF_NOTIFY_TARGET, TARGET_OFF)
+    enabled = values.get(CONF_NOTIFY_ENABLED, target != TARGET_OFF)
+    fields[vol.Required(CONF_NOTIFY_ENABLED, default=bool(enabled))] = selector.BooleanSelector()
+    if targets is None:
+        targets = [(TARGET_OFF, "Off")]
+    fields[vol.Required(CONF_NOTIFY_TARGET, default=target)] = selector.SelectSelector(
+        selector.SelectSelectorConfig(
+            options=[selector.SelectOptionDict(value=value, label=label) for value, label in targets],
+            mode=selector.SelectSelectorMode.DROPDOWN,
+        )
+    )
     return vol.Schema(fields)
 
 
