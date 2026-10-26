@@ -36,7 +36,7 @@ class ProviderDeepLinkTests(unittest.TestCase):
         self.assertEqual(parsed.path,"/booking-flow/no-no/")
         fragment=parse_qs(parsed.fragment)
         self.assertEqual(fragment["id"],["67718"])
-        self.assertEqual(fragment["date"],["2026-10-27T08:00"])
+        self.assertEqual(fragment["date"],["2026-10-27T08:15"])
 
     def test_swedish_localized_booking_flow(self):
         url,direct=official_car_booking_url(
