@@ -185,6 +185,10 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
             for ride in matched:
                 if ride.key not in queued:
                     continue
+                if ride.source_country not in successful_countries:
+                    # Never notify from a stale cached feed after source outage.
+                    still_pending.append(ride.key)
+                    continue
                 if attempts>=8:
                     still_pending.append(ride.key)
                     continue
