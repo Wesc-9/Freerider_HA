@@ -17,6 +17,7 @@ jobs:
           pat=r'a.u=function\\(e\\)\\{return(\\{.+?\\})\\[e\\]\\+"-"\\+(\\{.+?\\})\\[e\\]\\+"\\.js"'
           m=re.search(pat,js)
           print('RUNTIME_MAP',bool(m),flush=True)
+          print('RUNTIME_SNIPPET',js[js.find('a.u=function'):js.find('a.u=function')+3100],flush=True)
           if m:
             names={int(k):v for k,v in re.findall(r'(\\d+):"([^"]+)"',m.group(1))}
             hashes={int(k):v for k,v in re.findall(r'(\\d+):"([^"]+)"',m.group(2))}
