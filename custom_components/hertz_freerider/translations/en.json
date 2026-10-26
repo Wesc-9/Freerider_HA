@@ -56,7 +56,9 @@
           "route": "Places, dates and notifications",
           "dates": "Travel dates",
           "filters": "Vehicle filters (optional)",
-          "updates": "Refresh interval and events"
+          "updates": "Refresh interval and events",
+          "area": "Search radius around stations",
+          "costs": "Trip cost assumptions"
         }
       },
       "route": {
@@ -91,12 +93,14 @@
       },
       "filters": {
         "title": "Vehicle preferences",
-        "description": "All filters are optional. Unknown vehicle details are not guessed.",
+        "description": "Search for parts of model names, such as 'Crafter; Transporter'. Include or exclude model terms. Unknown gearboxes and vehicle types are not guessed.",
         "data": {
           "transmission": "Gearbox",
           "vehicle_type": "Vehicle category",
           "fuel": "Fuel type",
-          "min_seats": "Minimum seats (0 = any)"
+          "min_seats": "Minimum seats (0 = any)",
+          "model_include": "Vehicle names to include (separate with ;)",
+          "model_exclude": "Vehicle names to exclude (separate with ;)"
         }
       },
       "updates": {
@@ -106,7 +110,28 @@
           "scan_mode": "Search mode",
           "scan_interval": "Minutes between automatic checks",
           "notify_events": "Also emit events for HA automations",
-          "toll_in_notifications": "Include estimated tolls in new car alerts (Norway)"
+          "toll_in_notifications": "Include estimated tolls in new car alerts (Norway)",
+          "alert_existing_first_scan": "Notify about existing available cars on first scan",
+          "alert_offer_changes": "Also notify when offer dates or availability change"
+        }
+      },
+      "area": {
+        "title": "Stations within a radius",
+        "description": "Choose a radius and one or both GPS-verified stations. Matching stations inside that straight-line distance supplement your other From/To places. Coordinates come only from actual Freerider stations. 0 disables radius search.",
+        "data": {
+          "radius_km": "Radius in kilometres",
+          "origin_radius_name": "Near departure station (optional)",
+          "destination_radius_name": "Near arrival station (optional)"
+        }
+      },
+      "costs": {
+        "title": "Estimated fuel and charging",
+        "description": "Enter your own consumption and prices. Zero means unknown and disables that estimate. Only stated vehicle fuel types are used. These are partial estimates, not a full rental cost. Ferries/fees may be extra.",
+        "data": {
+          "fuel_l_100km": "Petrol/diesel consumption (litres/100 km)",
+          "fuel_price_nok_l": "Fuel price (NOK/litre)",
+          "electric_kwh_100km": "Electric consumption (kWh/100 km)",
+          "electric_price_nok_kwh": "Charging price (NOK/kWh)"
         }
       }
     },
@@ -115,7 +140,9 @@
       "country_not_ready": "Choose Norway or Sweden. The Danish source is not available yet.",
       "missing_date": "Choose the required dates.",
       "end_before_start": "End date cannot precede start date.",
-      "notification_device_required": "Choose a notification device before enabling alerts."
+      "notification_device_required": "Choose a notification device before enabling alerts.",
+      "radius_station_unavailable": "Choose a station with known GPS coordinates.",
+      "radius_center_required": "Select at least one center station when radius is active."
     }
   },
   "selector": {
@@ -167,6 +194,14 @@
       "options": {
         "automatic": "Check automatically",
         "manual": "Manual refresh only"
+      }
+    },
+    "radius_km": {
+      "options": {
+        "0": "Off",
+        "25": "25 km",
+        "50": "50 km",
+        "100": "100 km"
       }
     }
   }

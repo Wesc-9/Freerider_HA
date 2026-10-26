@@ -56,7 +56,9 @@
           "route": "Steder, dato og varsler",
           "dates": "Dato og periode",
           "filters": "Bilpreferanser (valgfritt)",
-          "updates": "Søkeintervall og hendelser"
+          "updates": "Søkeintervall og hendelser",
+          "area": "Søkeradius rundt steder",
+          "costs": "Reisekostnader (egne satser)"
         }
       },
       "route": {
@@ -91,12 +93,14 @@
       },
       "filters": {
         "title": "Bilpreferanser",
-        "description": "Alt er valgfritt. Ukjent informasjon om bilene blir ikke gjettet.",
+        "description": "Søk etter navnedeler i bilmodellen, for eksempel «Crafter; Transporter». Avgrens eller utelat modeller. Ukjente girkasser og biltyper gjettes ikke.",
         "data": {
           "transmission": "Girkasse",
           "vehicle_type": "Biltype",
           "fuel": "Drivstoff",
-          "min_seats": "Minste antall seter (0 = alle)"
+          "min_seats": "Minste antall seter (0 = alle)",
+          "model_include": "Bilnavn som inkluderes (atskilt med ;)",
+          "model_exclude": "Bilnavn som utelates (atskilt med ;)"
         }
       },
       "updates": {
@@ -106,7 +110,28 @@
           "scan_mode": "Oppdateringsmåte",
           "scan_interval": "Minutter mellom automatiske søk",
           "notify_events": "Publiser også hendelser til Home Assistant-automasjoner",
-          "toll_in_notifications": "Inkluder bompengeestimat i nye bilvarsler (Norge)"
+          "toll_in_notifications": "Inkluder bompengeestimat i nye bilvarsler (Norge)",
+          "alert_existing_first_scan": "Varsle om biler som allerede er ledige ved første søk",
+          "alert_offer_changes": "Varsle også når tilgjengelighet eller dato endres"
+        }
+      },
+      "area": {
+        "title": "Stasjoner innen en radius",
+        "description": "Velg radius og en eller begge referansestasjoner fra tilgjengelige GPS-kjente stasjoner. Treffer stasjoner innen fuglelinjeavstand, i tillegg til eventuelle valgte Fra/Til-steder. GPS-data hentes fra faktiske Freerider-stasjoner. 0 km skrur funksjonen av.",
+        "data": {
+          "radius_km": "Radius i kilometer",
+          "origin_radius_name": "Rundt avreisested (valgfritt)",
+          "destination_radius_name": "Rundt ankomststed (valgfritt)"
+        }
+      },
+      "costs": {
+        "title": "Estimert drivstoff og lading",
+        "description": "Legg inn eget forventet forbruk og priser. 0 betyr ikke oppgitt (da beregnes ikke komponenten). Kun drivstofftype oppgitt på bilen brukes. Kostnadene er delanslag, ikke en komplett leiepris. Ferger/avgifter kan komme i tillegg.",
+        "data": {
+          "fuel_l_100km": "Forbruk bensin/diesel (liter/100 km)",
+          "fuel_price_nok_l": "Drivstoffpris (kr/liter)",
+          "electric_kwh_100km": "Forbruk elbil (kWh/100 km)",
+          "electric_price_nok_kwh": "Ladepris (kr/kWh)"
         }
       }
     },
@@ -115,7 +140,9 @@
       "country_not_ready": "Velg Norge eller Sverige. Danmark er ikke tilgjengelig ennå.",
       "missing_date": "Velg nødvendige datoer.",
       "end_before_start": "Sluttdato kan ikke være før startdato.",
-      "notification_device_required": "Velg en varslingsenhet før du slår på varsler."
+      "notification_device_required": "Velg en varslingsenhet før du slår på varsler.",
+      "radius_station_unavailable": "Velg en stasjon med kjente GPS-koordinater.",
+      "radius_center_required": "Velg minst ett referansested når radius er aktiv."
     }
   },
   "selector": {
@@ -167,6 +194,14 @@
       "options": {
         "automatic": "Søk automatisk",
         "manual": "Kun manuell oppdatering"
+      }
+    },
+    "radius_km": {
+      "options": {
+        "0": "Av",
+        "25": "25 km",
+        "50": "50 km",
+        "100": "100 km"
       }
     }
   }
