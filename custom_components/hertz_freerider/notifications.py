@@ -44,19 +44,45 @@ def official_url(value: str | None, country: str) -> str:
     return KNOWN_LANDING.get(country, KNOWN_LANDING["NO"])
 
 
-def notification_content(ride: Ride, name: str) -> dict:
-    """Build an accurate user-facing message with route details and URL."""
+def notification_content(ride: Ride, name: str, language: str = "nb") -> dict:
+    """One concise notification with route details and a trusted official URL."""
     url = official_url(ride.booking_url, ride.source_country)
-    when = f" · Fra {ride.available_start}" if ride.available_start else ""
-    title = f"Freerider HA · Ny bil ({name})"
-    body = (
-        f"{ride.origin} → {ride.destination}\n"
-        f"{ride.vehicle}{when}\n"
-        f"Tilbuds-ID: {ride.key}\n"
-        "Åpne Freerider for å finne og bestille bilen. "
-        "Bompenger og drivstoff/lading kan forekomme."
-    )
+    norwegian = language.lower().startswith(("nb", "nn", "no"))
+    if norwegian:
+        when = f" · Tilgjengelig fra {ride.available_start}" if ride.available_start else ""
+        title = f"Freerider HA · Ny bil ({name})"
+        body = (
+            f"{ride.origin} → {ride.destination}\\n"
+            f"{ride.vehicle}{when}\\n"
+            f"Tilbuds-ID: {ride.key}\\n"
+            "Trykk for å åpne Freerider og velge bilen. "
+            "Bom og drivstoff/lading kan forekomme."
+        )
+    else:
+        when = f" · Available from {ride.available_start}" if ride.available_start else ""
+        title = f"Freerider HA · New car ({name})"
+        body = (
+            f"{ride.origin} → {ride.destination}\\n"
+            f"{ride.vehicle}{when}\\n"
+            f"Offer ID: {ride.key}\\n"
+            "Tap to open Freerider and select the car. "
+            "Tolls and fuel/charging costs may apply."
+        )
     return {"title": title, "message": body, "url": url}
+
+
+def test_notification_content(name: str, language: str = "nb") -> dict:
+    """A clear test, not a fabricated car offer."""
+    norwegian = language.lower().startswith(("nb", "nn", "no"))
+    return {
+        "title": "Freerider HA · Testvarsel" if norwegian else "Freerider HA · Test notification",
+        "message": (
+            f"Varsler for «{name}» er aktivert. Nye biler sendes hit med rute og lenke."
+            if norwegian else
+            f"Notifications for “{name}” are enabled. New cars will appear here with their route and link."
+        ),
+        "url": KNOWN_LANDING["NO"],
+    }
 
 
 def notification_targets(hass, configured: str | None = None) -> list[tuple[str, str]]:
