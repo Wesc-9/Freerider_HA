@@ -113,12 +113,15 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def async_get_options_flow(config_entry):
-        """Allow adjustments without reinstalling."""
-        # Recent Home Assistant versions provide selclass FreeriderOptionsFlow(config_entries.OptionsFlow):
-    """Edit every filter/scan setting in Home Assistant."""
+        """Open an editable options form for this watch."""
+        return FreeriderOptionsFlow()
+
+
+class FreeriderOptionsFlow(config_entries.OptionsFlow):
+    """Options use the current Home Assistant self.config_entry property."""
 
     async def async_step_init(self, user_input=None):
-        """Accept changed route settings."""
+        """Accept changed filters without reinstalling."""
         errors = {}
         if user_input is not None:
             invalid = validation_error(user_input)

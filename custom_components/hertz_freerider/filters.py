@@ -30,6 +30,12 @@ class Ride:
     available_at: str | None = None
     offer_expires_at: str | None = None
     latest_return_at: str | None = None
+    pickup_lat: float | None = None
+    pickup_lon: float | None = None
+    return_lat: float | None = None
+    return_lon: float | None = None
+    pickup_country: str | None = None
+    return_country: str | None = None
 
     @property
     def key(self) -> str:
@@ -54,6 +60,7 @@ class Ride:
             "available_at": self.available_at,
             "offer_expires_at": self.offer_expires_at,
             "latest_return_at": self.latest_return_at,
+            "toll_note": "Tolls may be charged. Fuel/charging costs may apply.",
         }
 
 
@@ -217,6 +224,12 @@ def parse_transport_routes(payload: object, country: str, booking_url: str) -> l
                 available_at=available_at,
                 offer_expires_at=expires_at,
                 latest_return_at=latest_return,
+                pickup_lat=pickup.get("geoLat"),
+                pickup_lon=pickup.get("geoLon"),
+                return_lat=dropoff.get("geoLat"),
+                return_lon=dropoff.get("geoLon"),
+                pickup_country=pickup.get("country"),
+                return_country=dropoff.get("country"),
             )
             rides[ride.key] = ride
     return list(rides.values())

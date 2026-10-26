@@ -16,11 +16,33 @@ Independent community project; not affiliated with or endorsed by Hertz.
 - English and Norwegian UI translations; event automation blueprint for notifying any phone using a Home Assistant notification service.
 - No Hertz credentials requested or stored. The NO/SE read-only JSON paths were discovered in the published Freerider frontend and tested with HTTP 200 responses. No secret/private endpoints are used.
 
-## Install for development / personal testing (not stable)
+## Install via Home Assistant (HACS, developer alpha)
 
-Copy `custom_components/hertz_freerider` into `<config>/custom_components/` and restart Home Assistant. Add **Hertz Freerider** under **Settings → Devices & services → Add integration**. Use **Configure** to modify filters. Create additional integration entries for more saved routes.
+**1. Add/open the GitHub repository directly in HACS:**
 
-The source adapters in `source.py` intentionally raise a visible source-not-implemented error. Once an authorized country feed is available, implement the adapter and normalize its output to `Ride` records. The sensor will then become available, and new-ride events can be used with the supplied blueprint (`blueprints/automation/hertz_freerider/new_ride.yaml`).
+[![Open Freerider_HA in HACS](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Wesc-9&repository=Freerider_HA&category=integration)
+
+This official *My Home Assistant* link opens the repository in the user's own instance, including HACS custom repositories. HACS must be installed. **Clicking the badge does not silently install anything**: choose Download/Install inside HACS and restart Home Assistant when prompted.
+
+**2. Add the integration after installation:**
+
+[![Set up Hertz Freerider](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=hertz_freerider)
+
+Or use Settings → Devices & services → Add integration → Hertz Freerider.
+
+**Alternative manual installation:** copy `custom_components/hertz_freerider` into `<config>/custom_components/`, restart Home Assistant, and add the integration.
+
+When installed, configure any number of independent watched routes, date ranges, vehicle preferences and country sources. Norway/Sweden public route adapters are active; Denmark still requires a validated feed. Existing profiles can be edited in **Configure**. This remains alpha until tested against a real Home Assistant runtime.
+
+### Extra costs (important)
+
+**Tolls may be charged to the driver. Fuel/charging costs may apply.** Check the actual country's Freerider conditions and the booking terms before reserving. The FreeRide transfer is not necessarily an entirely free journey. For Danish Freerider, Hertz's FAQ says the first full tank is included, extra fuel may be paid by the driver and bridge/ferry fees normally fall to the driver; verify exceptions directly in the booking. For Norway, Hertz says regular toll tariffs are charged to the rental customer without transferring the normal AutoPASS discount.
+
+**Norwegian toll estimate (on-demand):** The integration includes a manually triggered estimate based on the selected NO→NO route and its real Hertz station coordinates. It uses BompengeAppen's documented public route calculator. It deliberately does **not** call this service automatically for every route: the free keyless limit is 100 requests per IP per day, and toll estimates can vary with vehicle type, trip time and the route chosen. Use the button **Estimate toll for first match**, or call `hertz_freerider.estimate_toll` with an exact `entry_id` and route `ride_id`. Results appear under the matching rides in the sensor's attributes and in the latest estimate sensor.
+
+Estimates use **without-AutoPASS-discount** tariffs to better reflect Hertz's Norway FAQ; they **are not the final amount Hertz will invoice** and may differ due to VAT, fees, vehicle category, seasonal tariffs, time of day or deviations from the proposed road route. For an EV, the no-discount EV rate is used when explicitly identified. Ferries, bridges or journeys outside Norway are **not quoted as zero**: they're labeled unknown/not included. The calculation defaults to the current time unless an ISO `start_time` is provided (e.g. `2026-10-27T08:30:00+01:00`). A user-triggered request can consume quota at BompengeAppen.
+
+**Data used:** [BompengeAppen API docs](https://bompengeappen.no/api-docs), [Hertz Norway FAQ](https://www.hertz.no/p/faq), [Hertz Denmark FAQ](https://hertzfreerider.nu/ofte-stillede-sporgsmal/).
 
 ### Refresh service
 
