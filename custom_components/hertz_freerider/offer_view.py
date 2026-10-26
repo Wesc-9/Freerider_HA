@@ -7,7 +7,10 @@ offers, while the original count sensor still tracks every matching ride.
 
 from __future__ import annotations
 
-from .filters import Ride
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .filters import Ride
 
 DEVICE_OFFER_LIMIT = 8
 
