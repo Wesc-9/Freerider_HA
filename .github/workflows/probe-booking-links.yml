@@ -1,34 +1,42 @@
 name: Probe Freerider booking links
 on:
   push:
-    paths:
-      - '.github/workflows/probe-booking-links.yml'
+    paths: ['.github/workflows/probe-booking-links.yml']
 permissions:
   contents: read
 jobs:
   inspect:
     runs-on: ubuntu-latest
     steps:
-      - name: Inspect URL and persisted selected offer in Gatsby
+      - name: Extract official Freerider direct-link contract
         run: |
           python - <<'PY'
           import requests,re
           base='https://hertzfreerider.no'
           urls=[
-            base+'/component---src-templates-start-tsx-711208a1da0171ccda5f.js',
             base+'/component---src-templates-booking-flow-tsx-5ca4adf91cca8b5747e4.js',
-            base+'/app-39437c55b75f4d1a2470.js'
+            base+'/app-39437c55b75f4d1a2470.js',
+            base+'/sitemap.xml',
+            base+'/page-data/no-no/booking-flow/page-data.json',
+            base+'/page-data/no-no/booking/page-data.json',
+            base+'/page-data/no-no/bestilling/page-data.json'
           ]
           for url in urls:
-            response=requests.get(url,timeout=25)
-            js=response.text
-            print('RESOURCE',response.status_code,url,len(js),flush=True)
-            if response.status_code!=200: continue
-            pats=['selectedRoute','sessionStorage.getItem','sessionStorage.setItem','window.location.search','URLSearchParams','location.search','booking_flow','booking-flow','transportOfferId','routeId','selectedCarDrawer','setSelectedRoute','navigate(','queryParams','queryString']
-            for pat in pats:
-              hits=list(re.finditer(re.escape(pat),js,re.I))
-              if hits:print('PATTERN',pat,'COUNT',len(hits),flush=True)
-              for m in hits[:7]:
-                before=js[max(0,m.start()-280):m.end()+430]
-                print('EXCERPT',pat,before[:740],flush=True)
+            r=requests.get(url,timeout=25)
+            s=r.text
+            print('RESOURCE',r.status_code,len(s),url,flush=True)
+            if r.status_code!=200:continue
+            if '/sitemap' in url:print('CONTENT',s[:3800],flush=True)
+            if '/page-data/' in url:print('CONTENT',s[:600],flush=True)
+            if not url.endswith('.js'):continue
+            for id in ('9691','6141','758','booking_flow','BOOKING_FLOW','booking-flow','selectedRoute','/booking-flow/'):
+              if id.isnumeric():
+                for pattern in (id+':function',id+':(e',id+':(t'):
+                  idx=s.find(pattern)
+                  if idx>=0:print('MODULE',id,s[idx:idx+1700],flush=True)
+              else:
+                hits=list(re.finditer(re.escape(id),s,re.I))
+                print('HITS',id,len(hits),flush=True)
+                for hit in hits[-5:]:
+                  print('NEAR',id,s[max(0,hit.start()-250):hit.end()+310][:600],flush=True)
           PY
