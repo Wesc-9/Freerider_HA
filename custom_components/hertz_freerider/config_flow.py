@@ -513,6 +513,10 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
                     errors["base"]="radius_station_unavailable"
                 opts[key]=name
                 opts[key.replace("_name","_point")]=point
+            if radius and not (
+                opts.get("origin_radius_name") or opts.get("destination_radius_name")
+            ):
+                errors["base"]="radius_center_required"
             if not errors:
                 return self.async_create_entry(
                     title="",data={**self.config_entry.options,**opts},
