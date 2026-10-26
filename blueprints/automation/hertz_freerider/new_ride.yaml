@@ -1,0 +1,28 @@
+blueprint:
+  name: Hertz Freerider - new matching ride
+  description: >
+    Send a push alert when a new matching Freerider offer appears.
+    Requires a functioning source adapter, which is NOT yet in this alpha.
+    Choose your existing Home Assistant notification service.
+  domain: automation
+  input:
+    notify_service:
+      name: Notification service
+      description: For example, notify.mobile_app_iphone
+      selector:
+        text: {}
+trigger:
+  - platform: event
+    event_type: hertz_freerider_new_ride
+action:
+  - action: !input notify_service
+    data:
+      title: "New Hertz Freerider car"
+      message: >-
+        {{ trigger.event.data.origin }} → {{ trigger.event.data.destination }}
+        ({{ trigger.event.data.vehicle }})
+      data:
+        url: "{{ trigger.event.data.booking_url }}"
+        clickAction: "{{ trigger.event.data.booking_url }}"
+mode: queued
+max: 10

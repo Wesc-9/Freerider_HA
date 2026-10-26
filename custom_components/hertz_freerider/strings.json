@@ -1,0 +1,62 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "New Freerider watch",
+        "description": "Choose countries, route, date and vehicle preferences. NOTE: live Hertz listing adapters are not yet available in this alpha version.",
+        "data": {
+          "watch_name": "Watch name",
+          "countries": "Countries",
+          "origin": "From (leave empty for anywhere)",
+          "destination": "To (leave empty for anywhere)",
+          "direction": "Travel direction",
+          "date_mode": "Preferred date",
+          "date_start": "Date / start of range",
+          "date_end": "End of range",
+          "transmission": "Transmission",
+          "vehicle_type": "Vehicle type",
+          "fuel": "Fuel type",
+          "min_seats": "Minimum seats (0 = any)",
+          "scan_mode": "Update mode",
+          "scan_interval": "Automatic refresh interval (minutes)",
+          "notify_events": "Emit event when a new matching ride appears"
+        }
+      }
+    },
+    "error": {
+      "missing_date": "Choose the necessary date(s) for the selected date mode.",
+      "end_before_start": "End date must not precede start date.",
+      "missing_country": "Choose at least one country."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Edit Freerider watch",
+        "description": "Manage route, date, vehicle and notification preferences.",
+        "data": {
+          "watch_name": "Watch name",
+          "countries": "Countries",
+          "origin": "From",
+          "destination": "To",
+          "direction": "Direction",
+          "date_mode": "Date filter",
+          "date_start": "Date / first date",
+          "date_end": "Last date",
+          "transmission": "Transmission",
+          "vehicle_type": "Vehicle type",
+          "fuel": "Fuel",
+          "min_seats": "Minimum seats",
+          "scan_mode": "Update mode",
+          "scan_interval": "Automatic refresh minutes",
+          "notify_events": "Emit new listing events"
+        }
+      }
+    },
+    "error": {
+      "missing_date": "Choose the necessary date(s).",
+      "end_before_start": "End date must not precede start date.",
+      "missing_country": "Choose at least one country."
+    }
+  }
+}

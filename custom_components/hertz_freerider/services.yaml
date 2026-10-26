@@ -1,0 +1,10 @@
+refresh:
+  name: Refresh Freerider listings
+  description: Recheck the configured official sources, for all watch profiles or one entry.
+  fields:
+    entry_id:
+      name: Profile entry ID
+      description: Leave empty to refresh all Freerider search profiles.
+      example: 123456abcdef
+      selector:
+        text:

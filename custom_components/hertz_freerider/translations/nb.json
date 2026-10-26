@@ -1,0 +1,62 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nytt Freerider-søk",
+        "description": "Velg land, rute, dato og biltype. MERK: Datakilder for ledige Hertz-biler er ennå ikke klare i denne alfaversjonen.",
+        "data": {
+          "watch_name": "Navn på søk",
+          "countries": "Land",
+          "origin": "Fra (tomt = alle steder)",
+          "destination": "Til (tomt = alle steder)",
+          "direction": "Kjøreretning",
+          "date_mode": "Ønsket dato",
+          "date_start": "Dato / fra dato",
+          "date_end": "Til dato",
+          "transmission": "Girkasse",
+          "vehicle_type": "Biltype",
+          "fuel": "Drivstoff",
+          "min_seats": "Minste antall seter (0 = alle)",
+          "scan_mode": "Oppdateringsmodus",
+          "scan_interval": "Automatisk sjekkintervall (minutter)",
+          "notify_events": "Send hendelse når ny bil matcher"
+        }
+      }
+    },
+    "error": {
+      "missing_date": "Velg datoene som kreves for dette datofilteret.",
+      "end_before_start": "Sluttdato kan ikke være før startdato.",
+      "missing_country": "Velg minst ett land."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Endre Freerider-søk",
+        "description": "Endre fra/til, dato, bil og varsling.",
+        "data": {
+          "watch_name": "Navn på søk",
+          "countries": "Land",
+          "origin": "Fra",
+          "destination": "Til",
+          "direction": "Retning",
+          "date_mode": "Dato",
+          "date_start": "Dato / fra dato",
+          "date_end": "Til dato",
+          "transmission": "Girkasse",
+          "vehicle_type": "Biltype",
+          "fuel": "Drivstoff",
+          "min_seats": "Minste antall seter",
+          "scan_mode": "Oppdateringsmodus",
+          "scan_interval": "Sjekkintervall (minutter)",
+          "notify_events": "Varsle med hendelse om nye treff"
+        }
+      }
+    },
+    "error": {
+      "missing_date": "Velg nødvendige datoer.",
+      "end_before_start": "Sluttdato kan ikke være før startdato.",
+      "missing_country": "Velg minst ett land."
+    }
+  }
+}

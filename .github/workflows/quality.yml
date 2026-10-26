@@ -1,0 +1,24 @@
+name: Python validation
+on:
+  push:
+  pull_request:
+jobs:
+  basic-validation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Validate Python syntax
+        run: python -m compileall -q custom_components/hertz_freerider
+      - name: Run pure filter tests
+        run: PYTHONPATH=custom_components/hertz_freerider python -m unittest discover -s tests -v
+      - name: Validate JSON
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          for path in list(Path('custom_components').rglob('*.json')) + [Path('hacs.json')]:
+              json.loads(path.read_text())
+          PY
