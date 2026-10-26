@@ -15,6 +15,8 @@ PAYLOAD = {
             "tollSmallEvNoDiscount": 26,
             "tollSmallEv": 20.8,
             "tollCount": 1,
+            "distance": 43078,
+            "durationMin": 34.65,
             "ferryCount": 1,
             "chargedStations": [
                 {"name": "E18 Bygdøylokket"},
@@ -30,6 +32,8 @@ class TollTests(unittest.TestCase):
         result = parse_toll_response(PAYLOAD, electric=False)
         self.assertEqual(result["amount_nok"], 50)
         self.assertEqual(result["toll_count"], 1)
+        self.assertEqual(result["distance_km"], 43.1)
+        self.assertEqual(result["duration_min"], 34.6)
         self.assertEqual(len(result["toll_stations"]), 2)
         self.assertTrue(result["toll_stations"][1]["covered_by_hour_rule"])
         self.assertFalse(result["ferry_included"])
