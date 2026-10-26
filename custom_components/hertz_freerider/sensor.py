@@ -117,7 +117,8 @@ class FreeriderLiveOffer(CoordinatorEntity, SensorEntity):
                 if offer.vehicle_type in ("van", "minibus")
                 else "Kun estimat; kan avvike fra faktisk kostnad"
             ),
-            "lenke_til_freerider": offer.booking_url,
+            "lenke_til_freerider": offer.as_event()["booking_url"],
+            "direktelenke_til_bilen": offer.as_event()["direct_booking_link"],
             "tilbud_id": offer.key,
         }
 
