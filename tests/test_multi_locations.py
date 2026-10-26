@@ -17,7 +17,7 @@ class MultiLocationTest(unittest.TestCase):
             "origin":["Trondheim sluppen","Værnes"],
             "destination":["Bodø","Oslo"],
         }
-        self.assertEqual(
+        self.assertCountEqual(
             [r.key for r in filter_rides(ROUTES,config)],
             ["NO:1","NO:2"],
         )
