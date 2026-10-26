@@ -128,6 +128,8 @@ def notification_content(
     language: str = "nb",
     toll_estimate: dict | None = None,
     toll_status: str = "not_calculated",
+    cost_estimate: dict | None = None,
+    alert_kind: str = "new",
     now=None,
 ) -> dict:
     """Detailed and readable push with real vehicle/route/travel data."""
@@ -142,7 +144,7 @@ def notification_content(
     latest_return = _local_datetime(ride.latest_return_at)
     expiry = _local_datetime(ride.offer_expires_at)
     if norwegian:
-        title = "🚗 Ny Freerider-bil!"
+        title = "🚗 Oppdatert Freerider-tilbud!" if alert_kind=="updated" else "🚗 Ny Freerider-bil!"
         lines = [
             f"📍 {ride.origin} → {ride.destination}",
             f"🚙 {ride.vehicle}",
@@ -154,6 +156,14 @@ def notification_content(
             lines.append(f"⏳ Tilbudet utløper {expiry}")
         if latest_return:
             lines.append(f"🏁 Siste retur {latest_return}")
+        if cost_estimate and cost_estimate.get("energy_nok") is not None:
+            lines.append(f"⛽ Beregnet energi: ca. {cost_estimate['energy_nok']:.0f} kr")
+        if cost_estimate and cost_estimate.get("known_subtotal_nok") is not None:
+            lines.append(f"💰 Kjente kostnader: ca. {cost_estimate['known_subtotal_nok']:.0f} kr (delanslag)")
+        if cost_estimate and cost_estimate.get("energy_nok") is not None:
+            lines.append(f"⛽ Estimated energy: NOK {cost_estimate['energy_nok']:.0f}")
+        if cost_estimate and cost_estimate.get("known_subtotal_nok") is not None:
+            lines.append(f"💰 Known costs: NOK {cost_estimate['known_subtotal_nok']:.0f} (partial)")
         lines.extend([
             f"💳 {_toll_summary(toll_estimate, toll_status, language)}",
             "⛽ Drivstoff/lading kan forekomme",
@@ -161,7 +171,7 @@ def notification_content(
              if direct else f"Tilbud {ride.key} · Åpne Freerider og finn bilen"),
         ])
     else:
-        title = "🚗 New Freerider car!"
+        title = "🚗 Freerider offer updated!" if alert_kind=="updated" else "🚗 New Freerider car!"
         lines = [
             f"📍 {ride.origin} → {ride.destination}",
             f"🚙 {ride.vehicle}",
@@ -185,6 +195,7 @@ def notification_content(
         "url": url,
         "route": f"{ride.origin} → {ride.destination}",
         "direct_car_link": direct,
+        "alert_kind":alert_kind,
     }
 
 
