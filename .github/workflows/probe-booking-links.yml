@@ -22,7 +22,7 @@ jobs:
           nameset=runtime.split('return{',1)[1].split('}[e]+"-"+',1)
           names={int(k):v for k,v in re.findall(r'(\\d+):"([^"]+)"',nameset[0])}
           hashes={int(k):v for k,v in re.findall(r'(\\d+):"([^"]+)"',nameset[1].split('}[e]+',1)[0])}
-          chunks=[names[k]+'-'+hashes[k]+'.js' for k in names
+          chunks=[names[k]+'-'+hashes[k]+'.js' for k in names]
           print('CHUNKS',chunks,flush=True)
           for name in chunks:
             try:
