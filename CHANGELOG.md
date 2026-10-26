@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.8.2 (2026-10-26) — booking-flow deep links for exact cars
+- Fixed push alerts opening only the Freerider homepage: directly open provider booking-flow for the matching official route ID and selected pickup date.
+- Confirmed official NO/SE booking page paths and hash parameters from the provider's public JavaScript.
+- Pick a future pickup time within published offer availability, closing/return limits and pickup station weekday hours.
+- Use safe fallback for incomplete/expired data. This is not an authenticated end-to-end booking guarantee.
+- Apply links to both mobile notifications and Home Assistant per-car sensors/dashboard payloads.
+- Test alerts use the selected real matching car when one exists, while generic tests are explicitly marked.
+- Added unit tests for specific links, time selection, country routes, validity and safe fallback.
+- Removed the temporary web research workflow.
+
+
 ## 0.8.1 (2026-10-26) — active offers in the device view
 - Surface one normal sensor per currently matched car offer directly on the Freerider HA device page.
 - Each row names the exact provider car model plus return destination; its state gives the origin → destination route.
