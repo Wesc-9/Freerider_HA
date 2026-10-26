@@ -70,6 +70,46 @@ class SearchTests(unittest.TestCase):
         self.assertEqual(events[0]["kind"],"removed")
         self.assertNotIn(one.key,after)
 
+    def test_unchanged_route_never_realerts_after_restart(self):
+        one=ride()
+        _,_,saved=classify_offers(None,[one],{"NO"},None)
+        alerts,events,again=classify_offers(saved,[one],{"NO"},{one.key})
+        self.assertEqual(alerts,[])
+        self.assertEqual(events,[])
+        self.assertEqual(again,saved)
+
+    def test_confirmed_removal_then_return_is_notified_again(self):
+        one=ride()
+        _,_,old=classify_offers(None,[one],{"NO"},None)
+        _,removed,none=classify_offers(old,[],{"NO"},{one.key})
+        self.assertEqual(removed[0]["kind"],"removed")
+        again,appeared,new=classify_offers(none,[one],{"NO"},{one.key})
+        self.assertEqual(again[0][1],"new")
+        self.assertEqual(appeared[0]["kind"],"new")
+        self.assertIn(one.key,new)
+
+    def test_existing_legacy_seen_ids_only_alert_truly_new(self):
+        rs=[ride("1"),ride("2")]
+        alerts,events,_=classify_offers(None,rs,{"NO"},{"NO:1"})
+        self.assertEqual([r.key for r,_ in alerts],["NO:2"])
+
+    def test_missing_fuel_price_never_implies_free_energy(self):
+        r=ride(distance_km=180,fuel="electric")
+        costs=cost_breakdown(r,{"amount_nok":0,"ferry_count":0},{
+            "electric_kwh_100km":20, "electric_price_nok_kwh":0,
+        })
+        self.assertIsNone(costs["energy_nok"])
+        self.assertEqual(costs["known_subtotal_nok"],0)
+        self.assertTrue(costs["has_unknown_components"])
+
+    def test_electric_costs_require_explicit_model_fuel(self):
+        r=ride(distance_km=100,fuel="electric")
+        config={"electric_kwh_100km":18, "electric_price_nok_kwh":3.5}
+        self.assertEqual(cost_breakdown(r,None,config)["energy_nok"],63)
+        self.assertIsNone(cost_breakdown(
+            ride(distance_km=100,fuel=None),None,config,
+        )["energy_nok"])
+
     def test_known_partial_costs_and_unknown_not_zero(self):
         r=ride(distance_km=200,fuel="diesel")
         result=cost_breakdown(r,{"amount_nok":145,"ferry_count":1},{
