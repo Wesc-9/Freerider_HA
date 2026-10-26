@@ -1,6 +1,6 @@
 # Hertz Freerider for Home Assistant
 
-> **Alpha / development scaffold. Not yet a working availability monitor.** The Home Assistant setup UI, multi-country route/date/vehicle filters, refresh button, event/notification wiring and test framework are implemented. **No verified, authorized live Hertz listing adapter exists yet**: therefore the availability sensor deliberately reports **unavailable**, not 0, and no live-car notifications can be emitted. Do not install this expecting live listings.
+> **Alpha / development scaffold. Not yet a working availability monitor.** The Home Assistant setup UI, multi-country route/date/vehicle filters, refresh button, event/notification wiring and test framework are implemented. The NO/SE feeds now return actual public route data without login. Denmark remains unavailable, and the code should be validated in a running Home Assistant instance before relying on notifications.
 
 Independent community project; not affiliated with or endorsed by Hertz.
 
@@ -14,7 +14,7 @@ Independent community project; not affiliated with or endorsed by Hertz.
 - **Automatic** background polling (minimum 15 minutes, configurable 15–120 min) or **manual** via a refresh button or `hertz_freerider.refresh` service.
 - A Home Assistant count sensor with matched ride details and booking links, plus an event for genuinely new matching rides (once a source is operational). New-ride IDs are persisted locally to avoid duplicate push notifications on restart.
 - English and Norwegian UI translations; event automation blueprint for notifying any phone using a Home Assistant notification service.
-- No Hertz credentials requested or stored; no scraping or invented API URLs.
+- No Hertz credentials requested or stored. The NO/SE read-only JSON paths were discovered in the published Freerider frontend and tested with HTTP 200 responses. No secret/private endpoints are used.
 
 ## Install for development only
 
@@ -41,21 +41,21 @@ Import the optional blueprint using the path above; select your mobile notificat
 
 | Country | Site | Adapter |
 |---|---|---|
-| Norway | https://hertzfreerider.no/ | **Not implemented** |
-| Sweden | https://hertzfreerider.se/ | **Not implemented** |
+| Norway | https://hertzfreerider.no/ | **Public JSON API connected; HA runtime test pending** |
+| Sweden | https://hertzfreerider.se/ | **Public JSON API connected; HA runtime test pending** |
 | Denmark | https://hertzfreerider.nu/ | **Not implemented** |
 
-Swedish/Norwegian sites and Danish site have different web implementations. No country should be labeled as live until verified. Country filtering applies to the listing's source, and **does not prohibit international route destinations**.
+NO and SE expose public read-only \`/api/transport-routes/?country=NORWAY\` and \`?country=SWEDEN\` endpoints, returning grouped route offers. The Danish catalog is JS-rendered and can list products that are out of stock. No country should be labeled stable until end-to-end testing. Country filtering applies to the listing's source, and **does not prohibit international route destinations**.
 
 ## Roadmap / release gates
 
-1. Establish reliable and **permitted** structured data access from each official service; validate Hertz terms and rate limits.
-2. Build per-country source adapters, stable offer IDs, exact pickup windows, stations, booking URLs, vehicle metadata. Do not infer transmission/fuel/dates from vague model names.
+1. Validate Hertz permitted automated API use and polling limits. Confirm live Home Assistant behavior for the implemented NO/SE feeds, then seek a permitted Danish route source.
+2. Improve country adapters, especially exact pickup cutoff vs offer expiry, stations, booking deep links and vehicle metadata. Only derive transmission/fuel from explicitly labeled text.
 3. Test live listings and duplicate suppression, including new matches after route/date option changes.
 4. Add end-to-end Home Assistant integration tests, locale-specific station selection after source discovery and HACS beta release.
 5. Consider additional countries only when a Freerider-specific service is verified.
 
-The integration has no live source today. This limitation is intentionally visible instead of pretending to return valid search results.
+Important date caveat: \`availableAt\` is when the car becomes available, \`expireTime\` is the offer expiration, and \`latestReturn\` is the return deadline. Selecting a date filters the advertised offer window but does **not** guarantee Hertz will allow pickup on every matching day. Confirm exact pickup time on the booking site. The integration is not affiliated with Hertz.
 
 ## Developer checks
 

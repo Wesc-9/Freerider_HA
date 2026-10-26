@@ -49,7 +49,7 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
     async def _async_update_data(self) -> list[Ride]:
         countries = self.settings.get(CONF_COUNTRIES, ["NO"])
         results = await asyncio.gather(
-            *(async_fetch_country(country) for country in countries),
+            *(async_fetch_country(self.hass, country) for country in countries),
             return_exceptions=True,
         )
         valid: list[Ride] = []
