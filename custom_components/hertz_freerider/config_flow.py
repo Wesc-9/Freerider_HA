@@ -260,6 +260,8 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 **route_dates(user_input),
             }
             invalid = validation_error(candidate)
+            if not invalid and candidate.get(CONF_NOTIFY_ENABLED) and candidate.get(CONF_NOTIFY_TARGET) == TARGET_OFF:
+                invalid = "notification_device_required"
             if not invalid and user_input.get(CONF_DATE_END) and not user_input.get(CONF_DATE_START):
                 invalid = "missing_date"
             if not invalid:
@@ -270,11 +272,11 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._stations = await async_station_suggestions(
                 self.hass, self._draft.get(CONF_COUNTRIES, ["NO"])
             )
+        values = {**self._draft, **(user_input or {})}
+        targets = notification_targets(self.hass, values.get(CONF_NOTIFY_TARGET))
         return self.async_show_form(
             step_id="route",
-            data_schema=route_schema(
-                {**self._draft, **(user_input or {})}, self._stations,
-            ),
+            data_schema=route_schema(values, self._stations, targets),
             errors=errors,
         )
 
@@ -323,6 +325,8 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_SCAN_MODE: "automatic",
             CONF_SCAN_INTERVAL: DEFAULT_POLL_MINUTES,
             CONF_EVENTS: True,
+            CONF_NOTIFY_TARGET: TARGET_OFF,
+            CONF_NOTIFY_ENABLED: False,
         }
         fields.update(self._draft)
         title = fields.pop(CONF_WATCH_NAME, "Freerider")
