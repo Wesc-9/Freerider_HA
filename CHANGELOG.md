@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.6.2 (2026-10-26) — select phone and notifications during registration
+- Added **Notify me about new cars** toggle and **Send notifications to** mobile dropdown directly to the new search's From/To/Date screen.
+- Warns before submission when notifications are enabled without a receiving device.
+- Existing searches can set or change the exact same controls under Configure → Places, dates and notifications; no deletion required.
+- The Home Assistant New car alerts switch remains synchronized, so you can later pause/resume without reentering setup.
+- The separate refresh/events configuration no longer duplicates notification-recipient selection.
+- Norwegian and English labels and validation included. All existing Freerider data and search profiles remain compatible.
+
+
 ## 0.6.1 (2026-10-26) — easy notification controls
 - Added a dedicated **New car alerts** switch for each saved watch in Home Assistant.
 - Added the **Test notification** button to verify your selected phone.

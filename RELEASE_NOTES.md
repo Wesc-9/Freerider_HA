@@ -1,23 +1,18 @@
-# Freerider HA 0.6.1
+# Freerider HA 0.6.2
 
-This update makes new-car alerts easy to configure and manage directly in Home Assistant.
+## Notifications now part of search registration
 
-### Notifications
-1. Open **Settings → Devices & services → Freerider HA → Configure**.
-2. Choose **Automatic checks and notifications**.
-3. Select **Send notifications to** and choose your registered phone (Home Assistant Companion app), or choose **Home Assistant notifications** for in-app alerts.
-4. Save. The **New car alerts** switch is enabled automatically when you select a phone. Toggle it off/on any time, without deleting the recipient.
-5. Find the search device in the integration and press **Test notification**. You should receive a clearly marked test alert.
-6. New matching cars trigger push notifications after the initial baseline. The message contains the car model, route, offer ID, earliest listed date and link to the official provider site.
+After choosing name and countries, the **From / To / Dates** screen also offers:
 
-**Booking links:** The Norwegian and Swedish public route feeds do not provide a confirmed deep link to a single specific car. Tapping the alert opens the official Freerider website for the car's country, where you can find and reserve the listing. The alert includes the route/vehicle information to identify it. No booking is created automatically.
+- **Notify me about new cars** — on/off switch (off by default).
+- **Send notifications to** — select your registered Home Assistant Companion app phone, Home Assistant in-app notifications, or Off.
 
-### Other improvements
-- All sensor, button and switch entities are grouped as a Home Assistant device for each search.
-- Failed phone delivery is retried on later successful route checks while the offer still appears.
-- A maximum of eight alert attempts per scan, to reduce noise.
-- Existing search profiles and event-trigger automations remain compatible.
+To receive new-car push alerts, choose your mobile device **and enable the toggle** before creating the saved search. The setup will warn if alerts are on but no recipient is chosen. There is no need for a separate notification configuration step.
 
-**Note:** This is an unofficial community project, not endorsed or affiliated with Hertz. No live Home Assistant phone test is claimed. Denmark feed remains unavailable, and fuel/charging/tolls may apply.
+For **existing searches**, open Freerider HA → Configure → **Places, dates and notifications**. Update the same settings there; previous route filters and entities are preserved. A corresponding New car alerts entity switch remains available on the search device for turning notifications on and off later.
 
-Update to `0.6.1` in HACS, restart Home Assistant and configure your notification destination.
+The Test notification button can confirm delivery. New matching cars generate messages containing route, vehicle, date, offer ID and a link to the correct Freerider country's booking site. Due to the provider's session-based booking UI, the link is **not** yet a verified individual-car checkout link.
+
+This is an unofficial community project, not affiliated with Hertz. Norway and Sweden data feeds supported; Denmark pending. Fuel/charging and toll costs may apply.
+
+Install 0.6.2 from HACS and restart Home Assistant.
