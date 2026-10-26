@@ -38,7 +38,7 @@ class FreeriderRefresh(CoordinatorEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Request immediate update from enabled country adapters."""
-        await self.coordinator.async_request_refresh()
+        await self.coordinator.async_force_refresh()
 
 
 class FreeriderEstimateFirstToll(CoordinatorEntity, ButtonEntity):

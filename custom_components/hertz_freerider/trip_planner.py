@@ -8,6 +8,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from math import asin, cos, radians, sin, sqrt
 from typing import TYPE_CHECKING
+from zoneinfo import ZoneInfo
 
 if TYPE_CHECKING:
     from .filters import Ride
@@ -32,7 +33,7 @@ def journey_feasibility(ride: Ride, now: datetime | None = None) -> dict:
     rest stops and traffic cannot be checked here.
     """
     if now is None:
-        now = datetime.now()
+        now = datetime.now(ZoneInfo('Europe/Oslo'))
     now = now.replace(tzinfo=None)
     first = _date(ride.available_at)
     expires = _date(ride.offer_expires_at)

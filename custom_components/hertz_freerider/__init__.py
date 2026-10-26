@@ -32,7 +32,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
                 entry_id: coordinators[entry_id]
             } if entry_id in coordinators else {}
         for coordinator in coordinators.values():
-            await coordinator.async_request_refresh()
+            await coordinator.async_force_refresh()
 
     hass.services.async_register(
         DOMAIN, SERVICE_REFRESH, refresh,
@@ -58,6 +58,27 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
             vol.Required("entry_id"): str,
             vol.Required("ride_id"): str,
             vol.Optional("start_time"): str,
+        }),
+    )
+    async def set_favorite(call: ServiceCall) -> None:
+        """Manage an offer bookmark locally, never make a booking."""
+        entry_id=call.data["entry_id"]
+        coordinator=hass.data.get(DOMAIN,{}).get(entry_id)
+        if coordinator is None:
+            raise HomeAssistantError("Unknown Freerider search")
+        try:
+            await coordinator.async_set_favorite(
+                call.data["ride_id"],call.data["favorite"],
+            )
+        except ValueError as exc:
+            raise HomeAssistantError(str(exc)) from exc
+
+    hass.services.async_register(
+        DOMAIN,"set_favorite",set_favorite,
+        schema=vol.Schema({
+            vol.Required("entry_id"):str,
+            vol.Required("ride_id"):str,
+            vol.Required("favorite"):bool,
         }),
     )
     return True

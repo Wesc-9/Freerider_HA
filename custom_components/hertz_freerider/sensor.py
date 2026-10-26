@@ -13,6 +13,8 @@ from .const import DOMAIN
 from .offer_view import device_offers, offer_entity_name, offer_entity_state
 from .trip_costs import cost_breakdown
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
+from .trip_planner import journey_feasibility, km_airline
 
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
@@ -127,6 +129,10 @@ class FreeriderLiveOffer(CoordinatorEntity, SensorEntity):
                 if offer.vehicle_type in ("van", "minibus")
                 else "Kun estimat; kan avvike fra faktisk kostnad"
             ),
+            "estimated_time_margin":journey_feasibility(
+                offer,datetime.now(ZoneInfo("Europe/Oslo")),
+            ),
+            "favoritt":offer.key in self.coordinator.favorite_offers,
             "lenke_til_freerider": offer.as_event()["booking_url"],
             "direktelenke_til_bilen": offer.as_event()["direct_booking_link"],
             "tilbud_id": offer.key,
@@ -161,6 +167,10 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
                 {
                     **ride.as_event(),
                     "toll_estimate": self.coordinator.toll_estimates.get(ride.key),
+                    "time_feasibility":journey_feasibility(
+                        ride,datetime.now(ZoneInfo("Europe/Oslo")),
+                    ),
+                    "is_favorite":ride.key in self.coordinator.favorite_offers,
                     "listing_source_status":(
                         "stale" if ride.source_country in self.coordinator.last_source_errors
                         else "latest_successful_scan"
@@ -178,6 +188,9 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
                 for ride in (self.coordinator.data or [])[:20]
             ],
             "total_matches": len(self.coordinator.data or []),
+            "entry_id":self.coordinator.entry.entry_id,
+            "favorite_ids":list(self.coordinator.favorite_offers),
+            "favorite_offers":list(self.coordinator.favorite_offers.values())[-30:],
             "notification_target": self.coordinator.settings.get("notify_target", "off"),
             "notification_enabled": self.coordinator.settings.get("notify_enabled", True),
             "pending_notifications": len(self.coordinator.pending_notification_ids),
