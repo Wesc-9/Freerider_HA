@@ -11,6 +11,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .device import watch_device_info
 from .const import DOMAIN
 from .offer_view import device_offers, offer_entity_name, offer_entity_state
+from .trip_costs import cost_breakdown
+from datetime import datetime, timedelta
 
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
@@ -56,6 +58,7 @@ async def async_setup_entry(hass, entry, async_add_entities) -> None:
     async_add_entities([
         FreeriderCount(coordinator, entry),
         FreeriderLastTollEstimate(coordinator, entry),
+        FreeriderSearchStatus(coordinator, entry),
     ])
     _sync_available_cars()
     entry.async_on_unload(coordinator.async_add_listener(_sync_available_cars))
@@ -112,6 +115,9 @@ class FreeriderLiveOffer(CoordinatorEntity, SensorEntity):
             "tilbud_utloper": offer.offer_expires_at,
             "seneste_retur": offer.latest_return_at,
             "bom_estimat_nok": toll.get("amount_nok") if toll else None,
+            "beregnet_reisekostnad":cost_breakdown(offer,toll,self.coordinator.settings),
+            "sist_bekreftet_i_rutelisten":self.coordinator.last_success_utc,
+            "lenkestatus":"Tilbud observert sist søk; bestilling må bekreftes hos Freerider",
             "bom_merknad": (
                 "Takstgruppe ukjent for større kjøretøy"
                 if offer.vehicle_type in ("van", "minibus")
@@ -151,6 +157,10 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
                 {
                     **ride.as_event(),
                     "toll_estimate": self.coordinator.toll_estimates.get(ride.key),
+                    "estimated_trip_costs":cost_breakdown(
+                        ride,self.coordinator.toll_estimates.get(ride.key),
+                        self.coordinator.settings,
+                    ),
                     "toll_estimate_status": (
                         "unknown_vehicle_weight_class"
                         if ride.vehicle_type in ("van", "minibus")
@@ -163,6 +173,8 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
             "notification_target": self.coordinator.settings.get("notify_target", "off"),
             "notification_enabled": self.coordinator.settings.get("notify_enabled", True),
             "pending_notifications": len(self.coordinator.pending_notification_ids),
+            "recent_offer_changes":self.coordinator.offer_history[-20:],
+            "last_successful_check":self.coordinator.last_success_utc,
             "extra_costs": "Tolls may be payable. Fuel/charging may incur additional costs.",
             "tolls": "Norway: automatic estimates for eligible new cars (quota-limited); manual lookup via button. Van/minibus needs verified weight class.",
         }
@@ -194,4 +206,57 @@ class FreeriderLastTollEstimate(CoordinatorEntity, SensorEntity):
             "status": "not_calculated",
             "info": "Computed for eligible Norwegian passenger-car routes on new alerts; manual estimate button also available. Unknown is not free.",
             "fuel_charging_note": "Fuel/charging costs may apply.",
+        }
+
+
+class FreeriderSearchStatus(CoordinatorEntity,SensorEntity):
+    """Human-readable monitoring status and bounded recent change history."""
+
+    _attr_icon="mdi:history"
+    _attr_entity_category=EntityCategory.DIAGNOSTIC
+
+    def __init__(self,coordinator,entry) -> None:
+        super().__init__(coordinator)
+        self._attr_device_info=watch_device_info(entry)
+        self._attr_name=f"{entry.title} search status"
+        self._attr_unique_id=f"hertz_freerider_{entry.entry_id}_search_status"
+
+    @property
+    def available(self) -> bool:
+        """Show diagnostics even while the source adapter is unavailable."""
+        return True
+
+    @property
+    def native_value(self):
+        if not self.coordinator.last_success_utc:
+            return "waiting"
+        if not self.coordinator.last_update_success:
+            return "error"
+        if self.coordinator.last_source_errors:
+            return "partial"
+        return "ok"
+
+    @property
+    def extra_state_attributes(self):
+        c=self.coordinator
+        interval=c.update_interval
+        next_estimate=None
+        if interval is not None and c.last_success_utc:
+            try:
+                next_estimate=(datetime.fromisoformat(c.last_success_utc)+interval).isoformat()
+            except (TypeError,ValueError):
+                pass
+        return {
+            "last_attempt_utc":c.last_attempt_utc,
+            "last_successful_check_utc":c.last_success_utc,
+            "estimated_next_check_utc":next_estimate,
+            "source_errors":c.last_source_errors,
+            "current_offers":len(c.data or []),
+            "recent_changes":c.offer_history[-30:],
+            "pending_alerts":len(c.pending_notification_ids),
+            "alerts_delivered":c.sent_alert_count,
+            "last_alert_utc":c.last_alert_utc,
+            "last_alert_error":c.last_alert_error,
+            "source_state":"Partial results may omit offers from unavailable country feeds"
+                           if c.last_source_errors else "Latest country feeds succeeded",
         }
