@@ -160,10 +160,6 @@ def notification_content(
             lines.append(f"⛽ Beregnet energi: ca. {cost_estimate['energy_nok']:.0f} kr")
         if cost_estimate and cost_estimate.get("known_subtotal_nok") is not None:
             lines.append(f"💰 Kjente kostnader: ca. {cost_estimate['known_subtotal_nok']:.0f} kr (delanslag)")
-        if cost_estimate and cost_estimate.get("energy_nok") is not None:
-            lines.append(f"⛽ Estimated energy: NOK {cost_estimate['energy_nok']:.0f}")
-        if cost_estimate and cost_estimate.get("known_subtotal_nok") is not None:
-            lines.append(f"💰 Known costs: NOK {cost_estimate['known_subtotal_nok']:.0f} (partial)")
         lines.extend([
             f"💳 {_toll_summary(toll_estimate, toll_status, language)}",
             "⛽ Drivstoff/lading kan forekomme",
@@ -183,6 +179,10 @@ def notification_content(
             lines.append(f"⏳ Offer expires {expiry}")
         if latest_return:
             lines.append(f"🏁 Return by {latest_return}")
+        if cost_estimate and cost_estimate.get("energy_nok") is not None:
+            lines.append(f"⛽ Estimated energy: NOK {cost_estimate['energy_nok']:.0f}")
+        if cost_estimate and cost_estimate.get("known_subtotal_nok") is not None:
+            lines.append(f"💰 Known costs: NOK {cost_estimate['known_subtotal_nok']:.0f} (partial)")
         lines.extend([
             f"💳 {_toll_summary(toll_estimate, toll_status, language)}",
             "⛽ Fuel/charging costs may apply",
