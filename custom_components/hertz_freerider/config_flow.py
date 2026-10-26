@@ -22,6 +22,7 @@ from .const import (
     CONF_MODEL_INCLUDE, CONF_MODEL_EXCLUDE, CONF_RADIUS_KM,
     CONF_ALERT_EXISTING, CONF_ALERT_UPDATES, CONF_FUEL_USAGE, CONF_FUEL_PRICE,
     CONF_ELECTRIC_USAGE, CONF_ELECTRIC_PRICE,
+    CONF_SORT_BY, CONF_QUIET_START, CONF_QUIET_END, CONF_QUIET_URGENT, CONF_MAX_TOLL, CONF_ONLY_FEASIBLE,
 )
 from .filters import station_candidates, place_values
 from .source import async_fetch_country
@@ -161,6 +162,8 @@ def vehicle_schema(values: dict | None = None) -> vol.Schema:
             selector.TextSelector(),
         vol.Optional(CONF_MODEL_EXCLUDE, default=values.get(CONF_MODEL_EXCLUDE, "")):
             selector.TextSelector(),
+        vol.Required(CONF_SORT_BY, default=values.get(CONF_SORT_BY, "date")):
+            select(["date","short_drive","short_route","nearest_pickup","low_cost","best_margin"], "sort_by"),
     })
 
 
@@ -183,6 +186,26 @@ def updates_schema(values: dict | None = None) -> vol.Schema:
             selector.BooleanSelector(),
         vol.Required(CONF_ALERT_UPDATES, default=values.get(CONF_ALERT_UPDATES, True)):
             selector.BooleanSelector(),
+    })
+
+
+def alerts_schema(values: dict | None = None) -> vol.Schema:
+    """Separate alert rules, without changing selected phone or saved route."""
+    values = values or {}
+    return vol.Schema({
+        vol.Optional(CONF_QUIET_START, default=values.get(CONF_QUIET_START, "")):
+            selector.TextSelector(selector.TextSelectorConfig(
+                type=selector.TextSelectorType.TEXT)),
+        vol.Optional(CONF_QUIET_END, default=values.get(CONF_QUIET_END, "")):
+            selector.TextSelector(selector.TextSelectorConfig(
+                type=selector.TextSelectorType.TEXT)),
+        vol.Required(CONF_QUIET_URGENT, default=values.get(CONF_QUIET_URGENT, False)):
+            selector.BooleanSelector(),
+        vol.Required(CONF_ONLY_FEASIBLE, default=values.get(CONF_ONLY_FEASIBLE, False)):
+            selector.BooleanSelector(),
+        vol.Required(CONF_MAX_TOLL, default=values.get(CONF_MAX_TOLL, 0)):
+            selector.NumberSelector(selector.NumberSelectorConfig(
+                min=0, max=10000, step=10, mode=selector.NumberSelectorMode.BOX)),
     })
 
 
@@ -375,6 +398,12 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_FUEL_PRICE: 0,
             CONF_ELECTRIC_USAGE: 0,
             CONF_ELECTRIC_PRICE: 0,
+            CONF_SORT_BY: "date",
+            CONF_QUIET_START: "",
+            CONF_QUIET_END: "",
+            CONF_QUIET_URGENT: False,
+            CONF_MAX_TOLL: 0,
+            CONF_ONLY_FEASIBLE: False,
         }
         fields.update(self._draft)
         title = fields.pop(CONF_WATCH_NAME, "Freerider")
@@ -399,7 +428,7 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Choose which part of the configuration to change."""
         return self.async_show_menu(
-            step_id="init", menu_options=["route", "dates", "filters", "area", "costs", "updates"],
+            step_id="init", menu_options=["route", "dates", "filters", "area", "costs", "updates", "alerts"],
         )
 
     async def async_step_route(self, user_input=None):
@@ -534,6 +563,35 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
             )
         return self.async_show_form(
             step_id="costs",data_schema=cost_schema(self._settings()),
+        )
+
+    async def async_step_alerts(self, user_input=None):
+        """Quiet hours and value filters; recipient remains in route settings."""
+        if user_input is not None:
+            start=(user_input.get(CONF_QUIET_START) or "").strip()
+            end=(user_input.get(CONF_QUIET_END) or "").strip()
+            from .trip_planner import quiet_now
+            from datetime import datetime
+            def valid(t):
+                if not t:
+                    return True
+                try:
+                    datetime.strptime(t,"%H:%M")
+                    return True
+                except ValueError:
+                    return False
+            if not valid(start) or not valid(end) or bool(start) != bool(end):
+                return self.async_show_form(
+                    step_id="alerts",
+                    data_schema=alerts_schema({**self._settings(),**user_input}),
+                    errors={"base": "invalid_quiet_hours"},
+                )
+            return self.async_create_entry(
+                title="", data={**self.config_entry.options, **user_input,
+                                CONF_QUIET_START:start, CONF_QUIET_END:end},
+            )
+        return self.async_show_form(
+            step_id="alerts", data_schema=alerts_schema(self._settings()),
         )
 
     async def async_step_updates(self, user_input=None):
