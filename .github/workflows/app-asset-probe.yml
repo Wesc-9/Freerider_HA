@@ -1,0 +1,39 @@
+name: Freerider public app data diagnostics
+on:
+  push:
+    paths:
+      - .github/workflows/app-asset-probe.yml
+jobs:
+  inspect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Inspect published static JS assets
+        shell: python
+        run: |
+          import re,json
+          from urllib.request import Request,urlopen
+          for host,lang in [('https://hertzfreerider.no','no-no'),('https://hertzfreerider.se','sv-se')]:
+              print('SITE',host,flush=True)
+              req=Request(host+'/'+lang+'/',headers={'User-Agent':'Freerider-HA-development-probe/0.1 (Wesc-9/Freerider_HA)'})
+              try:
+                  html=urlopen(req,timeout=15).read(300000).decode('utf-8','replace')
+                  m=re.search(r'window\.___chunkMapping="(.*?)";',html,re.S)
+                  if not m:
+                      print('NO_CHUNK_MAP',flush=True)
+                      continue
+                  mapping=json.loads(json.loads('"'+m.group(1)+'"'))
+                  target=mapping.get('component---src-templates-start-tsx',[])
+                  print('CHUNKS',target,flush=True)
+                  for filename in target[:2]:
+                      if not filename.startswith('/'):filename='/'+filename
+                      req=Request(host+filename,headers={'User-Agent':'Freerider-HA-development-probe/0.1 (Wesc-9/Freerider_HA)'})
+                      js=urlopen(req,timeout=15).read(3_000_000).decode('utf-8','replace')
+                      print('CHUNK_BYTES',len(js),flush=True)
+                      urls=sorted(set(re.findall(r'https?://[^"\\\s<>)]{5,180}',js)))
+                      print('URLS',[url[:150] for url in urls[:35]],flush=True)
+                      for needle in ('booking','carList','availableCars','freeRider','api/','graphql','stationId'):
+                          matches=list(re.finditer(re.escape(needle),js,re.I))
+                          print('KEYWORD',needle,'hits',len(matches),'contexts',[js[max(0,ma.start()-90):ma.start()+130][:220] for ma in matches[:4]],flush=True)
+              except Exception as e:
+                  print('ERROR',type(e).__name__,str(e)[:250],flush=True)
