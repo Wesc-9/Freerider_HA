@@ -12,7 +12,7 @@
       },
       "route": {
         "title": "2 · Velg fra, til og dato",
-        "description": "Velg fra- og tilsteder. Dra skyveknappen under hvert sted for å velge radius fra 0 til 100 km (0 = kun valgt sted). Radius gjelder alle valgte steder med kjente GPS-koordinater. Velg deretter dato og varsling på samme side.",
+        "description": "Velg steder og radius med sliderne. La «Alle datoer» være på for å få varsel om nye biler uansett dato. Hvis den er av, velger du først fra-dato og deretter til-dato i neste skjerm. 0 km betyr kun valgt sted.",
         "data": {
           "origin": "Fra – velg flere steder (valgfritt)",
           "destination": "Til – velg flere steder (valgfritt)",
@@ -22,7 +22,8 @@
           "notify_enabled": "Varsle om nye biler",
           "notify_target": "Send varsel til",
           "origin_radius_km": "Radius rundt avreisesteder (km)",
-          "destination_radius_km": "Radius rundt leveringssteder (km)"
+          "destination_radius_km": "Radius rundt leveringssteder (km)",
+          "all_dates": "Alle datoer – varsle når som helst"
         }
       },
       "date": {
@@ -38,6 +39,34 @@
         "data": {
           "date_start": "Dato / fra dato",
           "date_end": "Til dato"
+        }
+      },
+      "registration_date_start": {
+        "title": "Velg første dato",
+        "description": "Velg første dato. Trykk Neste for å gå direkte til siste dato.",
+        "data": {
+          "date_start": "Dato fra"
+        }
+      },
+      "registration_date_end": {
+        "title": "Velg siste dato",
+        "description": "Velg eventuelt en siste dato. La feltet stå tomt for én enkelt dato.",
+        "data": {
+          "date_end": "Dato til"
+        }
+      },
+      "edit_date_start": {
+        "title": "Endre første dato",
+        "description": "Velg ny fra-dato. Deretter kommer til-dato automatisk som neste steg.",
+        "data": {
+          "date_start": "Dato fra"
+        }
+      },
+      "edit_date_end": {
+        "title": "Endre siste dato",
+        "description": "Velg til-dato, eller la det stå tomt for én dato.",
+        "data": {
+          "date_end": "Dato til"
         }
       }
     },
@@ -59,7 +88,6 @@
         "description": "Endre bare det du trenger. Avanserte bilvalg og varselinnstillinger er flyttet ut av førstegangsoppsettet.",
         "menu_options": {
           "route": "Steder, dato og varsler",
-          "dates": "Dato og periode",
           "filters": "Bilpreferanser (valgfritt)",
           "updates": "Søkeintervall og hendelser",
           "costs": "Reisekostnader (egne satser)",
@@ -68,7 +96,7 @@
       },
       "route": {
         "title": "Steder og dato",
-        "description": "Velg fra- og tilsteder. Dra skyveknappen under hvert sted for å velge radius fra 0 til 100 km (0 = kun valgt sted). Radius gjelder alle valgte steder med kjente GPS-koordinater. Velg deretter dato og varsling på samme side.",
+        "description": "Velg steder og radius med sliderne. La «Alle datoer» være på for å få varsel om nye biler uansett dato. Hvis den er av, velger du først fra-dato og deretter til-dato i neste skjerm. 0 km betyr kun valgt sted.",
         "data": {
           "watch_name": "Navn på søket",
           "countries": "Land",
@@ -80,7 +108,8 @@
           "notify_enabled": "Varsle om nye biler",
           "notify_target": "Send varsel til",
           "origin_radius_km": "Radius rundt avreisesteder (km)",
-          "destination_radius_km": "Radius rundt leveringssteder (km)"
+          "destination_radius_km": "Radius rundt leveringssteder (km)",
+          "all_dates": "Alle datoer – varsle når som helst"
         }
       },
       "dates": {
@@ -152,6 +181,20 @@
           "quiet_urgent_bypass": "Tillat hastesaker gjennom stilleperiode (utløper innen 3 timer)",
           "alerts_only_feasible": "Varsle bare når tidsmarginen kan beregnes og er positiv",
           "max_toll_nok": "Maks beregnet bom NOK (0 = ingen grense)"
+        }
+      },
+      "edit_date_start": {
+        "title": "Endre første dato",
+        "description": "Velg ny fra-dato. Deretter kommer til-dato automatisk som neste steg.",
+        "data": {
+          "date_start": "Dato fra"
+        }
+      },
+      "edit_date_end": {
+        "title": "Endre siste dato",
+        "description": "Velg til-dato, eller la det stå tomt for én dato.",
+        "data": {
+          "date_end": "Dato til"
         }
       }
     },

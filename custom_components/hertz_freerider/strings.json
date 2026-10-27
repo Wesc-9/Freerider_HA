@@ -12,7 +12,7 @@
       },
       "route": {
         "title": "2 · From, to and travel dates",
-        "description": "Select pickup and return locations. Use the slider below each field to set a 0–100 km radius (0 = selected locations only). Radius covers each selected location with verified GPS coordinates. Then set dates and notifications on the same page.",
+        "description": "Choose locations and radius using the sliders. Keep All dates on to get alerts whenever matching cars appear. Turn it off to choose a first date, then a last date in the next steps. 0 km means only the selected location.",
         "data": {
           "origin": "From – select several places (optional)",
           "destination": "To – select several places (optional)",
@@ -22,7 +22,8 @@
           "notify_enabled": "Notify me about new cars",
           "notify_target": "Send notifications to",
           "origin_radius_km": "Radius around pickup locations (km)",
-          "destination_radius_km": "Radius around return locations (km)"
+          "destination_radius_km": "Radius around return locations (km)",
+          "all_dates": "All dates – notify me whenever a car is available"
         }
       },
       "date": {
@@ -38,6 +39,34 @@
         "data": {
           "date_start": "Date / first date",
           "date_end": "Last date"
+        }
+      },
+      "registration_date_start": {
+        "title": "Choose first date",
+        "description": "Choose the first date. Continue to open the last date.",
+        "data": {
+          "date_start": "From date"
+        }
+      },
+      "registration_date_end": {
+        "title": "Choose last date",
+        "description": "Optionally select a last date. Leave it blank for one day.",
+        "data": {
+          "date_end": "To date"
+        }
+      },
+      "edit_date_start": {
+        "title": "Change first date",
+        "description": "Choose the new start date. The end-date step follows automatically.",
+        "data": {
+          "date_start": "From date"
+        }
+      },
+      "edit_date_end": {
+        "title": "Change last date",
+        "description": "Select an end date, or leave blank for a single day.",
+        "data": {
+          "date_end": "To date"
         }
       }
     },
@@ -59,7 +88,6 @@
         "description": "Change only the part you need. Advanced vehicle options and notification settings stay out of the initial setup.",
         "menu_options": {
           "route": "Places, dates and notifications",
-          "dates": "Travel dates",
           "filters": "Vehicle filters (optional)",
           "updates": "Refresh interval and events",
           "costs": "Trip cost assumptions",
@@ -68,7 +96,7 @@
       },
       "route": {
         "title": "Places and dates",
-        "description": "Select pickup and return locations. Use the slider below each field to set a 0–100 km radius (0 = selected locations only). Radius covers each selected location with verified GPS coordinates. Then set dates and notifications on the same page.",
+        "description": "Choose locations and radius using the sliders. Keep All dates on to get alerts whenever matching cars appear. Turn it off to choose a first date, then a last date in the next steps. 0 km means only the selected location.",
         "data": {
           "watch_name": "Search name",
           "countries": "Countries",
@@ -80,7 +108,8 @@
           "notify_enabled": "Notify me about new cars",
           "notify_target": "Send notifications to",
           "origin_radius_km": "Radius around pickup locations (km)",
-          "destination_radius_km": "Radius around return locations (km)"
+          "destination_radius_km": "Radius around return locations (km)",
+          "all_dates": "All dates – notify me whenever a car is available"
         }
       },
       "dates": {
@@ -152,6 +181,20 @@
           "quiet_urgent_bypass": "Allow urgent offers during quiet hours (expires within 3 hours)",
           "alerts_only_feasible": "Only alert when travel time margin is known and positive",
           "max_toll_nok": "Maximum estimated toll NOK (0 = unlimited)"
+        }
+      },
+      "edit_date_start": {
+        "title": "Change first date",
+        "description": "Choose the new start date. The end-date step follows automatically.",
+        "data": {
+          "date_start": "From date"
+        }
+      },
+      "edit_date_end": {
+        "title": "Change last date",
+        "description": "Select an end date, or leave blank for a single day.",
+        "data": {
+          "date_end": "To date"
         }
       }
     },
