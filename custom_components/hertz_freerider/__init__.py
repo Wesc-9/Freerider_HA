@@ -102,9 +102,14 @@ async def async_reload_entry(hass, entry) -> None:
 
 
 async def async_unload_entry(hass, entry) -> bool:
-    """Cleanly unload an individual route profile."""
+    """Support Home Assistant's native Disable and Reload actions.
+
+    Home Assistant owns ConfigEntry.async_unload() and runs all callbacks
+    registered with entry.async_on_unload() *after* this function returns.
+    Calling entry.async_unload() here is erroneous and can recursively try
+    to unload the same entry (or raise TypeError for the missing hass arg).
+    """
     ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if ok:
-        hass.data[DOMAIN].pop(entry.entry_id, None)
-        entry.async_unload()
+        hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
     return ok
