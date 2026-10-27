@@ -30,6 +30,7 @@ from .quote_rules import quote_eligibility
 from .search_enhancements import classify_offers
 from .trip_costs import cost_breakdown
 from .trip_planner import sort_offers, journey_feasibility, quiet_now, is_urgent
+from .search_mode import search_active, periodic_checks_enabled
 from zoneinfo import ZoneInfo
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,8 +59,7 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         self.toll_estimates: dict[str, dict] = {}
         self._toll_cache: dict[tuple[str, str], tuple[float, dict]] = {}
         self.last_toll_estimate: dict | None = None
-        automatic = (self.settings.get(CONF_SEARCH_ACTIVE, True)
-                     and self.settings.get(CONF_SCAN_MODE, "automatic") == "automatic")
+        automatic = periodic_checks_enabled(self.settings)
         interval = max(15, min(120, int(self.settings.get(
             CONF_SCAN_INTERVAL, DEFAULT_POLL_MINUTES
         ))))
@@ -101,7 +101,7 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
     async def _async_update_data(self) -> list[Ride]:
         # Pause is an actual stop, not just a notification mute. Do not
         # contact provider feeds, queue alerts, or mark a new successful scan.
-        if not self.settings.get(CONF_SEARCH_ACTIVE, True):
+        if not search_active(self.settings):
             self.last_source_errors = {}
             return []
         self.last_attempt_utc = datetime.now(timezone.utc).isoformat()

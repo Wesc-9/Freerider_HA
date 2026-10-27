@@ -8,6 +8,7 @@ from homeassistant.exceptions import HomeAssistantError
 from .device import watch_device_info
 from .const import DOMAIN, CONF_NOTIFY_TARGET, CONF_NOTIFY_ENABLED, CONF_SEARCH_ACTIVE
 from .notifications import TARGET_OFF
+from .search_mode import search_active
 
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
@@ -32,10 +33,7 @@ class FreeriderSearchSwitch(SwitchEntity):
 
     @property
     def is_on(self) -> bool:
-        return bool(self._entry.options.get(
-            CONF_SEARCH_ACTIVE,
-            self._entry.data.get(CONF_SEARCH_ACTIVE, True),
-        ))
+        return search_active({**self._entry.data, **self._entry.options})
 
     async def async_turn_on(self, **kwargs) -> None:
         self.hass.config_entries.async_update_entry(
