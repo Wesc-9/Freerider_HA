@@ -21,7 +21,7 @@ from .const import (
     CONF_VEHICLE_TYPE, CONF_WATCH_NAME, COUNTRIES, DEFAULT_POLL_MINUTES, DOMAIN,
     CONF_MODEL_INCLUDE, CONF_MODEL_EXCLUDE, CONF_RADIUS_KM,
     CONF_ALERT_EXISTING, CONF_ALERT_UPDATES, CONF_FUEL_USAGE, CONF_FUEL_PRICE,
-    CONF_ELECTRIC_USAGE, CONF_ELECTRIC_PRICE, CONF_SEARCH_ACTIVE,
+    CONF_ELECTRIC_USAGE, CONF_ELECTRIC_PRICE, CONF_SEARCH_ACTIVE, CONF_ALL_DATES,
     CONF_SORT_BY, CONF_QUIET_START, CONF_QUIET_END, CONF_QUIET_URGENT, CONF_MAX_TOLL, CONF_ONLY_FEASIBLE,
 )
 from .filters import station_candidates, place_values
@@ -74,6 +74,37 @@ def _place_selector(names: list[str]):
     ))
 
 
+def all_dates_default(values: dict) -> bool:
+    """Maintain old searches that may have chosen a date period."""
+    if CONF_ALL_DATES in values:
+        return bool(values[CONF_ALL_DATES])
+    return values.get(CONF_DATE_MODE, "any") == "any"
+
+
+def all_dates_fields() -> dict:
+    """Clear obsolete date filters whenever all dates is selected."""
+    return {
+        CONF_ALL_DATES: True,
+        CONF_DATE_MODE: "any",
+        CONF_DATE_START: None,
+        CONF_DATE_END: None,
+    }
+
+
+def start_date_schema(values: dict | None = None) -> vol.Schema:
+    values = values or {}
+    marker = (vol.Required(CONF_DATE_START, default=values[CONF_DATE_START])
+              if values.get(CONF_DATE_START) else vol.Required(CONF_DATE_START))
+    return vol.Schema({marker: selector.DateSelector()})
+
+
+def end_date_schema(values: dict | None = None) -> vol.Schema:
+    values = values or {}
+    marker = (vol.Optional(CONF_DATE_END, default=values[CONF_DATE_END])
+              if values.get(CONF_DATE_END) else vol.Optional(CONF_DATE_END))
+    return vol.Schema({marker: selector.DateSelector()})
+
+
 def route_schema(values: dict | None, stations: list[str], targets=None) -> vol.Schema:
     """Show departure, destination and travel dates together."""
     values = values or {}
@@ -98,11 +129,11 @@ def route_schema(values: dict | None, stations: list[str], targets=None) -> vol.
     fields[vol.Required(
         CONF_DIRECTION, default=values.get(CONF_DIRECTION, "forward")
     )] = select(["forward", "either"], "direction")
-    for key in (CONF_DATE_START, CONF_DATE_END):
-        if values.get(key):
-            fields[vol.Optional(key, default=values[key])] = selector.DateSelector()
-        else:
-            fields[vol.Optional(key)] = selector.DateSelector()
+    # All-dates is the default. Date fields are not interactive on this
+    # step; selecting a period guides the user through start and end dates.
+    fields[vol.Required(
+        CONF_ALL_DATES, default=all_dates_default(values)
+    )] = selector.BooleanSelector()
 
     target = values.get(CONF_NOTIFY_TARGET, TARGET_OFF)
     enabled = values.get(CONF_NOTIFY_ENABLED, target != TARGET_OFF)
@@ -405,6 +436,7 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_MIN_SEATS: 0,
             CONF_SCAN_MODE: "automatic",
             CONF_SEARCH_ACTIVE: True,
+            CONF_ALL_DATES: True,
             CONF_SCAN_INTERVAL: DEFAULT_POLL_MINUTES,
             CONF_EVENTS: True,
             CONF_NOTIFY_TARGET: TARGET_OFF,
