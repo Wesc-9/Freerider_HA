@@ -107,14 +107,15 @@
       },
       "updates": {
         "title": "Checks and notifications",
-        "description": "Configure refresh frequency and automatic Norwegian toll estimates for new-car notifications. A small daily API request cap applies. Missing estimates are never displayed as zero. Select your phone under Places, dates and notifications.",
+        "description": "Pause or resume this saved search without deleting its setup. A paused search will not fetch provider listings or send car alerts. The notification recipient and filters are preserved.",
         "data": {
           "scan_mode": "Search mode",
           "scan_interval": "Minutes between automatic checks",
           "notify_events": "Also emit events for HA automations",
           "toll_in_notifications": "Include estimated tolls in new car alerts (Norway)",
           "alert_existing_first_scan": "Notify about existing available cars on first scan",
-          "alert_offer_changes": "Also notify when offer dates or availability change"
+          "alert_offer_changes": "Also notify when offer dates or availability change",
+          "search_active": "Search active (pause / resume this search)"
         }
       },
       "area": {

@@ -73,8 +73,8 @@ class FreeriderAlertSwitch(SwitchEntity):
         cfg = {**self._entry.data, **self._entry.options}
         if cfg.get(CONF_NOTIFY_TARGET, TARGET_OFF) == TARGET_OFF:
             raise HomeAssistantError(
-                "Select a mobile phone in Freerider HA → Configure → "
-                "Steder, dato og varsler first."
+                "Velg først mottakeren under Freerider HA → Konfigurer → "
+                "Steder, dato og varsler."
             )
         self.hass.config_entries.async_update_entry(
             self._entry,

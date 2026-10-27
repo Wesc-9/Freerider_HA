@@ -107,14 +107,15 @@
       },
       "updates": {
         "title": "Søk og varslinger",
-        "description": "Velg sjekkintervall og om bompenger skal beregnes i mobilvarsler. For norske ruter beregnes bom automatisk ved nye treff, med en forsiktig daglig API-grense. Ukjent beløp vises aldri som 0 kr. Varslingsenhet velges under «Steder, dato og varsler».",
+        "description": "Stopp eller start dette søket uten å slette søkeprofilen. Når søket er satt på pause, henter det ikke Freerider-data og sender ingen bilvarsler. Valgt varslingsenhet og søkekriterier beholdes.",
         "data": {
           "scan_mode": "Oppdateringsmåte",
           "scan_interval": "Minutter mellom automatiske søk",
           "notify_events": "Publiser også hendelser til Home Assistant-automasjoner",
           "toll_in_notifications": "Inkluder bompengeestimat i nye bilvarsler (Norge)",
           "alert_existing_first_scan": "Varsle om biler som allerede er ledige ved første søk",
-          "alert_offer_changes": "Varsle også når tilgjengelighet eller dato endres"
+          "alert_offer_changes": "Varsle også når tilgjengelighet eller dato endres",
+          "search_active": "Søk aktivt (stopp / start dette søket)"
         }
       },
       "area": {
