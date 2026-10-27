@@ -53,3 +53,5 @@ CONF_SEARCH_ACTIVE = "search_active"
 # Independent registration sliders, 0 = exact stations only.
 CONF_ORIGIN_RADIUS_KM = "origin_radius_km"
 CONF_DESTINATION_RADIUS_KM = "destination_radius_km"
+
+CONF_ALL_DATES = "all_dates"
