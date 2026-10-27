@@ -1,41 +1,73 @@
-"""Validate radius choices from verified provider station coordinates.
+"""Pure GPS-backed radius settings shared by registration and edit flow.
 
-Only real coordinate-bearing stations can be used as radius centers. The
-same rules apply during first-time registration and when editing a watch.
+The two sliders operate independently: 0 km keeps the original exact/alias
+matching; a positive radius adds provider-confirmed stations near each
+selected reference point. Never guess coordinates for custom text stations.
 """
 from __future__ import annotations
 
-from .search_enhancements import distance_km
+if __package__:
+    from .filters import normalized, place_values
+    from .search_enhancements import distance_km
+else:
+    from filters import normalized, place_values
+    from search_enhancements import distance_km
+
+RADIUS_STEP_KM = 5
+MAX_RADIUS_KM = 100
+SIDES = ("origin", "destination")
 
 
-RADIUS_CHOICES = frozenset({"0", "25", "50", "100"})
+def radius_default(values: dict, side: str) -> int:
+    """Show existing legacy radius on first edit, then use new explicit value."""
+    key = f"{side}_radius_km"
+    if key in values:
+        return int(values.get(key) or 0)
+    if values.get(f"{side}_radius_name"):
+        try:
+            return int(values.get("radius_km", 0) or 0)
+        except (TypeError, ValueError):
+            return 0
+    return 0
 
 
-def parse_radius_selection(values: dict, located: dict[str, dict]) -> tuple[dict, str | None]:
-    """Return saved radius fields and a translated error key if invalid."""
-    radius = str(values.get("radius_km", "0"))
-    if radius not in RADIUS_CHOICES:
-        return {}, "radius_invalid"
+def validate_radius_settings(values: dict, located: dict[str, dict]) -> tuple[dict, str | None]:
+    """Validate both sliders and resolve every selected center from real GPS.
 
-    result = {"radius_km": radius}
-    if radius == "0":
-        # Explicitly reset old center coordinates when turning radius off.
-        for side in ("origin", "destination"):
-            result[f"{side}_radius_name"] = ""
-            result[f"{side}_radius_point"] = None
-        return result, None
+    No provider GPS for a selected origin/destination => a clear form error
+    rather than silently omitting that radius center.
+    """
+    known = {normalized(name): point for name, point in located.items()}
+    updates: dict = {"radius_km": "0"}  # turn off previous legacy shared radius
+    for side in SIDES:
+        field = f"{side}_radius_km"
+        raw = values.get(field, radius_default(values, side))
+        if isinstance(raw, bool):
+            return {}, "radius_invalid"
+        try:
+            radius = int(raw)
+            if float(raw) != radius:
+                return {}, "radius_invalid"
+        except (ValueError, TypeError):
+            return {}, "radius_invalid"
+        if radius < 0 or radius > MAX_RADIUS_KM or radius % RADIUS_STEP_KM:
+            return {}, "radius_invalid"
 
-    for side in ("origin", "destination"):
-        name = values.get(f"{side}_radius_name") or ""
-        point = located.get(name) if name else None
-        if name and (not isinstance(point, dict) or distance_km(
-            point.get("lat"), point.get("lon"),
-            point.get("lat"), point.get("lon"),
-        ) is None):
-            return {}, "radius_station_unavailable"
-        result[f"{side}_radius_name"] = name
-        result[f"{side}_radius_point"] = dict(point) if point else None
-
-    if not (result["origin_radius_point"] or result["destination_radius_point"]):
-        return {}, "radius_center_required"
-    return result, None
+        points = []
+        selected = place_values(values.get(side))
+        if radius and not selected:
+            return {}, "radius_center_required"
+        if radius:
+            for name in selected:
+                point = known.get(normalized(name))
+                if (not isinstance(point, dict)
+                    or distance_km(point.get("lat"), point.get("lon"),
+                                   point.get("lat"), point.get("lon")) is None):
+                    return {}, "radius_station_unavailable"
+                coords = {"lat": float(point["lat"]), "lon": float(point["lon"])}
+                if coords not in points:
+                    points.append(coords)
+        updates[field] = radius
+        updates[f"{side}_radius_points"] = points
+    # Do not keep any stale previous center when changing registration settings.
+    return updates, None
