@@ -378,7 +378,10 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     candidate.update(points)
                     # Prevent old shared-radius settings from conflicting.
                     self._draft = candidate
-                    return self._finish()
+                    if all_dates_default(candidate):
+                        self._draft.update(all_dates_fields())
+                        return self._finish()
+                    return await self.async_step_registration_date_start()
             errors["base"] = invalid
         if self._stations is None:
             self._stations = await async_station_suggestions(
@@ -393,6 +396,33 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
 
+
+    async def async_step_registration_date_start(self, user_input=None):
+        """Choose a start date; next automatically opens the end-date form."""
+        if user_input is not None:
+            self._draft[CONF_DATE_START] = user_input[CONF_DATE_START]
+            return await self.async_step_registration_date_end()
+        return self.async_show_form(
+            step_id="registration_date_start",
+            data_schema=start_date_schema(self._draft),
+        )
+
+    async def async_step_registration_date_end(self, user_input=None):
+        """Allow a single day or inclusive date range."""
+        errors = {}
+        if user_input is not None:
+            values = {**self._draft, CONF_DATE_END: user_input.get(CONF_DATE_END)}
+            candidate = {**values, CONF_ALL_DATES: False, **route_dates(values)}
+            invalid = validation_error(candidate)
+            if invalid is None:
+                self._draft = candidate
+                return self._finish()
+            errors["base"] = invalid
+        return self.async_show_form(
+            step_id="registration_date_end",
+            data_schema=end_date_schema({**self._draft, **(user_input or {})}),
+            errors=errors,
+        )
 
     async def async_step_date(self, user_input=None):
         """Page three: all dates by default, optional single day or range."""
@@ -481,7 +511,7 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Choose which part of the configuration to change."""
         return self.async_show_menu(
-            step_id="init", menu_options=["route", "dates", "filters", "costs", "updates", "alerts"],
+            step_id="init", menu_options=["route", "filters", "costs", "updates", "alerts"],
         )
 
     async def async_step_route(self, user_input=None):
@@ -511,6 +541,11 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
                 )
                 if invalid is None:
                     user_input.update(points)
+                    if all_dates_default(user_input):
+                        user_input.update(all_dates_fields())
+                    else:
+                        self._pending_route = user_input
+                        return await self.async_step_edit_date_start()
                     title = user_input.pop(CONF_WATCH_NAME, self.config_entry.title)
                     if title != self.config_entry.title:
                         self.hass.config_entries.async_update_entry(
@@ -532,6 +567,46 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
         )
 
 
+
+    async def async_step_edit_date_start(self, user_input=None):
+        """Continue directly to return-date selection after choosing from-date."""
+        draft = getattr(self, "_pending_route", None)
+        if draft is None:
+            return await self.async_step_route()
+        if user_input is not None:
+            draft[CONF_DATE_START] = user_input[CONF_DATE_START]
+            return await self.async_step_edit_date_end()
+        return self.async_show_form(
+            step_id="edit_date_start",
+            data_schema=start_date_schema({**self._settings(), **draft}),
+        )
+
+    async def async_step_edit_date_end(self, user_input=None):
+        """Save edited route, radius and date range atomically."""
+        draft = getattr(self, "_pending_route", None)
+        if draft is None:
+            return await self.async_step_route()
+        errors = {}
+        if user_input is not None:
+            values = {**draft, CONF_DATE_END: user_input.get(CONF_DATE_END)}
+            candidate = {**values, CONF_ALL_DATES: False, **route_dates(values)}
+            invalid = validation_error(candidate)
+            if invalid is None:
+                title = candidate.pop(CONF_WATCH_NAME, self.config_entry.title)
+                if title != self.config_entry.title:
+                    self.hass.config_entries.async_update_entry(
+                        self.config_entry, title=title,
+                    )
+                self._pending_route = None
+                return self.async_create_entry(
+                    title="", data={**self.config_entry.options, **candidate},
+                )
+            errors["base"] = invalid
+        return self.async_show_form(
+            step_id="edit_date_end",
+            data_schema=end_date_schema({**self._settings(), **draft, **(user_input or {})}),
+            errors=errors,
+        )
 
     async def async_step_dates(self, user_input=None):
         """Choose any day, a single day, or a date window."""
