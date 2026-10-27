@@ -134,6 +134,17 @@ def route_schema(values: dict | None, stations: list[str], targets=None) -> vol.
     fields[vol.Required(
         CONF_ALL_DATES, default=all_dates_default(values)
     )] = selector.BooleanSelector()
+    # Grey, noninteractive previews in the initial form. The ordinary
+    # Home Assistant UI cannot toggle selector read_only in-place; when
+    # All dates is unchecked, Next opens the active start/end calendars.
+    for date_key in (CONF_DATE_START, CONF_DATE_END):
+        marker = (
+            vol.Optional(date_key, default=values[date_key])
+            if values.get(date_key) else vol.Optional(date_key)
+        )
+        fields[marker] = selector.DateSelector(
+            selector.DateSelectorConfig(read_only=True)
+        )
 
     target = values.get(CONF_NOTIFY_TARGET, TARGET_OFF)
     enabled = values.get(CONF_NOTIFY_ENABLED, target != TARGET_OFF)
