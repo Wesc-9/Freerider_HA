@@ -250,6 +250,8 @@ class FreeriderSearchStatus(CoordinatorEntity,SensorEntity):
 
     @property
     def native_value(self):
+        if not self.coordinator.settings.get("search_active", True):
+            return "paused"
         if not self.coordinator.last_success_utc:
             return "waiting"
         if not self.coordinator.last_update_success:
@@ -290,6 +292,7 @@ class FreeriderSearchStatus(CoordinatorEntity,SensorEntity):
             "alerts_delivered":c.sent_alert_count,
             "last_alert_utc":c.last_alert_utc,
             "last_alert_error":c.last_alert_error,
+            "search_active":c.settings.get("search_active",True),
             "source_state":"Partial results may omit offers from unavailable country feeds"
                            if c.last_source_errors else "Latest country feeds succeeded",
         }

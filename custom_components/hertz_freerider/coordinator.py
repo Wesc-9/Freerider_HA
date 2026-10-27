@@ -16,6 +16,7 @@ from .const import (
     CONF_TOLL_IN_NOTIFICATIONS, CONF_ALERT_EXISTING, CONF_ALERT_UPDATES,
     CONF_SORT_BY, CONF_QUIET_START, CONF_QUIET_END, CONF_QUIET_URGENT,
     CONF_MAX_TOLL, CONF_ONLY_FEASIBLE,
+    CONF_SEARCH_ACTIVE,
 )
 from .filters import Ride, filter_rides
 from .source import async_fetch_country
@@ -57,7 +58,8 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         self.toll_estimates: dict[str, dict] = {}
         self._toll_cache: dict[tuple[str, str], tuple[float, dict]] = {}
         self.last_toll_estimate: dict | None = None
-        automatic = self.settings.get(CONF_SCAN_MODE, "automatic") == "automatic"
+        automatic = (self.settings.get(CONF_SEARCH_ACTIVE, True)
+                     and self.settings.get(CONF_SCAN_MODE, "automatic") == "automatic")
         interval = max(15, min(120, int(self.settings.get(
             CONF_SCAN_INTERVAL, DEFAULT_POLL_MINUTES
         ))))
@@ -97,6 +99,11 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
 
 
     async def _async_update_data(self) -> list[Ride]:
+        # Pause is an actual stop, not just a notification mute. Do not
+        # contact provider feeds, queue alerts, or mark a new successful scan.
+        if not self.settings.get(CONF_SEARCH_ACTIVE, True):
+            self.last_source_errors = {}
+            return []
         self.last_attempt_utc = datetime.now(timezone.utc).isoformat()
         countries = self.settings.get(CONF_COUNTRIES, ["NO"])
         force=self._force_source_fetch

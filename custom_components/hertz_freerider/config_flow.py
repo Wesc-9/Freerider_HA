@@ -21,7 +21,7 @@ from .const import (
     CONF_VEHICLE_TYPE, CONF_WATCH_NAME, COUNTRIES, DEFAULT_POLL_MINUTES, DOMAIN,
     CONF_MODEL_INCLUDE, CONF_MODEL_EXCLUDE, CONF_RADIUS_KM,
     CONF_ALERT_EXISTING, CONF_ALERT_UPDATES, CONF_FUEL_USAGE, CONF_FUEL_PRICE,
-    CONF_ELECTRIC_USAGE, CONF_ELECTRIC_PRICE,
+    CONF_ELECTRIC_USAGE, CONF_ELECTRIC_PRICE, CONF_SEARCH_ACTIVE,
     CONF_SORT_BY, CONF_QUIET_START, CONF_QUIET_END, CONF_QUIET_URGENT, CONF_MAX_TOLL, CONF_ONLY_FEASIBLE,
 )
 from .filters import station_candidates, place_values
@@ -170,6 +170,8 @@ def vehicle_schema(values: dict | None = None) -> vol.Schema:
 def updates_schema(values: dict | None = None) -> vol.Schema:
     values = values or {}
     return vol.Schema({
+        vol.Required(CONF_SEARCH_ACTIVE, default=values.get(CONF_SEARCH_ACTIVE, True)):
+            selector.BooleanSelector(),
         vol.Required(CONF_SCAN_MODE, default=values.get(CONF_SCAN_MODE, "automatic")):
             select(["automatic", "manual"], "scan_mode"),
         vol.Required(CONF_SCAN_INTERVAL, default=values.get(
@@ -384,6 +386,7 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_FUEL: "any",
             CONF_MIN_SEATS: 0,
             CONF_SCAN_MODE: "automatic",
+            CONF_SEARCH_ACTIVE: True,
             CONF_SCAN_INTERVAL: DEFAULT_POLL_MINUTES,
             CONF_EVENTS: True,
             CONF_NOTIFY_TARGET: TARGET_OFF,
