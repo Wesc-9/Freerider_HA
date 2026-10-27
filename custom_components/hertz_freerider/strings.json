@@ -12,7 +12,7 @@
       },
       "route": {
         "title": "2 · From, to and travel dates",
-        "description": "Choose multiple departure and arrival places and optional dates. At the bottom, enable alerts and select a mobile device registered in Home Assistant. You can change it later.",
+        "description": "Select pickup and return locations. Use the slider below each field to set a 0–100 km radius (0 = selected locations only). Radius covers each selected location with verified GPS coordinates. Then set dates and notifications on the same page.",
         "data": {
           "origin": "From – select several places (optional)",
           "destination": "To – select several places (optional)",
@@ -20,7 +20,9 @@
           "date_start": "Date / first date (optional)",
           "date_end": "Last date (optional, for a range)",
           "notify_enabled": "Notify me about new cars",
-          "notify_target": "Send notifications to"
+          "notify_target": "Send notifications to",
+          "origin_radius_km": "Radius around pickup locations (km)",
+          "destination_radius_km": "Radius around return locations (km)"
         }
       },
       "date": {
@@ -44,7 +46,10 @@
       "country_not_ready": "Choose Norway or Sweden. The Denmark data source is not ready yet.",
       "missing_date": "Choose the required date(s).",
       "end_before_start": "End date cannot be earlier than start date.",
-      "notification_device_required": "Choose a notification device before enabling alerts."
+      "notification_device_required": "Choose a notification device before enabling alerts.",
+      "radius_station_unavailable": "One or more selected locations have no GPS coordinates. Choose a known Freerider station or set radius to 0 km.",
+      "radius_center_required": "Choose at least one location on the side where radius is greater than 0 km.",
+      "radius_invalid": "Radius must be 0–100 km in increments of 5 km."
     }
   },
   "options": {
@@ -57,14 +62,13 @@
           "dates": "Travel dates",
           "filters": "Vehicle filters (optional)",
           "updates": "Refresh interval and events",
-          "area": "Search radius around stations",
           "costs": "Trip cost assumptions",
           "alerts": "Alert preferences and quiet hours"
         }
       },
       "route": {
         "title": "Places and dates",
-        "description": "Edit locations, dates, alert toggle and receiving phone together. Select a recipient before enabling alerts.",
+        "description": "Select pickup and return locations. Use the slider below each field to set a 0–100 km radius (0 = selected locations only). Radius covers each selected location with verified GPS coordinates. Then set dates and notifications on the same page.",
         "data": {
           "watch_name": "Search name",
           "countries": "Countries",
@@ -74,7 +78,9 @@
           "date_start": "Date / first date (optional)",
           "date_end": "Last date (optional, for a range)",
           "notify_enabled": "Notify me about new cars",
-          "notify_target": "Send notifications to"
+          "notify_target": "Send notifications to",
+          "origin_radius_km": "Radius around pickup locations (km)",
+          "destination_radius_km": "Radius around return locations (km)"
         }
       },
       "dates": {
@@ -155,9 +161,10 @@
       "missing_date": "Choose the required dates.",
       "end_before_start": "End date cannot precede start date.",
       "notification_device_required": "Choose a notification device before enabling alerts.",
-      "radius_station_unavailable": "Choose a station with known GPS coordinates.",
-      "radius_center_required": "Select at least one center station when radius is active.",
-      "invalid_quiet_hours": "Enter both quiet-hour times in HH:MM format, for example 22:00 and 07:00."
+      "radius_station_unavailable": "One or more selected locations have no GPS coordinates. Choose a known Freerider station or set radius to 0 km.",
+      "radius_center_required": "Choose at least one location on the side where radius is greater than 0 km.",
+      "invalid_quiet_hours": "Enter both quiet-hour times in HH:MM format, for example 22:00 and 07:00.",
+      "radius_invalid": "Radius must be 0–100 km in increments of 5 km."
     }
   },
   "selector": {

@@ -12,7 +12,7 @@
       },
       "route": {
         "title": "2 · Velg fra, til og dato",
-        "description": "Velg flere fra- og tilsteder, og eventuelt dato. Nederst velger du om varsling skal være på, og hvilken mobil i Home Assistant som skal motta meldinger. Du kan endre dette senere.",
+        "description": "Velg fra- og tilsteder. Dra skyveknappen under hvert sted for å velge radius fra 0 til 100 km (0 = kun valgt sted). Radius gjelder alle valgte steder med kjente GPS-koordinater. Velg deretter dato og varsling på samme side.",
         "data": {
           "origin": "Fra – velg flere steder (valgfritt)",
           "destination": "Til – velg flere steder (valgfritt)",
@@ -20,7 +20,9 @@
           "date_start": "Dato / fra dato (valgfritt)",
           "date_end": "Til dato (valgfritt, for periode)",
           "notify_enabled": "Varsle om nye biler",
-          "notify_target": "Send varsel til"
+          "notify_target": "Send varsel til",
+          "origin_radius_km": "Radius rundt avreisesteder (km)",
+          "destination_radius_km": "Radius rundt leveringssteder (km)"
         }
       },
       "date": {
@@ -44,7 +46,10 @@
       "country_not_ready": "Velg Norge eller Sverige. Datakilden for Danmark er ikke klar.",
       "missing_date": "Velg nødvendige datoer.",
       "end_before_start": "Sluttdato kan ikke være før startdato.",
-      "notification_device_required": "Velg en varslingsenhet før du slår på varsler."
+      "notification_device_required": "Velg en varslingsenhet før du slår på varsler.",
+      "radius_station_unavailable": "Ett eller flere valgte steder mangler GPS-koordinater. Velg en kjent Freerider-stasjon eller sett radius til 0 km.",
+      "radius_center_required": "Velg minst ett sted i kolonnen der radius er større enn 0 km.",
+      "radius_invalid": "Radius må være mellom 0 og 100 km i trinn på 5 km."
     }
   },
   "options": {
@@ -57,14 +62,13 @@
           "dates": "Dato og periode",
           "filters": "Bilpreferanser (valgfritt)",
           "updates": "Søkeintervall og hendelser",
-          "area": "Søkeradius rundt steder",
           "costs": "Reisekostnader (egne satser)",
           "alerts": "Varslingsregler og stilleperioder"
         }
       },
       "route": {
         "title": "Steder og dato",
-        "description": "Endre steder, dato, varslingsbryter og mottakende mobil i samme skjerm. Du må velge mottaker før du slår på varsler.",
+        "description": "Velg fra- og tilsteder. Dra skyveknappen under hvert sted for å velge radius fra 0 til 100 km (0 = kun valgt sted). Radius gjelder alle valgte steder med kjente GPS-koordinater. Velg deretter dato og varsling på samme side.",
         "data": {
           "watch_name": "Navn på søket",
           "countries": "Land",
@@ -74,7 +78,9 @@
           "date_start": "Dato / fra dato (valgfritt)",
           "date_end": "Til dato (valgfritt, for periode)",
           "notify_enabled": "Varsle om nye biler",
-          "notify_target": "Send varsel til"
+          "notify_target": "Send varsel til",
+          "origin_radius_km": "Radius rundt avreisesteder (km)",
+          "destination_radius_km": "Radius rundt leveringssteder (km)"
         }
       },
       "dates": {
@@ -155,9 +161,10 @@
       "missing_date": "Velg nødvendige datoer.",
       "end_before_start": "Sluttdato kan ikke være før startdato.",
       "notification_device_required": "Velg en varslingsenhet før du slår på varsler.",
-      "radius_station_unavailable": "Velg en stasjon med kjente GPS-koordinater.",
-      "radius_center_required": "Velg minst ett referansested når radius er aktiv.",
-      "invalid_quiet_hours": "Stilleperioden krever både fra- og til-tid skrevet som HH:MM, for eksempel 22:00 og 07:00."
+      "radius_station_unavailable": "Ett eller flere valgte steder mangler GPS-koordinater. Velg en kjent Freerider-stasjon eller sett radius til 0 km.",
+      "radius_center_required": "Velg minst ett sted i kolonnen der radius er større enn 0 km.",
+      "invalid_quiet_hours": "Stilleperioden krever både fra- og til-tid skrevet som HH:MM, for eksempel 22:00 og 07:00.",
+      "radius_invalid": "Radius må være mellom 0 og 100 km i trinn på 5 km."
     }
   },
   "selector": {
