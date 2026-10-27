@@ -338,8 +338,16 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not invalid and user_input.get(CONF_DATE_END) and not user_input.get(CONF_DATE_START):
                 invalid = "missing_date"
             if not invalid:
-                self._draft = candidate
-                return self._finish()
+                catalog = await async_get_station_catalog(self.hass)
+                countries = candidate.get(CONF_COUNTRIES, ["NO"])
+                points, invalid = validate_radius_settings(
+                    candidate, catalog.located_stations(countries)
+                )
+                if not invalid:
+                    candidate.update(points)
+                    # Prevent old shared-radius settings from conflicting.
+                    self._draft = candidate
+                    return self._finish()
             errors["base"] = invalid
         if self._stations is None:
             self._stations = await async_station_suggestions(
@@ -441,7 +449,7 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
     async def async_step_init(self, user_input=None):
         """Choose which part of the configuration to change."""
         return self.async_show_menu(
-            step_id="init", menu_options=["route", "dates", "filters", "area", "costs", "updates", "alerts"],
+            step_id="init", menu_options=["route", "dates", "filters", "costs", "updates", "alerts"],
         )
 
     async def async_step_route(self, user_input=None):
@@ -464,14 +472,21 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
             if not invalid and user_input.get(CONF_DATE_END) and not user_input.get(CONF_DATE_START):
                 invalid = "missing_date"
             if invalid is None:
-                title = user_input.pop(CONF_WATCH_NAME, self.config_entry.title)
-                if title != self.config_entry.title:
-                    self.hass.config_entries.async_update_entry(
-                        self.config_entry, title=title,
-                    )
-                return self.async_create_entry(title="", data={
-                    **self.config_entry.options, **user_input,
-                })
+                catalog=await async_get_station_catalog(self.hass)
+                points, invalid = validate_radius_settings(
+                    user_input,
+                    catalog.located_stations(user_input[CONF_COUNTRIES]),
+                )
+                if invalid is None:
+                    user_input.update(points)
+                    title = user_input.pop(CONF_WATCH_NAME, self.config_entry.title)
+                    if title != self.config_entry.title:
+                        self.hass.config_entries.async_update_entry(
+                            self.config_entry, title=title,
+                        )
+                    return self.async_create_entry(title="", data={
+                        **self.config_entry.options, **user_input,
+                    })
             errors["base"] = invalid
 
         selected = (user_input or current).get(CONF_COUNTRIES, ["NO"])
