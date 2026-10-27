@@ -22,7 +22,7 @@ def radius_default(values: dict, side: str) -> int:
     """Show existing legacy radius on first edit, then use new explicit value."""
     key = f"{side}_radius_km"
     if key in values:
-        return int(values.get(key) or 0)
+        return values[key] if values[key] is not None else 0
     if values.get(f"{side}_radius_name"):
         try:
             return int(values.get("radius_km", 0) or 0)
