@@ -33,8 +33,8 @@ class FreeriderRefresh(CoordinatorEntity, ButtonEntity):
 
     @property
     def available(self) -> bool:
-        """Always permit manual retries after an adapter/network error."""
-        return True
+        """Paused searches are stopped until the active switch is turned on."""
+        return bool(self.coordinator.settings.get("search_active", True))
 
     async def async_press(self) -> None:
         """Request immediate update from enabled country adapters."""
@@ -55,7 +55,11 @@ class FreeriderEstimateFirstToll(CoordinatorEntity, ButtonEntity):
     @property
     def available(self) -> bool:
         """Requires a successful listing update and at least one result."""
-        return bool(self.coordinator.last_update_success and self.coordinator.data)
+        return bool(
+            self.coordinator.settings.get("search_active", True)
+            and self.coordinator.last_update_success
+            and self.coordinator.data
+        )
 
     async def async_press(self) -> None:
         """Estimate toll on the first sorted matching route only."""
@@ -80,8 +84,8 @@ class FreeriderTestNotification(CoordinatorEntity, ButtonEntity):
 
     @property
     def available(self) -> bool:
-        """Sending a test alert does not depend on Freerider feed status."""
-        return True
+        """Test alerts are also paused when this search is inactive."""
+        return bool(self.coordinator.settings.get("search_active", True))
 
     async def async_press(self) -> None:
         """Allow the user to verify alert delivery without a live car."""

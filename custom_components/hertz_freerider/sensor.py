@@ -154,7 +154,9 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self):
-        """Count matches only following a successful live data fetch."""
+        """Pause means unknown, never a fictitious zero offers."""
+        if not self.coordinator.settings.get("search_active", True):
+            return None
         return len(self.coordinator.data or [])
 
     @property
@@ -162,6 +164,7 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
         """Expose a small list of actionable matches without bloating state."""
         return {
             "search_name": self.coordinator.entry.title,
+            "search_active": self.coordinator.settings.get("search_active", True),
             "filters": self.coordinator.settings,
             "source_errors": self.coordinator.last_source_errors,
             "rides": [
