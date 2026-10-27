@@ -146,16 +146,24 @@ def ride_matches(ride: Ride, config: dict) -> bool:
     # Existing single-string searches are still supported after upgrading.
     wanted_from = place_values(config.get("origin"))
     wanted_to = place_values(config.get("destination"))
-    radius = int(config.get("radius_km", 0) or 0)
     def _place_ok(names, place, lat, lon, side):
-        center_name=config.get(f"{side}_radius_name")
-        has_radius = radius > 0 and bool(center_name)
+        # New sliders independently expand all GPS-confirmed selected points;
+        # old profiles continue using the legacy one-center radius settings.
+        new_key = f"{side}_radius_km"
+        if new_key in config:
+            radius = int(config.get(new_key, 0) or 0)
+            points = config.get(f"{side}_radius_points") or []
+        else:
+            radius = int(config.get("radius_km", 0) or 0)
+            old = config.get(f"{side}_radius_point")
+            points = [old] if config.get(f"{side}_radius_name") and old else []
+        has_radius = radius > 0 and bool(points)
         if not names and not has_radius:
             return True
         return (
-            any(station_matches(x,place) for x in names)
-            or (has_radius and station_in_radius(
-                config.get(f"{side}_radius_point"),lat,lon,radius,
+            any(station_matches(x, place) for x in names)
+            or (has_radius and any(
+                station_in_radius(point, lat, lon, radius) for point in points
             ))
         )
 

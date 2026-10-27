@@ -49,3 +49,7 @@ CONF_QUIET_URGENT = "quiet_urgent_bypass"
 CONF_MAX_TOLL = "max_toll_nok"
 CONF_ONLY_FEASIBLE = "alerts_only_feasible"
 CONF_SEARCH_ACTIVE = "search_active"
+
+# Independent registration sliders, 0 = exact stations only.
+CONF_ORIGIN_RADIUS_KM = "origin_radius_km"
+CONF_DESTINATION_RADIUS_KM = "destination_radius_km"

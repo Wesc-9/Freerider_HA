@@ -29,6 +29,7 @@ from .source import async_fetch_country
 from .notifications import notification_targets, TARGET_OFF
 from .station_catalog import async_get_station_catalog
 from .search_enhancements import distance_km
+from .radius_settings import validate_radius_settings, radius_default
 
 
 def select(options: list[str], translation_key: str):
@@ -80,11 +81,20 @@ def route_schema(values: dict | None, stations: list[str], targets=None) -> vol.
     for key in (CONF_ORIGIN, CONF_DESTINATION):
         places = place_values(values.get(key))
         field = vol.Optional(key, default=places) if places else vol.Optional(key)
-        # The selected chips already show these stations. Don't duplicate
-        # them in the initial suggestion list on a reopened options form.
+        # The chosen chips already show these stations.
         selected = {name.casefold() for name in places}
         choices = [name for name in stations if name.casefold() not in selected]
         fields[field] = _place_selector(choices)
+        # The native number selector is a real drag slider in HA's config
+        # flow. Keep it right below each place selection, not hidden in
+        # Configure. There is deliberately no dynamic JS requirement.
+        radius_key = f"{key}_radius_km"
+        fields[vol.Required(
+            radius_key, default=radius_default(values, key)
+        )] = selector.NumberSelector(selector.NumberSelectorConfig(
+            min=0, max=100, step=5, unit_of_measurement="km",
+            mode=selector.NumberSelectorMode.SLIDER,
+        ))
     fields[vol.Required(
         CONF_DIRECTION, default=values.get(CONF_DIRECTION, "forward")
     )] = select(["forward", "either"], "direction")
