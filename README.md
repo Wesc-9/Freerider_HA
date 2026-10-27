@@ -1,5 +1,18 @@
 # Freerider HA
 
+## What's new in 0.10.1 — easier registration and working Disable
+
+The **From/To registration screen** now has two real **drag sliders**, immediately below their place selectors: `Origin radius (km)` and `Destination radius (km)`. Set each independently from **0 to 100 km** in 5 km steps. At **0 km** only your selected stations apply. Positive radius includes verified provider-listed stations within straight-line distance of **every** selected origin/destination with known station GPS. Missing coordinates produce a useful validation message rather than guessed matches. Current saved-search settings continue to work and the separate radius configuration menu was removed in favor of the main `Places, dates and notifications` form.
+
+**All dates – notify me whenever a car is available** is enabled by default. With this enabled, the stored search has **no date restriction** (the previous dates are cleared). The date selector previews are grey/read-only. To limit dates, turn off this toggle, press **Next**, choose the first date, press **Next** and the UI opens the last-date form automatically (optional to use a single date). This uses native HA configuration screens for backwards compatibility: the current frontend **cannot auto-open the next calendar immediately from the previous picker or dynamically enable dates without submitting the step**. For older saved date filters the toggle defaults to Off.
+
+**Deactivate / Disable fixed** for each config entry by removing an invalid internal call to `entry.async_unload()`. Home Assistant Core now manages cleanup exactly once. Additionally, each saved search offers a **Search active** entity switch to pause actual provider polling and notifications without deleting settings, while the old **New car alerts** switch only mutes notifications. A paused search has unknown availability rather than falsely claiming 0 offers.
+
+**Push messages:** car model/name appears exactly as published and is no longer prefixed with a car emoji in either Norwegian or English. Other details and official provider link remain available.
+
+Install **0.10.1** from HACS and restart Home Assistant. Native Disable and the new sliders still need an actual HA runtime test with your device. This is an unofficial integration and no Hertz permission for a specified automated polling rate has been established.
+
+
 ## What's new in 0.10.0 — smarter searches, maps and favorites
 
 **The underlying search engine is now shared across every saved watch:** only one cached public feed per country per Home Assistant server is used for ordinary checks. The normal minimum source cache age is **15 minutes**; the default automatic watch interval remains 30 minutes. Manual refresh can fetch only once per country per five minutes. Respect provider Retry-After, exponential backoff, and a four-hour stop on HTTP 403. **No automated-data-use permission has yet been established with Freerider**; treat this as a cautious community prototype, not an approved polling integration.

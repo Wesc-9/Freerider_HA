@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.1 (2026-10-27) — first-run search radius and unrestricted dates, Disable fix
+- 0–100 km pickup and return radius sliders directly under their station selectors, with independently selected values and verified station GPS per selected reference station.
+- Radius persistence in new and existing watch profiles, safe error handling for unknown GPS and migration from old single-center searches.
+- "All dates" toggle on by default; stored time filters cleared and grey/read-only date previews in the first screen.
+- Guided first-date then last-date steps whenever date limiting is requested; supports one date or an inclusive window.
+- Fixed native Home Assistant config-entry Disable handler (removed erroneous recursive `entry.async_unload()`); added regression tests.
+- New per-watch Search active toggle, separate from the notification switch; stops polling without deleting filters or target device.
+- Car-model push line no longer has an emoji prefix, on Norwegian or English notifications.
+- No new provider sources added. Leiebilretur remains a candidate for a separate opt-in adapter after acceptable API/use terms are verified.
+
+
 ## 0.10.0 (2026-10-26) — shared source cache, trip choices, maps and favorites
 - Shared per-Home-Assistant per-country source cache with ETag conditional requests, 15-minute TTL, five-minute manual throttle, Retry-After and capped exponential backoff. HTTP 403 stops fetch attempts for four hours.
 - Sort confirmed matches by pickup availability, shortest travel time/distance, Home Assistant home-to-pickup air distance, known partial travel cost or greatest estimated return-time margin.

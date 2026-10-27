@@ -1,32 +1,21 @@
-# Freerider HA 0.10.0 — safer shared searches and smarter trip choices
+# Freerider HA 0.10.1
 
-## Six improvements
+## A simpler first-time setup
 
-1. **Shared, rate-conscious Norwegian/Swedish feed fetching.** All saved searches on one HA server use a shared per-country snapshot (minimum 15 minutes between ordinary source requests), conditional HTTP requests with ETag / If-Modified-Since when available, and backoff on provider errors. HTTP 429/503 honors Retry-After. HTTP 403 pauses automated requests for four hours. Manual refresh is limited to one forced country fetch per five minutes; it can return locally cached data in between. Initial/default watch interval remains 30 minutes. **This is load reduction, not proof of permission** to scrape or poll public Hertz endpoints.
-2. **Offer ranking.** Configure → Vehicle preferences → Sort offers by: earliest date, shortest travel time, shortest distance, nearest pickup to your HA home (straight-line only), lowest known cost (partial estimates), or greatest available time margin. A local sort menu is also available on the dashboard card.
-3. **Feasibility warnings.** Each offer carries an estimated travel-margin status using provider available-from/return deadlines and driving duration, plus an assumed 30-minute pickup/return buffer. This is not confirmed pickup availability and does not account for all opening hours, traffic, or pauses.
-4. **Smart alert rules.** Configure → Alert preferences and quiet hours: e.g. 22:00–07:00 Norwegian time; optional urgent override for offers expiring within three hours, estimated toll ceiling, or feasible-only alerts. Unknown toll prices do **not** pass a user-imposed toll ceiling. Quiet-hour notifications remain pending until a subsequent successful scheduled scan.
-5. **Favorites and calendar.** Save individual currently matching car offers as favorites directly from the dashboard; saved metadata persists locally across HA restarts. Favorite status does NOT reserve or guarantee a vehicle. Export an `.ics` placeholder for the provider's published availability/return window, prominently labeled "NOT BOOKED". This is a calendar file download, not a direct write to a user's connected calendar.
-6. **Maps.** Expand a result's OpenStreetMap geographic view and open external OpenStreetMap road directions from the offer's source station coordinates. The embedded map shows the general area, **not** an exact booked or driven road route; the external directions provider calculates a suggested road route.
+Choose origin and destination locations on the usual second screen. Each is immediately followed by an independent **0–100 km radius slider** (5 km steps). 0 km means only selected locations. Radius includes actual provider-listed GPS stations within straight-line distance of each selected reference. No coordinates are fabricated; entering an unknown custom place with a nonzero radius shows a validation message.
 
-### How to use
-1. Update from HACS to **0.10.0** and restart Home Assistant.
-2. Open Freerider HA → Configure → Vehicle preferences to select the default order.
-3. Open Configure → Alert preferences and quiet hours for optional push restrictions.
-4. Add or reopen the dashboard's Freerider card:
+**All dates — notify me whenever a matching car appears** is turned on by default. Any previous date filter is cleared when selected. Start/end date previews are visibly disabled in that form.
 
-```yaml
-type: custom:freerider-rides-card
-entity: sensor.freerider_matching_rides
-```
+To choose a date range, turn All dates off and continue. The setup asks for the **first date**, then advances to the **last date** step; last date is optional for a single-day search. A picker-to-picker auto-focus without submitting the step is not supported by the installed HA frontend, so each step requires its standard Next button.
 
-If the card is unavailable, register `/freerider-ha/freerider-rides-card.js?v=0.10.0` as a Lovelace JavaScript module in Dashboard Resources (replace the sensor entity ID with your search's matching-rides sensor).
+## Disable and notifications
+- Home Assistant's native **Disable** flow fixed by leaving lifecycle callbacks to HA instead of mistakenly calling config-entry unload twice.
+- A separate **Search active** switch under each watch stops the watch's polling and notifications while preserving its entire configuration.
+- The existing **New car alerts** switch continues to mute alerts only.
+- Phone messages show the provider's exact car name (such as VW CRAFTER 14M3 4MOTION TDI VA) **without a preceding emoji**, in both languages.
 
-### Important
-- Home Assistant native entity dialogs remain native; map, card sorting, favorites and .ics export are in the **optional dashboard card**, not in the built-in entity popup.
-- Existing per-car entities on the Freerider device page remain in place.
-- Direct booking links are not booking confirmations. Do not assume any offer remains available until the provider verifies it.
-- A real end-to-end test in a user's Home Assistant installation, including push delivery and frontend resource registration, has **not** been completed by CI.
-- This is an unofficial community integration, not affiliated with or endorsed by Hertz. We have not established permission for any specific public-endpoint polling frequency.
+## After updating
+Update to **0.10.1** in HACS, restart Home Assistant, add a test search and inspect its radius sliders and All dates switch. For an existing search select Freerider HA → Configure → Places, dates and notifications. Use the device's Search active switch to pause only that search, or native Disable to stop the config entry.
 
-Tests: Python regression tests, Node frontend behavioral tests and Home Assistant hassfest. HACS publication validation still needs GitHub repository Topics metadata.
+### Validation and limitations
+Automated Python tests, JavaScript tests and Home Assistant hassfest verify the implementation; a successful native Disable and date-picker UX in the user's real Home Assistant instance must still be confirmed. HACS publication validation may still be blocked by missing GitHub repository Topics. This is an unofficial project not affiliated with Hertz; permission to poll a public endpoint at a given frequency is not established. Leiebilretur/other providers are deliberately not mixed in without verifying supported data access and terms.
