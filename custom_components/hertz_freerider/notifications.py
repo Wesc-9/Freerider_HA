@@ -170,7 +170,7 @@ def notification_content(
         title = "🚗 Freerider offer updated!" if alert_kind=="updated" else "🚗 New Freerider car!"
         lines = [
             f"📍 {ride.origin} → {ride.destination}",
-            f"🚙 {ride.vehicle}",
+            f"{ride.vehicle}",
             f"🛣️ {_drive_summary(ride, language)}",
         ]
         if available:
