@@ -60,10 +60,34 @@ def parse_toll_response(payload: object, *, electric: bool) -> dict:
         round(float(raw_duration), 1)
         if _amount(raw_duration) is not None else None
     )
+    # BompengeAppen forwards the road-planner's obstruction flag as
+    # routes[i].isObstructed. This is a *route planning snapshot*, not a
+    # real-time comprehensive DATEX traffic feed.
+    route_payload = payload.get("routes")
+    matched_route = None
+    if isinstance(route_payload, list):
+        expected_id = route.get("routeId")
+        for suggestion in route_payload[:10]:
+            if not isinstance(suggestion, dict):
+                continue
+            if expected_id is None or suggestion.get("routeId") == expected_id:
+                matched_route = suggestion
+                break
+    flagged = matched_route.get("isObstructed") if matched_route else None
+    # Never call a missing / null flag "clear roads".
+    road_obstructed = flagged if isinstance(flagged, bool) else None
+    raw_features = matched_route.get("obstructingFeatures") if matched_route else None
+    obstruction_count = (
+        min(len(raw_features), 100)
+        if isinstance(raw_features, list) and road_obstructed is True else None
+    )
     count = route.get("tollCount")
     ferry_count = route.get("ferryCount")
     return {
         "amount_nok": cost,
+        "road_obstructed": road_obstructed,
+        "road_obstruction_count": obstruction_count,
+        "road_status_source": "SVV route planner via BompengeAppen" if road_obstructed is not None else None,
         "currency": "NOK",
         "distance_km": distance_km,
         "duration_min": duration_min,
