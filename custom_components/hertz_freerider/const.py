@@ -55,3 +55,5 @@ CONF_ORIGIN_RADIUS_KM = "origin_radius_km"
 CONF_DESTINATION_RADIUS_KM = "destination_radius_km"
 
 CONF_ALL_DATES = "all_dates"
+
+CONF_TOLL_API_KEY = "toll_api_key"

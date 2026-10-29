@@ -171,7 +171,8 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
         return {
             "search_name": self.coordinator.entry.title,
             "search_active": self.coordinator.settings.get("search_active", True),
-            "filters": self.coordinator.settings,
+            "filters": {key:value for key,value in self.coordinator.settings.items() if key != "toll_api_key"},
+            "toll_api_configured": bool(self.coordinator.settings.get("toll_api_key")),
             "source_errors": self.coordinator.last_source_errors,
             "rides": [
                 {

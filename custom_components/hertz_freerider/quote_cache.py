@@ -1,7 +1,7 @@
 """Quota-aware, Home Assistant-wide cache of optional Norwegian toll estimates.
 
-Only NEW matching car alerts trigger an automatic lookup. A small daily cap
-protects public keyless API usage (which is shared by IP with other clients).
+Only NEW matching car alerts trigger an automatic lookup. An API key is
+required; the local daily cap protects the provider's account quota.
 The saved cache is shared by every watch and survives Home Assistant restarts.
 """
 
@@ -65,12 +65,16 @@ class RouteQuoteCatalog:
             "ev" if ride.fuel == "electric" else "combustion_or_unknown",
         ])
 
-    async def async_quote(self, ride) -> tuple[dict | None, str]:
+    async def async_quote(
+        self, ride, api_key: str | None = None,
+    ) -> tuple[dict | None, str]:
         """Best-effort estimate. Never block delivery due to rate limits.
 
         Shared lock prevents separate watch profiles from simultaneously
         exhausting today's daily budget or duplicating the same route.
         """
+        if not isinstance(api_key, str) or not api_key.strip():
+            return None, "api_key_missing"
         why = quote_eligibility(ride)
         if why != "ok":
             return None, why
@@ -101,7 +105,7 @@ class RouteQuoteCatalog:
             self._count += 1
             await self._save_locked()
             try:
-                estimate = await async_estimate_toll(self.hass, ride)
+                estimate = await async_estimate_toll(self.hass, ride, api_key=api_key)
             except Exception as exc:
                 _LOGGER.debug("Toll estimate unavailable for %s: %s", ride.key, exc)
                 return None, "provider_error"

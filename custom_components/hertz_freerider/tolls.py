@@ -33,12 +33,20 @@ def _station_coordinates(lat, lon) -> str:
     return f"{la:.7f},{lo:.7f}"
 
 
-async def async_estimate_toll(hass, ride: Ride, start_time: str | None = None) -> dict:
+async def async_estimate_toll(
+    hass, ride: Ride, start_time: str | None = None, *, api_key: str | None = None,
+) -> dict:
     """Calculate Norwegian local tolls using an explicit, manual request.
 
     The first recommended calculated road route need not match exactly the
     vehicle return instructions from Hertz. Reject cross-border estimates.
     """
+    if not isinstance(api_key, str) or not api_key.strip():
+        raise TollLookupError(
+            "Mangler API-nøkkel fra BompengeAppen. Opprett gratis nøkkel på "
+            "https://bompengeappen.no/api-portal og legg den inn under "
+            "Freerider HA → Konfigurer → Bom og reisekostnader."
+        )
     if ride.vehicle_type in ("van", "minibus"):
         raise TollLookupError(
             "Varebil/minibuss: ukjent tillatt totalvekt og bomtakstgruppe. "
@@ -62,13 +70,20 @@ async def async_estimate_toll(hass, ride: Ride, start_time: str | None = None) -
         async with session.get(
             ROUTE_API,
             params=params,
-            headers={"Accept": "application/json"},
+            headers={
+                "Accept": "application/json",
+                "Authorization": f"Bearer {api_key.strip()}",
+            },
             timeout=aiohttp.ClientTimeout(total=15),
         ) as response:
-            if response.status in (401, 403, 429):
+            if response.status in (401, 403):
                 raise TollLookupError(
-                    "Toll calculator keyless quota exceeded or access denied; "
-                    "retry later or use your own provider agreement"
+                    "BompengeAppen avviste API-nøkkelen eller abonnementet. "
+                    "Kontroller nøkkelen i API-portalen."
+                )
+            if response.status == 429:
+                raise TollLookupError(
+                    "BompengeAppen har nådd døgnkvoten. Prøv igjen etter reset."
                 )
             response.raise_for_status()
             data = await response.json(content_type=None)

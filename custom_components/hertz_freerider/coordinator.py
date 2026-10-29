@@ -16,7 +16,7 @@ from .const import (
     CONF_TOLL_IN_NOTIFICATIONS, CONF_ALERT_EXISTING, CONF_ALERT_UPDATES,
     CONF_SORT_BY, CONF_QUIET_START, CONF_QUIET_END, CONF_QUIET_URGENT,
     CONF_MAX_TOLL, CONF_ONLY_FEASIBLE,
-    CONF_SEARCH_ACTIVE,
+    CONF_SEARCH_ACTIVE, CONF_TOLL_API_KEY,
 )
 from .filters import Ride, filter_rides
 from .source import async_fetch_country
@@ -250,7 +250,9 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
                         try:
                             if quote_catalog is None:
                                 quote_catalog=await async_get_quote_catalog(self.hass)
-                            quote,toll_status=await quote_catalog.async_quote(ride)
+                            quote,toll_status=await quote_catalog.async_quote(
+                                ride,api_key=self.settings.get(CONF_TOLL_API_KEY),
+                            )
                             if quote is not None:
                                 self.toll_estimates[ride.key]=quote
                                 self.last_toll_estimate=quote
@@ -372,7 +374,10 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         if stored and monotonic() - stored[0] < 3600:
             estimate = dict(stored[1])
         else:
-            estimate = await async_estimate_toll(self.hass, match, start_time)
+            estimate = await async_estimate_toll(
+                self.hass,match,start_time,
+                api_key=self.settings.get(CONF_TOLL_API_KEY),
+            )
             self._toll_cache[key] = (monotonic(), dict(estimate))
             # Limit in-memory cache size (quotas belong to external provider).
             if len(self._toll_cache) > 100:

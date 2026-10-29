@@ -22,7 +22,7 @@ from .const import (
     CONF_MODEL_INCLUDE, CONF_MODEL_EXCLUDE, CONF_RADIUS_KM,
     CONF_ALERT_EXISTING, CONF_ALERT_UPDATES, CONF_FUEL_USAGE, CONF_FUEL_PRICE,
     CONF_ELECTRIC_USAGE, CONF_ELECTRIC_PRICE, CONF_SEARCH_ACTIVE, CONF_ALL_DATES,
-    CONF_SORT_BY, CONF_QUIET_START, CONF_QUIET_END, CONF_QUIET_URGENT, CONF_MAX_TOLL, CONF_ONLY_FEASIBLE,
+    CONF_TOLL_API_KEY, CONF_SORT_BY, CONF_QUIET_START, CONF_QUIET_END, CONF_QUIET_URGENT, CONF_MAX_TOLL, CONF_ONLY_FEASIBLE,
 )
 from .filters import station_candidates, place_values
 from .source import async_fetch_country
@@ -55,6 +55,12 @@ def countries_schema(values: dict | None = None) -> vol.Schema:
                 multiple=True,
                 mode=selector.SelectSelectorMode.LIST,
                 translation_key="countries",
+            )),
+        # Optional for offer monitoring, required for toll-route calculations.
+        # Do not prefill or expose the secret in any visible frontend field.
+        vol.Optional(CONF_TOLL_API_KEY):
+            selector.TextSelector(selector.TextSelectorConfig(
+                type=selector.TextSelectorType.PASSWORD,
             )),
     })
 
@@ -298,7 +304,12 @@ def area_schema(values: dict, places: list[str]) -> vol.Schema:
 
 def cost_schema(values: dict) -> vol.Schema:
     """No invented fuel price or usage: zero means estimate unavailable."""
-    fields={}
+    fields={
+        vol.Optional(CONF_TOLL_API_KEY):
+            selector.TextSelector(selector.TextSelectorConfig(
+                type=selector.TextSelectorType.PASSWORD,
+            )),
+    }
     for key in (CONF_FUEL_USAGE,CONF_FUEL_PRICE,CONF_ELECTRIC_USAGE,CONF_ELECTRIC_PRICE):
         fields[vol.Required(key,default=values.get(key,0))] = selector.NumberSelector(
             selector.NumberSelectorConfig(
@@ -362,6 +373,14 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Page one: name and countries."""
         errors = {}
         if user_input is not None:
+            # Store an API key only in the HA config entry, never an event,
+            # frontend attribute or sensor state.
+            user_input = dict(user_input)
+            key = user_input.get(CONF_TOLL_API_KEY)
+            if not isinstance(key, str) or not key.strip():
+                user_input.pop(CONF_TOLL_API_KEY, None)
+            else:
+                user_input[CONF_TOLL_API_KEY] = key.strip()
             user_input = {
                 **user_input,
                 CONF_COUNTRIES: [
@@ -710,8 +729,16 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
     async def async_step_costs(self, user_input=None):
         """User-entered assumptions for partial running cost estimates."""
         if user_input is not None:
+            new = dict(user_input)
+            supplied = new.get(CONF_TOLL_API_KEY)
+            if not isinstance(supplied, str) or not supplied.strip():
+                # Leaving the masked replacement field blank preserves
+                # a previously stored key, never erases it accidentally.
+                new.pop(CONF_TOLL_API_KEY, None)
+            else:
+                new[CONF_TOLL_API_KEY] = supplied.strip()
             return self.async_create_entry(
-                title="",data={**self.config_entry.options,**user_input},
+                title="",data={**self.config_entry.options,**new},
             )
         return self.async_show_form(
             step_id="costs",data_schema=cost_schema(self._settings()),
