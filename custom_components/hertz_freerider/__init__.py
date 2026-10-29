@@ -15,6 +15,7 @@ from .tolls import TollLookupError
 from .api_settings import get_shared_api_settings
 from .coordinator import FreeriderCoordinator
 from .dashboard import async_setup_dashboard
+from .trip_profiles import all_watch_profiles
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS = ["sensor", "button", "switch"]
@@ -89,11 +90,18 @@ async def async_setup_entry(hass, entry) -> bool:
     """Set up one watch. An unavailable source must not block configuration."""
     # Move legacy per-search credentials into one private global setting.
     await get_shared_api_settings(hass).async_import_from_entry(entry)
-    coordinator = FreeriderCoordinator(hass, entry)
-    await coordinator.async_initialize()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
-    # async_refresh records source failure but does not pretend there are 0 offers.
-    await coordinator.async_refresh()
+    # A modern parent holds trips as subentries. Legacy entries still represent
+    # one watch and keep their original entity IDs and saved search history.
+    owned_ids = []
+    coordinators = hass.data.setdefault(DOMAIN, {})
+    for profile in all_watch_profiles(entry):
+        coordinator = FreeriderCoordinator(hass, profile)
+        await coordinator.async_initialize()
+        coordinators[profile.entry_id] = coordinator
+        owned_ids.append(profile.entry_id)
+        # A source error must not prevent the other trips from loading.
+        await coordinator.async_refresh()
+    hass.data.setdefault(f"{DOMAIN}_owned_profiles", {})[entry.entry_id] = owned_ids
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(async_reload_entry))
     return True
@@ -114,5 +122,13 @@ async def async_unload_entry(hass, entry) -> bool:
     """
     ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if ok:
-        hass.data.get(DOMAIN, {}).pop(entry.entry_id, None)
+        owned = hass.data.get(f"{DOMAIN}_owned_profiles", {}).pop(
+            entry.entry_id, []
+        )
+        for profile_id in owned:
+            coordinator = hass.data.get(DOMAIN, {}).pop(profile_id, None)
+            # Cancel periodic checks: HA owns platform listeners and coordinator
+            # schedules must not outlive the corresponding trip.
+            if coordinator is not None:
+                coordinator.async_set_update_interval(None)
     return ok
