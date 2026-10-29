@@ -12,18 +12,18 @@
       },
       "route": {
         "title": "2 · From, to and travel dates",
-        "description": "Choose locations and radius using the sliders. Keep All dates on to get alerts whenever matching cars appear. Turn it off to choose a first date, then a last date in the next steps. 0 km means only the selected location.",
+        "description": "Choose pickup/return locations and radius. Turn OFF All dates to choose dates directly below. When All dates is ON, entered dates are ignored and the search has no date restriction. To receive phone alerts, also enable New car alerts and select a phone.",
         "data": {
           "origin": "From – select several places (optional)",
           "destination": "To – select several places (optional)",
           "direction": "Direction",
-          "date_start": "Date / first date (optional)",
-          "date_end": "Last date (optional, for a range)",
+          "date_start": "From date (used when All dates is OFF)",
+          "date_end": "To date (optional, used when All dates is OFF)",
           "notify_enabled": "Notify me about new cars",
           "notify_target": "Send notifications to",
           "origin_radius_km": "Radius around pickup locations (km)",
           "destination_radius_km": "Radius around return locations (km)",
-          "all_dates": "All dates – notify me whenever a car is available"
+          "all_dates": "All dates – no date restriction"
         }
       },
       "date": {
@@ -96,20 +96,20 @@
       },
       "route": {
         "title": "Places and dates",
-        "description": "Choose locations and radius using the sliders. Keep All dates on to get alerts whenever matching cars appear. Turn it off to choose a first date, then a last date in the next steps. 0 km means only the selected location.",
+        "description": "Choose pickup/return locations and radius. Turn OFF All dates to choose dates directly below. When All dates is ON, entered dates are ignored and the search has no date restriction. To receive phone alerts, also enable New car alerts and select a phone.",
         "data": {
           "watch_name": "Search name",
           "countries": "Countries",
           "origin": "From – select several places (optional)",
           "destination": "To – select several places (optional)",
           "direction": "Direction",
-          "date_start": "Date / first date (optional)",
-          "date_end": "Last date (optional, for a range)",
+          "date_start": "From date (used when All dates is OFF)",
+          "date_end": "To date (optional, used when All dates is OFF)",
           "notify_enabled": "Notify me about new cars",
           "notify_target": "Send notifications to",
           "origin_radius_km": "Radius around pickup locations (km)",
           "destination_radius_km": "Radius around return locations (km)",
-          "all_dates": "All dates – notify me whenever a car is available"
+          "all_dates": "All dates – no date restriction"
         }
       },
       "dates": {

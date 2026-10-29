@@ -12,18 +12,18 @@
       },
       "route": {
         "title": "2 · Velg fra, til og dato",
-        "description": "Velg steder og radius med sliderne. La «Alle datoer» være på for å få varsel om nye biler uansett dato. Hvis den er av, velger du først fra-dato og deretter til-dato i neste skjerm. 0 km betyr kun valgt sted.",
+        "description": "Velg hentested, leveringssted og radius. Slå AV «Alle datoer» for å kunne velge datoer direkte nedenfor. Er «Alle datoer» PÅ, ignoreres datofeltene, og søket har ingen datobegrensning. For mobilvarsler må du i tillegg slå på «Varsle om nye biler» og velge telefon.",
         "data": {
           "origin": "Fra – velg flere steder (valgfritt)",
           "destination": "Til – velg flere steder (valgfritt)",
           "direction": "Retning",
-          "date_start": "Dato / fra dato (valgfritt)",
-          "date_end": "Til dato (valgfritt, for periode)",
+          "date_start": "Fra-dato (brukes når Alle datoer er AV)",
+          "date_end": "Til-dato (valgfritt, brukes når Alle datoer er AV)",
           "notify_enabled": "Varsle om nye biler",
           "notify_target": "Send varsel til",
           "origin_radius_km": "Radius rundt avreisesteder (km)",
           "destination_radius_km": "Radius rundt leveringssteder (km)",
-          "all_dates": "Alle datoer – varsle når som helst"
+          "all_dates": "Alle datoer – ingen datobegrensning"
         }
       },
       "date": {
@@ -96,20 +96,20 @@
       },
       "route": {
         "title": "Steder og dato",
-        "description": "Velg steder og radius med sliderne. La «Alle datoer» være på for å få varsel om nye biler uansett dato. Hvis den er av, velger du først fra-dato og deretter til-dato i neste skjerm. 0 km betyr kun valgt sted.",
+        "description": "Velg hentested, leveringssted og radius. Slå AV «Alle datoer» for å kunne velge datoer direkte nedenfor. Er «Alle datoer» PÅ, ignoreres datofeltene, og søket har ingen datobegrensning. For mobilvarsler må du i tillegg slå på «Varsle om nye biler» og velge telefon.",
         "data": {
           "watch_name": "Navn på søket",
           "countries": "Land",
           "origin": "Fra – velg flere steder (valgfritt)",
           "destination": "Til – velg flere steder (valgfritt)",
           "direction": "Retning",
-          "date_start": "Dato / fra dato (valgfritt)",
-          "date_end": "Til dato (valgfritt, for periode)",
+          "date_start": "Fra-dato (brukes når Alle datoer er AV)",
+          "date_end": "Til-dato (valgfritt, brukes når Alle datoer er AV)",
           "notify_enabled": "Varsle om nye biler",
           "notify_target": "Send varsel til",
           "origin_radius_km": "Radius rundt avreisesteder (km)",
           "destination_radius_km": "Radius rundt leveringssteder (km)",
-          "all_dates": "Alle datoer – varsle når som helst"
+          "all_dates": "Alle datoer – ingen datobegrensning"
         }
       },
       "dates": {
