@@ -97,7 +97,9 @@ class ApiKeyTests(unittest.IsolatedAsyncioTestCase):
         config_flow=(root/"config_flow.py").read_text()
         self.assertIn('"api_signup_url": "https://bompengeappen.no/api-portal"',config_flow)
         self.assertIn("TextSelectorType.PASSWORD",config_flow)
-        self.assertIn("include_api_key=first_setup",config_flow)
+        self.assertIn("initial_api_schema()", config_flow)
+        for section in ("config_subentries",):
+            self.assertEqual(data[section]["trip"]["initiate_flow"]["user"], "Add trip")
         self.assertNotIn("toll_api_key", data["options"]["step"]["costs"]["data"])
         self.assertIn("api", data["options"]["step"]["init"]["menu_options"])
 
