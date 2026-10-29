@@ -91,6 +91,21 @@ def all_dates_fields() -> dict:
     }
 
 
+def submitted_dates(values: dict) -> tuple[dict, str | None]:
+    """Resolve the date switch and editable fields without extra form steps.
+
+    The all-dates switch is authoritative: submitted old/filled dates do not
+    constrain an unrestricted watch. If switched off, a from date is required.
+    """
+    if all_dates_default(values):
+        return all_dates_fields(), None
+    if not values.get(CONF_DATE_START):
+        return {}, "missing_date"
+    fields = {CONF_ALL_DATES: False, **route_dates(values)}
+    error = validation_error(fields)
+    return fields, error
+
+
 def start_date_schema(values: dict | None = None) -> vol.Schema:
     values = values or {}
     marker = (vol.Required(CONF_DATE_START, default=values[CONF_DATE_START])
@@ -129,22 +144,19 @@ def route_schema(values: dict | None, stations: list[str], targets=None) -> vol.
     fields[vol.Required(
         CONF_DIRECTION, default=values.get(CONF_DIRECTION, "forward")
     )] = select(["forward", "either"], "direction")
-    # All-dates is the default. Date fields are not interactive on this
-    # step; selecting a period guides the user through start and end dates.
+    # HA Core versions before 2026.11 do not support live conditional
+    # config-flow fields. Keep both date inputs EDITABLE on this screen so
+    # turning off All dates actually allows immediate selection. Ignore
+    # values submitted while All dates is enabled (never silently filter).
     fields[vol.Required(
         CONF_ALL_DATES, default=all_dates_default(values)
     )] = selector.BooleanSelector()
-    # Grey, noninteractive previews in the initial form. The ordinary
-    # Home Assistant UI cannot toggle selector read_only in-place; when
-    # All dates is unchecked, Next opens the active start/end calendars.
     for date_key in (CONF_DATE_START, CONF_DATE_END):
         marker = (
             vol.Optional(date_key, default=values[date_key])
             if values.get(date_key) else vol.Optional(date_key)
         )
-        fields[marker] = selector.DateSelector(
-            selector.DateSelectorConfig(read_only=True)
-        )
+        fields[marker] = selector.DateSelector()
 
     target = values.get(CONF_NOTIFY_TARGET, TARGET_OFF)
     enabled = values.get(CONF_NOTIFY_ENABLED, target != TARGET_OFF)
@@ -368,17 +380,17 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Page two: multi-station route and optional date range in one form."""
         errors = {}
         if user_input is not None:
+            date_fields, invalid = submitted_dates(user_input)
             candidate = {
                 **self._draft, **user_input,
                 CONF_ORIGIN: place_values(user_input.get(CONF_ORIGIN)),
                 CONF_DESTINATION: place_values(user_input.get(CONF_DESTINATION)),
-                **route_dates(user_input),
+                **date_fields,
             }
-            invalid = validation_error(candidate)
+            if invalid is None:
+                invalid = validation_error(candidate)
             if not invalid and candidate.get(CONF_NOTIFY_ENABLED) and candidate.get(CONF_NOTIFY_TARGET) == TARGET_OFF:
                 invalid = "notification_device_required"
-            if not invalid and user_input.get(CONF_DATE_END) and not user_input.get(CONF_DATE_START):
-                invalid = "missing_date"
             if not invalid:
                 catalog = await async_get_station_catalog(self.hass)
                 countries = candidate.get(CONF_COUNTRIES, ["NO"])
@@ -389,10 +401,7 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     candidate.update(points)
                     # Prevent old shared-radius settings from conflicting.
                     self._draft = candidate
-                    if all_dates_default(candidate):
-                        self._draft.update(all_dates_fields())
-                        return self._finish()
-                    return await self.async_step_registration_date_start()
+                    return self._finish()
             errors["base"] = invalid
         if self._stations is None:
             self._stations = await async_station_suggestions(
@@ -530,6 +539,7 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
         errors = {}
         current = self._settings()
         if user_input is not None:
+            date_fields, invalid = submitted_dates(user_input)
             user_input = {
                 **user_input,
                 CONF_COUNTRIES: [
@@ -537,13 +547,12 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
                 ],
                 CONF_ORIGIN: place_values(user_input.get(CONF_ORIGIN)),
                 CONF_DESTINATION: place_values(user_input.get(CONF_DESTINATION)),
-                **route_dates(user_input),
+                **date_fields,
             }
-            invalid = validation_error(user_input)
+            if invalid is None:
+                invalid = validation_error(user_input)
             if not invalid and user_input.get(CONF_NOTIFY_ENABLED) and user_input.get(CONF_NOTIFY_TARGET) == TARGET_OFF:
                 invalid = "notification_device_required"
-            if not invalid and user_input.get(CONF_DATE_END) and not user_input.get(CONF_DATE_START):
-                invalid = "missing_date"
             if invalid is None:
                 catalog=await async_get_station_catalog(self.hass)
                 points, invalid = validate_radius_settings(
@@ -552,11 +561,6 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
                 )
                 if invalid is None:
                     user_input.update(points)
-                    if all_dates_default(user_input):
-                        user_input.update(all_dates_fields())
-                    else:
-                        self._pending_route = user_input
-                        return await self.async_step_edit_date_start()
                     title = user_input.pop(CONF_WATCH_NAME, self.config_entry.title)
                     if title != self.config_entry.title:
                         self.hass.config_entries.async_update_entry(
