@@ -123,7 +123,8 @@ async def async_unload_entry(hass, entry) -> bool:
     ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if ok:
         owned = hass.data.get(f"{DOMAIN}_owned_profiles", {}).pop(
-            entry.entry_id, []
+            entry.entry_id,
+            [entry.entry_id] if entry.entry_id in hass.data.get(DOMAIN, {}) else [],
         )
         for profile_id in owned:
             coordinator = hass.data.get(DOMAIN, {}).pop(profile_id, None)
