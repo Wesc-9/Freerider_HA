@@ -10,6 +10,7 @@ import logging
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .api_settings import get_shared_api_settings
 from .const import (
     CONF_COUNTRIES, CONF_EVENTS, CONF_SCAN_INTERVAL, CONF_SCAN_MODE,
     DEFAULT_POLL_MINUTES, DOMAIN, EVENT_NEW_RIDE, CONF_NOTIFY_TARGET, CONF_NOTIFY_ENABLED,
@@ -42,6 +43,7 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
 
     def __init__(self, hass, entry) -> None:
         self.entry = entry
+        self._shared_api = get_shared_api_settings(hass)
         self.settings = {**entry.data, **entry.options}
         self.seen_store = Store(hass, 1, f"{DOMAIN}_seen_{entry.entry_id}")
         self.seen_ids: list[str] | None = None
@@ -69,6 +71,11 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
             name=f"Freerider {entry.title}",
             update_interval=timedelta(minutes=interval) if automatic else None,
         )
+
+    @property
+    def toll_api_key(self) -> str | None:
+        """Use the installation-wide API key, not any individual watch."""
+        return self._shared_api.api_key
 
     async def async_initialize(self) -> None:
         """Load recent ID history before performing the first refresh."""
@@ -251,7 +258,7 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
                             if quote_catalog is None:
                                 quote_catalog=await async_get_quote_catalog(self.hass)
                             quote,toll_status=await quote_catalog.async_quote(
-                                ride,api_key=self.settings.get(CONF_TOLL_API_KEY),
+                                ride,api_key=self.toll_api_key,
                             )
                             if quote is not None:
                                 self.toll_estimates[ride.key]=quote
@@ -370,11 +377,11 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         if match is None:
             raise TollLookupError("Ride ID is not in the current matching results")
         key = (ride_id, start_time or "")
-        if not self.settings.get(CONF_TOLL_API_KEY):
+        if not self.toll_api_key:
             raise TollLookupError(
                 "BompengeAppen API-nøkkel mangler. Opprett gratis nøkkel på "
                 "https://bompengeappen.no/api-portal og legg den inn under "
-                "Konfigurer → Bom og reisekostnader."
+                "Konfigurer → Felles API-innstillinger."
             )
         stored = self._toll_cache.get(key)
         if stored and monotonic() - stored[0] < 3600:
@@ -382,7 +389,7 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         else:
             estimate = await async_estimate_toll(
                 self.hass,match,start_time,
-                api_key=self.settings.get(CONF_TOLL_API_KEY),
+                api_key=self.toll_api_key,
             )
             self._toll_cache[key] = (monotonic(), dict(estimate))
             # Limit in-memory cache size (quotas belong to external provider).
