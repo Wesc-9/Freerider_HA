@@ -352,8 +352,8 @@
           if(estimate?.road_checked_at){
             const ts=String(estimate.road_checked_at);
             card.append(this._text("div","notice",tr(
-              "Rutesjekk fra Statens vegvesen via BompengeAppen: ",
-              "SVV road planning snapshot via BompengeAppen: "
+              "Ruteinformasjon via BompengeAppen: ",
+              "Route information via BompengeAppen: "
             )+this._date(ts)+" · "+tr(
               "Ikke fullstendige sanntidsmeldinger.",
               "Not comprehensive live traffic data."
@@ -364,8 +364,8 @@
           traffic.href="https://www.vegvesen.no/trafikk";
           traffic.target="_blank";
           traffic.rel="noopener noreferrer";
-          traffic.textContent=tr("Se aktuelle stengninger og trafikkmeldinger hos Vegvesen",
-            "View current road closures and incidents at Statens vegvesen");
+          traffic.textContent=tr("Åpne offentlig trafikkinformasjon i nettleser",
+            "Open public road traffic information in your browser");
           card.append(traffic);
           const costs = ride.estimated_trip_costs || {};
           const fmtNok = (x) => typeof x === "number" && Number.isFinite(x)

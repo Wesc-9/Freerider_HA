@@ -101,6 +101,12 @@ def _toll_summary(quote: dict | None, reason: str, language: str) -> str:
             )
         return result
 
+    if reason == "api_key_missing":
+        return (
+            "Bom: Legg til BompengeAppen API-nøkkel i Freerider HA"
+            if norwegian else
+            "Tolls: Add a BompengeAppen API key in Freerider HA"
+        )
     if reason == "outside_norway":
         return (
             "Bom: Ikke beregnet utenfor Norge"
