@@ -3,11 +3,9 @@
   "config": {
     "step": {
       "user": {
-        "title": "1 · Velg land",
-        "description": "Ved første oppsett kan du legge inn én felles BompengeAppen API-nøkkel for alle Freerider-søk. [Skaff gratis API-nøkkel]({api_signup_url}). Bilvarsler fungerer også uten nøkkel. Nye søk spør ikke etter den igjen.",
+        "title": "1 · Felles API-innstillinger",
+        "description": "Velg én felles BompengeAppen API-nøkkel for hele integrasjonen. [Opprett gratis API-nøkkel]({api_signup_url}). Du får deretter legge til din første reise. Hver ny reise bruker samme nøkkel. Nøkkelen er valgfri.",
         "data": {
-          "watch_name": "Navn på søket",
-          "countries": "Land",
           "toll_api_key": "Felles BompengeAppen API-nøkkel (valgfritt)"
         },
         "data_description": {
@@ -292,6 +290,68 @@
         "nearest_pickup": "Nærmest hjem (luftlinje)",
         "low_cost": "Laveste kjente kostnad",
         "best_margin": "Størst tidsmargin"
+      }
+    }
+  },
+  "config_subentries": {
+    "trip": {
+      "entry_type": "Reise",
+      "initiate_flow": {
+        "user": "Legg til reise",
+        "reconfigure": "Endre reise"
+      },
+      "step": {
+        "user": {
+          "title": "Legg til reise · Navn og land",
+          "description": "Gi reisen et navn og velg land. Den felles API-nøkkelen blir brukt automatisk.",
+          "data": {
+            "watch_name": "Navn på søket",
+            "countries": "Land"
+          }
+        },
+        "route": {
+          "title": "Legg til reise · Steder, dato og varsler",
+          "description": "Velg fra og til, radius og eventuelt datoer. «Alle datoer» betyr at søket ikke begrenses av dato. For mobilvarsel: slå på bryteren og velg telefon. Retning og øvrige filtre finnes under Konfigurer.",
+          "data": {
+            "origin": "Fra – steder",
+            "destination": "Til – steder",
+            "date_start": "Fra dato",
+            "date_end": "Til dato",
+            "notify_enabled": "Mobilvarsel",
+            "notify_target": "Varsle til",
+            "origin_radius_km": "Radius fra",
+            "destination_radius_km": "Radius til",
+            "all_dates": "Alle datoer"
+          }
+        },
+        "reconfigure": {
+          "title": "Endre reise",
+          "description": "Endre bare denne reisen. Felles API-nøkkel og andre reiser blir ikke påvirket.",
+          "data": {
+            "watch_name": "Navn på søket",
+            "countries": "Land",
+            "origin": "Fra – steder",
+            "destination": "Til – steder",
+            "date_start": "Fra dato",
+            "date_end": "Til dato",
+            "notify_enabled": "Mobilvarsel",
+            "notify_target": "Varsle til",
+            "origin_radius_km": "Radius fra",
+            "destination_radius_km": "Radius til",
+            "all_dates": "Alle datoer"
+          }
+        }
+      },
+      "error": {
+        "missing_country": "Velg minst ett land.",
+        "country_not_ready": "Velg Norge eller Sverige. Datakilden for Danmark er ikke klar.",
+        "missing_date": "Velg nødvendige datoer.",
+        "end_before_start": "Sluttdato kan ikke være før startdato.",
+        "notification_device_required": "Velg en varslingsenhet før du slår på varsler.",
+        "radius_station_unavailable": "Ett eller flere valgte steder mangler GPS-koordinater. Velg en kjent Freerider-stasjon eller sett radius til 0 km.",
+        "radius_center_required": "Velg minst ett sted i kolonnen der radius er større enn 0 km.",
+        "radius_invalid": "Radius må være mellom 0 og 100 km i trinn på 5 km.",
+        "invalid_name": "Oppgi et navn på reisen (maks 80 tegn)."
       }
     }
   }
