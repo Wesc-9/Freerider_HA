@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.5 (2026-10-29) — one installation-wide BompengeAppen key
+- First setup optionally accepts one API key. Subsequent Freerider watch setups no longer show an API field.
+- The key is saved centrally in private Home Assistant storage, reused by manual toll requests and notification estimates across every search.
+- Existing per-watch keys migrate on load; each watch's stored copy is removed without touching existing filters or alerts.
+- Global key rotation and explicit removal appear only under **Configure → Shared API settings** for the first-created search, not on individual device travel-cost forms.
+- Keep fuel/EV cost assumptions independent per search. Add migration, rotation and form regression tests.
+
+
 ## 0.10.4 (2026-10-29) — validated API signup link under field
 - Correct Home Assistant translation validation: registration URLs are supplied through `description_placeholders`, not written literally in translation JSON.
 - API signup link shown below the hidden key input via the documented `data_description` mechanism.
