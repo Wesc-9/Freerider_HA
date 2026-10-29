@@ -41,10 +41,10 @@ def select(options: list[str], translation_key: str):
     ))
 
 
-def countries_schema(values: dict | None = None) -> vol.Schema:
+def countries_schema(values: dict | None = None, *, include_api_key: bool = True) -> vol.Schema:
     """Keep the first screen short: name plus source country selection."""
     values = values or {}
-    return vol.Schema({
+    fields = {
         vol.Required(CONF_WATCH_NAME, default=values.get(CONF_WATCH_NAME, "Freerider")):
             selector.TextSelector(),
         vol.Required(CONF_COUNTRIES, default=[
@@ -58,11 +58,12 @@ def countries_schema(values: dict | None = None) -> vol.Schema:
             )),
         # Optional for offer monitoring, required for toll-route calculations.
         # Do not prefill or expose the secret in any visible frontend field.
-        vol.Optional(CONF_TOLL_API_KEY):
-            selector.TextSelector(selector.TextSelectorConfig(
-                type=selector.TextSelectorType.PASSWORD,
-            )),
-    })
+    }
+    if include_api_key:
+        fields[vol.Optional(CONF_TOLL_API_KEY)] = selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        )
+    return vol.Schema(fields)
 
 
 def _place_selector(names: list[str]):
@@ -595,7 +596,7 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
         selected = (user_input or current).get(CONF_COUNTRIES, ["NO"])
         self._stations = await async_station_suggestions(self.hass, selected)
         values = {**current, **(user_input or {}), CONF_WATCH_NAME: self.config_entry.title}
-        fields = dict(countries_schema(values).schema)
+        fields = dict(countries_schema(values, include_api_key=False).schema)
         targets = notification_targets(self.hass, values.get(CONF_NOTIFY_TARGET))
         fields.update(route_schema(values, self._stations, targets).schema)
         return self.async_show_form(

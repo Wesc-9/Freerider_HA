@@ -370,6 +370,12 @@ class FreeriderCoordinator(DataUpdateCoordinator[list[Ride]]):
         if match is None:
             raise TollLookupError("Ride ID is not in the current matching results")
         key = (ride_id, start_time or "")
+        if not self.settings.get(CONF_TOLL_API_KEY):
+            raise TollLookupError(
+                "BompengeAppen API-nøkkel mangler. Opprett gratis nøkkel på "
+                "https://bompengeappen.no/api-portal og legg den inn under "
+                "Konfigurer → Bom og reisekostnader."
+            )
         stored = self._toll_cache.get(key)
         if stored and monotonic() - stored[0] < 3600:
             estimate = dict(stored[1])

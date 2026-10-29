@@ -178,7 +178,7 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
                 {
                     **ride.as_event(),
                     "toll_estimate": self.coordinator.toll_estimates.get(ride.key),
-                    "can_calculate_toll":quote_eligibility(ride) == "ok",
+                    "can_calculate_toll":quote_eligibility(ride) == "ok" and bool(self.coordinator.settings.get("toll_api_key")),
                     "road_status": (
                         "obstruction_reported"
                         if self.coordinator.toll_estimates[ride.key].get("road_obstructed") is True
