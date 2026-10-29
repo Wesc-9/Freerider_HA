@@ -172,13 +172,13 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
             "search_name": self.coordinator.entry.title,
             "search_active": self.coordinator.settings.get("search_active", True),
             "filters": {key:value for key,value in self.coordinator.settings.items() if key != "toll_api_key"},
-            "toll_api_configured": bool(self.coordinator.settings.get("toll_api_key")),
+            "toll_api_configured": bool(self.coordinator.toll_api_key),
             "source_errors": self.coordinator.last_source_errors,
             "rides": [
                 {
                     **ride.as_event(),
                     "toll_estimate": self.coordinator.toll_estimates.get(ride.key),
-                    "can_calculate_toll":quote_eligibility(ride) == "ok" and bool(self.coordinator.settings.get("toll_api_key")),
+                    "can_calculate_toll":quote_eligibility(ride) == "ok" and bool(self.coordinator.toll_api_key),
                     "road_status": (
                         "obstruction_reported"
                         if self.coordinator.toll_estimates[ride.key].get("road_obstructed") is True
