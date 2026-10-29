@@ -6,14 +6,24 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.exceptions import HomeAssistantError
 
 from .device import watch_device_info
+from .trip_profiles import all_watch_profiles, update_watch_setting
 from .const import DOMAIN, CONF_NOTIFY_TARGET, CONF_NOTIFY_ENABLED, CONF_SEARCH_ACTIVE
 from .notifications import TARGET_OFF
 from .search_mode import search_active
 
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
-    """Create one alerts switch per saved search."""
-    async_add_entities([FreeriderSearchSwitch(entry), FreeriderAlertSwitch(entry)])
+    """Independent pause/alert controls for every saved trip."""
+    for profile in all_watch_profiles(entry):
+        entities = [
+            FreeriderSearchSwitch(profile),
+            FreeriderAlertSwitch(profile),
+        ]
+        subentry_id = getattr(profile, "subentry_id", None)
+        if subentry_id is not None:
+            async_add_entities(entities, config_subentry_id=subentry_id)
+        else:
+            async_add_entities(entities)
 
 
 class FreeriderSearchSwitch(SwitchEntity):
@@ -36,16 +46,10 @@ class FreeriderSearchSwitch(SwitchEntity):
         return search_active({**self._entry.data, **self._entry.options})
 
     async def async_turn_on(self, **kwargs) -> None:
-        self.hass.config_entries.async_update_entry(
-            self._entry,
-            options={**self._entry.options, CONF_SEARCH_ACTIVE: True},
-        )
+        update_watch_setting(self.hass, self._entry, CONF_SEARCH_ACTIVE, True)
 
     async def async_turn_off(self, **kwargs) -> None:
-        self.hass.config_entries.async_update_entry(
-            self._entry,
-            options={**self._entry.options, CONF_SEARCH_ACTIVE: False},
-        )
+        update_watch_setting(self.hass, self._entry, CONF_SEARCH_ACTIVE, False)
 
 
 class FreeriderAlertSwitch(SwitchEntity):
@@ -74,14 +78,8 @@ class FreeriderAlertSwitch(SwitchEntity):
                 "Velg først mottakeren under Freerider HA → Konfigurer → "
                 "Steder, dato og varsler."
             )
-        self.hass.config_entries.async_update_entry(
-            self._entry,
-            options={**self._entry.options, CONF_NOTIFY_ENABLED: True},
-        )
+        update_watch_setting(self.hass, self._entry, CONF_NOTIFY_ENABLED, True)
 
     async def async_turn_off(self, **kwargs) -> None:
         """Disable alerts without deleting previously chosen phone."""
-        self.hass.config_entries.async_update_entry(
-            self._entry,
-            options={**self._entry.options, CONF_NOTIFY_ENABLED: False},
-        )
+        update_watch_setting(self.hass, self._entry, CONF_NOTIFY_ENABLED, False)
