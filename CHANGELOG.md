@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.1 (2026-10-29) — hassfest manifest fix
+- Correct manifest key order to satisfy Home Assistant's package validation.
+- Retain the native Add trip functionality from 0.11.0 without changing saved searches.
+
+
 ## 0.11.0 (2026-10-29) — native Home Assistant Add trip button
 - New installations configure the shared BompengeAppen API key once before adding their first trip, just like Flight Assistant.
 - Native config subentries add **Legg til reise / Add trip**, travel forms, editable trip settings and independent devices and sensors.
