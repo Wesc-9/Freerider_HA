@@ -3,11 +3,9 @@
   "config": {
     "step": {
       "user": {
-        "title": "1 · Choose countries",
-        "description": "On the first setup, enter a single BompengeAppen API key for all Freerider searches. [Get a free API key]({api_signup_url}). Car notifications also work without a key. Additional searches do not ask for it again.",
+        "title": "1 · Shared API settings",
+        "description": "Configure one optional BompengeAppen API key for the integration. [Register for a free API key]({api_signup_url}). The Add trip form follows automatically and later trips share the same key.",
         "data": {
-          "watch_name": "Name of saved search",
-          "countries": "Countries",
           "toll_api_key": "Shared BompengeAppen API key (optional)"
         },
         "data_description": {
@@ -292,6 +290,68 @@
         "nearest_pickup": "Nearest to Home Assistant home (straight line)",
         "low_cost": "Lowest known estimated cost",
         "best_margin": "Largest estimated time margin"
+      }
+    }
+  },
+  "config_subentries": {
+    "trip": {
+      "entry_type": "Trip",
+      "initiate_flow": {
+        "user": "Add trip",
+        "reconfigure": "Edit trip"
+      },
+      "step": {
+        "user": {
+          "title": "Add trip · Name and countries",
+          "description": "Name this trip and choose countries. The global API key is used automatically.",
+          "data": {
+            "watch_name": "Name of saved search",
+            "countries": "Countries"
+          }
+        },
+        "route": {
+          "title": "Add trip · Places, dates and alerts",
+          "description": "Select pickup, return, radius and optional dates. All dates removes date restrictions. For mobile alerts, enable notifications and select a phone. Direction and advanced filters are under Configure.",
+          "data": {
+            "origin": "From – locations",
+            "destination": "To – locations",
+            "date_start": "From date",
+            "date_end": "To date",
+            "notify_enabled": "Mobile alerts",
+            "notify_target": "Notify",
+            "origin_radius_km": "Pickup radius",
+            "destination_radius_km": "Return radius",
+            "all_dates": "All dates"
+          }
+        },
+        "reconfigure": {
+          "title": "Edit trip",
+          "description": "Edit this trip only. Shared API settings and other trips stay unchanged.",
+          "data": {
+            "watch_name": "Name of saved search",
+            "countries": "Countries",
+            "origin": "From – locations",
+            "destination": "To – locations",
+            "date_start": "From date",
+            "date_end": "To date",
+            "notify_enabled": "Mobile alerts",
+            "notify_target": "Notify",
+            "origin_radius_km": "Pickup radius",
+            "destination_radius_km": "Return radius",
+            "all_dates": "All dates"
+          }
+        }
+      },
+      "error": {
+        "missing_country": "Choose at least one country.",
+        "country_not_ready": "Choose Norway or Sweden. The Denmark data source is not ready yet.",
+        "missing_date": "Choose the required date(s).",
+        "end_before_start": "End date cannot be earlier than start date.",
+        "notification_device_required": "Choose a notification device before enabling alerts.",
+        "radius_station_unavailable": "One or more selected locations have no GPS coordinates. Choose a known Freerider station or set radius to 0 km.",
+        "radius_center_required": "Choose at least one location on the side where radius is greater than 0 km.",
+        "radius_invalid": "Radius must be 0–100 km in increments of 5 km.",
+        "invalid_name": "Enter a trip name (up to 80 characters)."
       }
     }
   }
