@@ -1,10 +1,11 @@
-# Freerider HA 0.10.5 — one BompengeAppen API key for all searches
+# Freerider HA 0.11.0 — «Legg til reise» directly in Home Assistant
 
-- On the **first-ever Freerider setup screen**, enter one optional BompengeAppen key: [get a free key](https://bompengeappen.no/api-portal).
-- Later searches do not ask for another key. No API fields appear in a search's device cost settings; the shared key is available automatically for eligible Norwegian routes.
-- To change or remove it later, open the first-created Freerider search in **Settings → Devices & services → Freerider HA → Configure → Shared API settings (all searches)**. Blank keeps your saved key; check the clear option to remove it for all searches.
-- **Existing installations**: stored per-search keys are migrated automatically into private global Home Assistant storage when entries load, then removed from individual entries. Search names, dates, filters and alerts stay unchanged.
-- All toll lookups still require a key and are requested through Home Assistant's backend, never the browser. Cost estimates are not guaranteed prices. No separate Statens vegvesen API is used.
-- **Install**: update to 0.10.5 via HACS, restart Home Assistant and check an eligible Norwegian route's toll calculation. This project's automated checks do not replace in-app device testing.
+**New setup**: The first page asks for an optional BompengeAppen API key, shared by every trip. After saving, the first **Add trip / Legg til reise** form opens automatically.
 
-Unofficial community project; not affiliated with Hertz or BompengeAppen.
+**Additional trips**: On the Freerider HA integration page, press **Legg til reise** to add a separate trip, just as in Flight Assistant. Choose its name, country, start/end places, radii, dates and notification phone. Each trip is a native Home Assistant subentry and has its own device, sensors and controls. The global API key is not shown on trip forms.
+
+**Existing installations**: Older Freerider searches and their entity IDs remain intact. New trips are added as subentries beneath a parent search entry. No existing searches are automatically removed or converted. If you already created several Freerider entries, they can remain alongside the new trips. The first entry manages the shared API key under Configure.
+
+**Before use**: Update to 0.11.0 in HACS and restart Home Assistant. Automated Python, HACS and hassfest tests run in GitHub, but mobile layout and real-world notifications/route checks still need verification on your instance.
+
+Unofficial community integration; not affiliated with Hertz or BompengeAppen.
