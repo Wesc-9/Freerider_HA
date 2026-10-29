@@ -10,6 +10,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .device import watch_device_info
 from .const import DOMAIN
+from .trip_profiles import all_watch_profiles
 from .offer_view import device_offers, offer_entity_name, offer_entity_state
 from .trip_costs import cost_breakdown
 from .quote_rules import quote_eligibility
@@ -20,52 +21,62 @@ from .trip_planner import journey_feasibility, km_airline
 
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
-    """Expose match count and each current offer directly on the device page.
+    """Create the original watch plus all trips as separate HA subentry devices."""
+    for profile in all_watch_profiles(entry):
+        coordinator = hass.data[DOMAIN][profile.entry_id]
+        subentry_id = getattr(profile, "subentry_id", None)
 
-    Keep the original aggregate sensor for existing dashboards/automations.
-    The separate live-offer entities are bounded, created as offers appear,
-    and removed from the registry when the provider no longer lists them.
-    """
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-    live: dict[str, FreeriderLiveOffer] = {}
-    uid_prefix = f"hertz_freerider_{entry.entry_id}_offer_"
+        def add_entities(entities, *, _id=subentry_id):
+            if _id is not None:
+                async_add_entities(entities, config_subentry_id=_id)
+            else:
+                async_add_entities(entities)
 
-    @callback
-    def _sync_available_cars() -> None:
-        # Failed requests must not erase listings or impersonate zero cars.
-        if not coordinator.last_update_success:
-            return
-        desired = {ride.key: ride for ride in device_offers(coordinator.data)}
-        registry = er.async_get(hass)
-        desired_ids = {uid_prefix + ride.key for ride in desired.values()}
+        live: dict[str, FreeriderLiveOffer] = {}
+        uid_prefix = f"hertz_freerider_{profile.entry_id}_offer_"
 
-        # Remove stale entries left by a restart as well as running entities.
-        # Do not touch the stable count sensor or a user's other entities.
-        for registered in er.async_entries_for_config_entry(registry, entry.entry_id):
-            if (registered.domain == "sensor"
-                and registered.unique_id.startswith(uid_prefix)
-                and registered.unique_id not in desired_ids):
-                registry.async_remove(registered.entity_id)
+        @callback
+        def sync_available_cars(
+            _coordinator=coordinator, _profile=profile,
+            _live=live, _uid_prefix=uid_prefix, _add=add_entities,
+        ) -> None:
+            if not _coordinator.last_update_success:
+                return
+            desired = {
+                ride.key: ride for ride in device_offers(_coordinator.data)
+            }
+            registry = er.async_get(hass)
+            desired_ids = {
+                _uid_prefix + ride.key for ride in desired.values()
+            }
+            for registered in er.async_entries_for_config_entry(
+                registry, entry.entry_id
+            ):
+                if (
+                    registered.domain == "sensor"
+                    and registered.unique_id.startswith(_uid_prefix)
+                    and registered.unique_id not in desired_ids
+                ):
+                    registry.async_remove(registered.entity_id)
+            for key in tuple(_live):
+                if key not in desired:
+                    _live.pop(key)
+            new_entities = []
+            for key, ride in desired.items():
+                if key not in _live:
+                    sensor = FreeriderLiveOffer(_coordinator, _profile, ride)
+                    _live[key] = sensor
+                    new_entities.append(sensor)
+            if new_entities:
+                _add(new_entities)
 
-        for key in tuple(live):
-            if key not in desired:
-                live.pop(key)
-        added = []
-        for key, ride in desired.items():
-            if key not in live:
-                sensor = FreeriderLiveOffer(coordinator, entry, ride)
-                live[key] = sensor
-                added.append(sensor)
-        if added:
-            async_add_entities(added)
-
-    async_add_entities([
-        FreeriderCount(coordinator, entry),
-        FreeriderLastTollEstimate(coordinator, entry),
-        FreeriderSearchStatus(coordinator, entry),
-    ])
-    _sync_available_cars()
-    entry.async_on_unload(coordinator.async_add_listener(_sync_available_cars))
+        add_entities([
+            FreeriderCount(coordinator, profile),
+            FreeriderLastTollEstimate(coordinator, profile),
+            FreeriderSearchStatus(coordinator, profile),
+        ])
+        sync_available_cars()
+        entry.async_on_unload(coordinator.async_add_listener(sync_available_cars))
 
 
 class FreeriderLiveOffer(CoordinatorEntity, SensorEntity):
