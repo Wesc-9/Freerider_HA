@@ -130,5 +130,5 @@ async def async_unload_entry(hass, entry) -> bool:
             # Cancel periodic checks: HA owns platform listeners and coordinator
             # schedules must not outlive the corresponding trip.
             if coordinator is not None:
-                coordinator.async_set_update_interval(None)
+                await coordinator.async_shutdown()
     return ok
