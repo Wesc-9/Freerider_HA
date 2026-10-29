@@ -84,7 +84,9 @@ class SharedApiTests(unittest.IsolatedAsyncioTestCase):
 
     def test_device_flows_never_show_secret_again(self):
         flow = (root / "config_flow.py").read_text()
-        self.assertIn("include_api_key=first_setup", flow)
+        self.assertIn("initial_api_schema()", flow)
+        self.assertIn("async_get_supported_subentry_types", flow)
+        self.assertIn("FreeriderTripSubentryFlow", flow)
         self.assertIn('menu.insert(0, "api")', flow)
         self.assertIn("if first_watch_entry(self.hass, self.config_entry):", flow)
         self.assertIn("fields = {}", flow)
