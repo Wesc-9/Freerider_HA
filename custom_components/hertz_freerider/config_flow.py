@@ -141,9 +141,8 @@ def route_schema(values: dict | None, stations: list[str], targets=None) -> vol.
             min=0, max=100, step=5, unit_of_measurement="km",
             mode=selector.NumberSelectorMode.SLIDER,
         ))
-    fields[vol.Required(
-        CONF_DIRECTION, default=values.get(CONF_DIRECTION, "forward")
-    )] = select(["forward", "either"], "direction")
+    # Direction is rarely changed; keep registration compact.
+    # It is available under Configure → Vehicle preferences.
     # HA Core versions before 2026.11 do not support live conditional
     # config-flow fields. Keep both date inputs EDITABLE on this screen so
     # turning off All dates actually allows immediate selection. Ignore
@@ -212,6 +211,8 @@ def date_window_schema(mode: str, values: dict | None = None) -> vol.Schema:
 def vehicle_schema(values: dict | None = None) -> vol.Schema:
     values = values or {}
     return vol.Schema({
+        vol.Required(CONF_DIRECTION, default=values.get(CONF_DIRECTION, "forward")):
+            select(["forward", "either"], "direction"),
         vol.Required(CONF_TRANSMISSION, default=values.get(CONF_TRANSMISSION, "any")):
             select(["any", "automatic", "manual"], "transmission"),
         vol.Required(CONF_VEHICLE_TYPE, default=values.get(CONF_VEHICLE_TYPE, "any")):
@@ -481,6 +482,7 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Create one saved watch using sensible, editable defaults."""
         fields = {
             CONF_TRANSMISSION: "any",
+            CONF_DIRECTION: "forward",
             CONF_VEHICLE_TYPE: "any",
             CONF_FUEL: "any",
             CONF_MIN_SEATS: 0,

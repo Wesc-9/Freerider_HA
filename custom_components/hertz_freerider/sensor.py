@@ -12,6 +12,7 @@ from .device import watch_device_info
 from .const import DOMAIN
 from .offer_view import device_offers, offer_entity_name, offer_entity_state
 from .trip_costs import cost_breakdown
+from .quote_rules import quote_eligibility
 from datetime import datetime, timedelta
 from time import monotonic
 from zoneinfo import ZoneInfo
@@ -176,6 +177,7 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
                 {
                     **ride.as_event(),
                     "toll_estimate": self.coordinator.toll_estimates.get(ride.key),
+                    "can_calculate_toll":quote_eligibility(ride) == "ok",
                     "road_status": (
                         "obstruction_reported"
                         if self.coordinator.toll_estimates[ride.key].get("road_obstructed") is True

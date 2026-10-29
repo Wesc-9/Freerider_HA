@@ -405,10 +405,7 @@
               : "An exact offer link is unavailable. Opens Freerider for manual selection."
           )));
           const actions=this._text("div","actions","");
-          if(ride.country==="NO" && ride.pickup_country==="no"
-            && ride.return_country==="no"
-            && ride.vehicle_type!=="van" && ride.vehicle_type!=="minibus"
-            && this._routeUrl(ride)) {
+          if(ride.can_calculate_toll === true) {
             const button=this._makeButton(
               this._calculating.has(ride.id)?tr("Beregner …","Calculating …")
                 :tr("Beregn bom og veistatus","Calculate toll and road status"),
