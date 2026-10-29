@@ -1,4 +1,4 @@
-"""Pure behavioral checks for 'all dates' and guided date selection.
+"""Pure behavioral checks for editable dates and unrestricted monitoring.
 
 Avoid importing HA in CI: inspect only the small pure functions from
 config_flow.py, with the exact constant values used at runtime.
@@ -10,7 +10,7 @@ import unittest
 
 path=Path(__file__).parents[1]/"custom_components/hertz_freerider/config_flow.py"
 tree=ast.parse(path.read_text())
-names={"route_dates","all_dates_default","all_dates_fields","validation_error"}
+names={"route_dates","all_dates_default","all_dates_fields","submitted_dates","validation_error"}
 pure=[node for node in tree.body if isinstance(node,ast.FunctionDef) and node.name in names]
 module=ast.Module(body=pure,type_ignores=[])
 ast.fix_missing_locations(module)
@@ -58,20 +58,66 @@ class AnyDateTests(unittest.TestCase):
             "countries":["NO"],**result,
         }),"end_before_start")
 
-    def test_first_date_transitions_to_end_step_in_both_flows(self):
+    def test_all_dates_ignores_any_form_date_values(self):
+        fields, error = env["submitted_dates"]({
+            "all_dates":True, "date_start":"2026-11-01",
+            "date_end":"2026-11-10",
+        })
+        self.assertIsNone(error)
+        self.assertEqual(fields, {
+            "all_dates":True, "date_mode":"any",
+            "date_start":None, "date_end":None,
+        })
+
+    def test_all_dates_off_enables_single_date(self):
+        fields, error = env["submitted_dates"]({
+            "all_dates":False, "date_start":"2026-11-01",
+        })
+        self.assertIsNone(error)
+        self.assertEqual(fields,{
+            "all_dates":False,"date_mode":"single",
+            "date_start":"2026-11-01","date_end":None,
+        })
+
+    def test_all_dates_off_enables_date_range(self):
+        fields, error = env["submitted_dates"]({
+            "all_dates":False,"date_start":"2026-11-01",
+            "date_end":"2026-11-10",
+        })
+        self.assertIsNone(error)
+        self.assertEqual(fields["date_mode"],"range")
+
+    def test_all_dates_off_requires_start_date(self):
+        fields,error=env["submitted_dates"]({
+            "all_dates":False, "date_end":"2026-11-10",
+        })
+        self.assertEqual(error,"missing_date")
+        self.assertFalse(fields)
+
+    def test_all_dates_off_rejects_invalid_range(self):
+        fields,error=env["submitted_dates"]({
+            "all_dates":False,"date_start":"2026-12-01",
+            "date_end":"2026-11-10",
+        })
+        self.assertEqual(error,"end_before_start")
+
+    def test_date_selectors_are_no_longer_read_only(self):
+        fn=next(node for node in tree.body
+                if isinstance(node,ast.FunctionDef) and node.name=="route_schema")
+        # The bug was creating DateSelectorConfig(read_only=True) no matter
+        # what the all-dates switch was set to.
+        self.assertNotIn("read_only",ast.unparse(fn))
+        self.assertIn("DateSelector()",ast.unparse(fn))
+
+    def test_both_new_and_edit_routes_save_dates_without_extra_steps(self):
         cls={node.name:node for node in tree.body if isinstance(node,ast.ClassDef)}
-        for name, method, target in (
-            ("FreeriderConfigFlow","async_step_registration_date_start",
-             "async_step_registration_date_end"),
-            ("FreeriderOptionsFlow","async_step_edit_date_start",
-             "async_step_edit_date_end"),
-        ):
-            with self.subTest(cls=name):
-                fn=next(n for n in cls[name].body
-                        if isinstance(n,ast.AsyncFunctionDef) and n.name==method)
-                calls=[n.func.attr for n in ast.walk(fn)
-                       if isinstance(n,ast.Call) and isinstance(n.func,ast.Attribute)]
-                self.assertIn(target,calls)
+        for name in ("FreeriderConfigFlow","FreeriderOptionsFlow"):
+            fn=next(n for n in cls[name].body
+                    if isinstance(n,ast.AsyncFunctionDef) and n.name=="async_step_route")
+            code=ast.unparse(fn)
+            self.assertIn("submitted_dates(user_input)",code)
+            self.assertNotIn("return await self.async_step_registration_date_start()",code)
+            self.assertNotIn("return await self.async_step_edit_date_start()",code)
 
 
 if __name__=="__main__":
