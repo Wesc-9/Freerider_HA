@@ -1,10 +1,11 @@
-# Freerider HA 0.10.3 — key-based toll estimates, compact cards and safe route warnings
+# Freerider HA 0.10.4 — key-based toll estimates, compact cards and safe route warnings
 
 ### Configure your free API key
+The link under the masked API-key field now follows Home Assistant's official translation-placeholder rules. This resolves a hassfest validation failure in version 0.10.3.
 1. Open **[BompengeAppen's free registration portal](https://bompengeappen.no/api-portal)** and sign up with an email address. Free keys allow 500 calls/day according to the provider.
 2. When creating a new Freerider watch, enter the key in the masked **BompengeAppen API key** field on the first screen. The signup link is shown directly underneath.
 3. For an existing watch, go to **Freerider HA → Configure → Toll, API key and travel expenses**. Paste the key and save. Blank keeps an already-saved key.
-4. Update to **0.10.3** in HACS and restart Home Assistant.
+4. Update to **0.10.4** in HACS and restart Home Assistant.
 
 You can still watch Freerider car listings without a BompengeAppen key. To fetch **toll quotes and optional route warnings**, a key is required. Only Home Assistant's backend sends it to the provider, via HTTPS `Authorization: Bearer`. The key is masked in the form and excluded from sensor attributes and push payloads.
 

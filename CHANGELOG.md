@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.10.4 (2026-10-29) — validated API signup link under field
+- Correct Home Assistant translation validation: registration URLs are supplied through `description_placeholders`, not written literally in translation JSON.
+- API signup link shown below the hidden key input via the documented `data_description` mechanism.
+- Retain the prior 0.10.3 API key Authorization header, no-key safeguards, sensor-attribute redaction, compact card and optional route obstruction status.
+- Regression coverage verifies translated key help, password selector and no key disclosure.
+
+
 ## 0.10.3 (2026-10-29) — BompengeAppen credential and road status
 - Optional masked BompengeAppen API key in the **first registration screen**, with clickable registration link displayed immediately below via Home Assistant `data_description`.
 - Existing watch profiles can add or change their key under **Configure → Toll, API key and travel expenses** without deleting saved searches. Leaving the replacement field blank preserves any configured key.

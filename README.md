@@ -1,5 +1,14 @@
 # Freerider HA
 
+## Version 0.10.4 — working link below BompengeAppen key field
+
+The optional masked **BompengeAppen API key** field is on the first Freerider setup step. A clickable signup link appears **immediately below the field** using Home Assistant's `data_description` helper and its required `description_placeholders`. You can get a free key at [BompengeAppen API portal](https://bompengeappen.no/api-portal) (currently 500 requests/day). For existing searches use **Configure → Tolls, API key and travel expenses** to add or replace it, without clearing other settings. Car listing searches work without a key; toll and route-status lookups require one.
+
+The dashboard results card is more compact and includes manual estimates of toll amounts, calculated route distance and duration, and available route-obstruction flags returned by BompengeAppen. This uses **only BompengeAppen**; no separate Statens vegvesen API/registration has been implemented. Obstruction information is not a full or continuous traffic incident feed. No verified vehicle rate is guessed for VW Crafter/vans.
+
+The native Home Assistant setup form has shorter labels and fewer advanced inputs. Its two calendar fields remain stacked vertically because Home Assistant's standard config flow does not allow a two-column date-input layout.
+
+
 ## New in 0.10.3 — BompengeAppen key, compact results and route status
 
 **BompengeAppen toll calculation now requires a personal API key.** In the first installation screen you can paste your key into the masked input; immediately below it there is a [link to the free API registration portal](https://bompengeappen.no/api-portal). If a search already exists, choose **Configure → Toll, API key and travel expenses** to enter or replace a key (leave blank to retain the previously saved secret). The free account currently has 500 requests/day, as documented by BompengeAppen. **Freerider car searches continue to work without an API key**; toll amounts and the optional road-route check will not be requested.
