@@ -4,14 +4,14 @@
     "step": {
       "user": {
         "title": "1 · Choose countries",
-        "description": "Create a search profile. Toll prices and route checks require a personal API key. [Register for a free API key]({api_signup_url}). Car searches work without it, but toll and route checks remain unavailable. The key is sent from Home Assistant to BompengeAppen, never in phone notifications.",
+        "description": "On the first setup, enter a single BompengeAppen API key for all Freerider searches. [Get a free API key]({api_signup_url}). Car notifications also work without a key. Additional searches do not ask for it again.",
         "data": {
           "watch_name": "Name of saved search",
           "countries": "Countries",
-          "toll_api_key": "BompengeAppen API key (optional for search)"
+          "toll_api_key": "Shared BompengeAppen API key (optional)"
         },
         "data_description": {
-          "toll_api_key": "Need a key? [Register for a free API key]({api_signup_url}). The key is only used for toll and route requests."
+          "toll_api_key": "[Register for a free API key]({api_signup_url}). Shared by all Freerider searches."
         }
       },
       "route": {
@@ -94,7 +94,8 @@
           "filters": "Vehicle filters (optional)",
           "updates": "Refresh interval and events",
           "costs": "Tolls, API key and travel expenses",
-          "alerts": "Alert preferences and quiet hours"
+          "alerts": "Alert preferences and quiet hours",
+          "api": "Shared API settings (all searches)"
         }
       },
       "route": {
@@ -166,17 +167,13 @@
         }
       },
       "costs": {
-        "title": "Tolls, API key and travel expenses",
-        "description": "Get a free key (500 requests/day) from [BompengeAppen API portal]({api_signup_url}). Enter it for toll quotes, planned routes and any road-obstruction flags included in the route response. Blank preserves an existing key. No direct connection to a separate Statens vegvesen API. Other costs are estimates.",
+        "title": "Travel cost assumptions per search",
+        "description": "Enter fuel and charging assumptions for this search. The BompengeAppen API key is shared across all searches and managed separately under Shared API settings.",
         "data": {
           "fuel_l_100km": "Petrol/diesel consumption (litres/100 km)",
           "fuel_price_nok_l": "Fuel price (NOK/litre)",
           "electric_kwh_100km": "Electric consumption (kWh/100 km)",
-          "electric_price_nok_kwh": "Charging price (NOK/kWh)",
-          "toll_api_key": "API key (leave blank to keep the existing key)"
-        },
-        "data_description": {
-          "toll_api_key": "[Get a free key]({api_signup_url}). Leave blank to keep an existing saved key."
+          "electric_price_nok_kwh": "Charging price (NOK/kWh)"
         }
       },
       "alerts": {
@@ -202,6 +199,17 @@
         "description": "Select an end date, or leave blank for a single day.",
         "data": {
           "date_end": "To date"
+        }
+      },
+      "api": {
+        "title": "Shared BompengeAppen API key",
+        "description": "This key is shared by all Freerider devices and searches. [Get a free API key]({api_signup_url}). Leave the field blank to keep the current key. Select clear only to disable toll calculations for all searches.",
+        "data": {
+          "toll_api_key": "New API key (blank = keep)",
+          "clear_api_key": "Clear shared API key"
+        },
+        "data_description": {
+          "toll_api_key": "[Register for a free key]({api_signup_url}). Stored only in private Home Assistant storage."
         }
       }
     },
