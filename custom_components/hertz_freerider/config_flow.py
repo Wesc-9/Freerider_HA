@@ -24,6 +24,7 @@ from .const import (
     CONF_ELECTRIC_USAGE, CONF_ELECTRIC_PRICE, CONF_SEARCH_ACTIVE, CONF_ALL_DATES,
     CONF_TOLL_API_KEY, CONF_SORT_BY, CONF_QUIET_START, CONF_QUIET_END, CONF_QUIET_URGENT, CONF_MAX_TOLL, CONF_ONLY_FEASIBLE,
 )
+from .api_settings import get_shared_api_settings
 from .filters import station_candidates, place_values
 from .source import async_fetch_country
 from .notifications import notification_targets, TARGET_OFF
@@ -304,13 +305,8 @@ def area_schema(values: dict, places: list[str]) -> vol.Schema:
 
 
 def cost_schema(values: dict) -> vol.Schema:
-    """No invented fuel price or usage: zero means estimate unavailable."""
-    fields={
-        vol.Optional(CONF_TOLL_API_KEY):
-            selector.TextSelector(selector.TextSelectorConfig(
-                type=selector.TextSelectorType.PASSWORD,
-            )),
-    }
+    """Per-search travel assumptions, never a separate API credential."""
+    fields = {}
     for key in (CONF_FUEL_USAGE,CONF_FUEL_PRICE,CONF_ELECTRIC_USAGE,CONF_ELECTRIC_PRICE):
         fields[vol.Required(key,default=values.get(key,0))] = selector.NumberSelector(
             selector.NumberSelectorConfig(
@@ -318,6 +314,23 @@ def cost_schema(values: dict) -> vol.Schema:
             )
         )
     return vol.Schema(fields)
+
+
+def shared_api_schema() -> vol.Schema:
+    """Explicit global key rotation; blank leaves the existing key intact."""
+    return vol.Schema({
+        vol.Optional(CONF_TOLL_API_KEY):
+            selector.TextSelector(selector.TextSelectorConfig(
+                type=selector.TextSelectorType.PASSWORD,
+            )),
+        vol.Required("clear_api_key", default=False): selector.BooleanSelector(),
+    })
+
+
+def first_watch_entry(hass, config_entry) -> bool:
+    """Only the integration's first search exposes shared settings in Configure."""
+    entries = hass.config_entries.async_entries(DOMAIN)
+    return bool(entries and entries[0].entry_id == config_entry.entry_id)
 
 
 def validation_error(values: dict) -> str | None:
@@ -373,10 +386,13 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     async def async_step_user(self, user_input=None):
         """Page one: name and countries."""
         errors = {}
+        first_setup = not self.hass.config_entries.async_entries(DOMAIN)
         if user_input is not None:
-            # Store an API key only in the HA config entry, never an event,
-            # frontend attribute or sensor state.
+            # First-ever registration may include a key. The setup handler
+            # immediately moves it into private installation-wide storage.
             user_input = dict(user_input)
+            if not first_setup:
+                user_input.pop(CONF_TOLL_API_KEY, None)
             key = user_input.get(CONF_TOLL_API_KEY)
             if not isinstance(key, str) or not key.strip():
                 user_input.pop(CONF_TOLL_API_KEY, None)
@@ -394,7 +410,7 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return await self.async_step_route()
             errors["base"] = invalid
         return self.async_show_form(
-            step_id="user", data_schema=countries_schema(user_input), errors=errors,
+            step_id="user", data_schema=countries_schema(user_input, include_api_key=first_setup), errors=errors,
             description_placeholders={
                 "api_signup_url": "https://bompengeappen.no/api-portal",
             },
@@ -555,9 +571,10 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Choose which part of the configuration to change."""
-        return self.async_show_menu(
-            step_id="init", menu_options=["route", "filters", "costs", "updates", "alerts"],
-        )
+        menu = ["route", "filters", "costs", "updates", "alerts"]
+        if first_watch_entry(self.hass, self.config_entry):
+            menu.insert(0, "api")
+        return self.async_show_menu(step_id="init", menu_options=menu)
 
     async def async_step_route(self, user_input=None):
         """Edit saved station groups and dates without recreating a watch."""
@@ -730,25 +747,37 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
             step_id="area",data_schema=area_schema(values,list(located)),errors=errors,
         )
 
-    async def async_step_costs(self, user_input=None):
-        """User-entered assumptions for partial running cost estimates."""
+    async def async_step_api(self, user_input=None):
+        """Change the single global BompengeAppen key, not per-watch options."""
+        if not first_watch_entry(self.hass, self.config_entry):
+            return await self.async_step_init()
+        shared = get_shared_api_settings(self.hass)
+        await shared.async_load()
         if user_input is not None:
-            new = dict(user_input)
-            supplied = new.get(CONF_TOLL_API_KEY)
-            if not isinstance(supplied, str) or not supplied.strip():
-                # Leaving the masked replacement field blank preserves
-                # a previously stored key, never erases it accidentally.
-                new.pop(CONF_TOLL_API_KEY, None)
-            else:
-                new[CONF_TOLL_API_KEY] = supplied.strip()
+            await shared.async_set_key(
+                user_input.get(CONF_TOLL_API_KEY),
+                clear=bool(user_input.get("clear_api_key", False)),
+            )
+            # No secret is ever saved into individual config entry options.
             return self.async_create_entry(
-                title="",data={**self.config_entry.options,**new},
+                title="", data={k: v for k, v in self.config_entry.options.items()
+                               if k != CONF_TOLL_API_KEY},
             )
         return self.async_show_form(
-            step_id="costs",data_schema=cost_schema(self._settings()),
+            step_id="api", data_schema=shared_api_schema(),
             description_placeholders={
                 "api_signup_url": "https://bompengeappen.no/api-portal",
             },
+        )
+
+    async def async_step_costs(self, user_input=None):
+        """User-entered assumptions for partial running cost estimates."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="", data={**self.config_entry.options, **user_input},
+            )
+        return self.async_show_form(
+            step_id="costs", data_schema=cost_schema(self._settings()),
         )
 
     async def async_step_alerts(self, user_input=None):
