@@ -395,6 +395,9 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = invalid
         return self.async_show_form(
             step_id="user", data_schema=countries_schema(user_input), errors=errors,
+            description_placeholders={
+                "api_signup_url": "https://bompengeappen.no/api-portal",
+            },
         )
 
     async def async_step_route(self, user_input=None):
@@ -743,6 +746,9 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
             )
         return self.async_show_form(
             step_id="costs",data_schema=cost_schema(self._settings()),
+            description_placeholders={
+                "api_signup_url": "https://bompengeappen.no/api-portal",
+            },
         )
 
     async def async_step_alerts(self, user_input=None):

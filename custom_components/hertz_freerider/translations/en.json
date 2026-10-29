@@ -4,14 +4,14 @@
     "step": {
       "user": {
         "title": "1 · Choose countries",
-        "description": "Create a search profile. Toll prices and route checks require a personal API key. [Register for a free API key](https://bompengeappen.no/api-portal). Car searches work without it, but toll and route checks remain unavailable. The key is sent from Home Assistant to BompengeAppen, never in phone notifications.",
+        "description": "Create a search profile. Toll prices and route checks require a personal API key. [Register for a free API key]({api_signup_url}). Car searches work without it, but toll and route checks remain unavailable. The key is sent from Home Assistant to BompengeAppen, never in phone notifications.",
         "data": {
           "watch_name": "Name of saved search",
           "countries": "Countries",
           "toll_api_key": "BompengeAppen API key (optional for search)"
         },
         "data_description": {
-          "toll_api_key": "Need a key? [Register for a free API key](https://bompengeappen.no/api-portal). The key is only used for toll and route requests."
+          "toll_api_key": "Need a key? [Register for a free API key]({api_signup_url}). The key is only used for toll and route requests."
         }
       },
       "route": {
@@ -167,7 +167,7 @@
       },
       "costs": {
         "title": "Tolls, API key and travel expenses",
-        "description": "Get a free key (500 requests/day) from [BompengeAppen API portal](https://bompengeappen.no/api-portal). Enter it for toll quotes, planned routes and any road-obstruction flags included in the route response. Blank preserves an existing key. No direct connection to a separate Statens vegvesen API. Other costs are estimates.",
+        "description": "Get a free key (500 requests/day) from [BompengeAppen API portal]({api_signup_url}). Enter it for toll quotes, planned routes and any road-obstruction flags included in the route response. Blank preserves an existing key. No direct connection to a separate Statens vegvesen API. Other costs are estimates.",
         "data": {
           "fuel_l_100km": "Petrol/diesel consumption (litres/100 km)",
           "fuel_price_nok_l": "Fuel price (NOK/litre)",
@@ -176,7 +176,7 @@
           "toll_api_key": "API key (leave blank to keep the existing key)"
         },
         "data_description": {
-          "toll_api_key": "[Get a free key](https://bompengeappen.no/api-portal). Leave blank to keep an existing saved key."
+          "toll_api_key": "[Get a free key]({api_signup_url}). Leave blank to keep an existing saved key."
         }
       },
       "alerts": {

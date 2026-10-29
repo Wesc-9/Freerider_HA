@@ -4,14 +4,14 @@
     "step": {
       "user": {
         "title": "1 · Velg land",
-        "description": "Opprett søkeprofil. Bompengeestimat og rutesjekk krever en personlig API-nøkkel. [Registrer deg gratis og få API-nøkkel](https://bompengeappen.no/api-portal). Søket fungerer uten nøkkel, men da hentes ingen bom- eller rutevarsler. Nøkkelen sendes bare til BompengeAppen fra Home Assistant, ikke via telefonvarsler.",
+        "description": "Opprett søkeprofil. Bompengeestimat og rutesjekk krever en personlig API-nøkkel. [Registrer deg gratis og få API-nøkkel]({api_signup_url}). Søket fungerer uten nøkkel, men da hentes ingen bom- eller rutevarsler. Nøkkelen sendes bare til BompengeAppen fra Home Assistant, ikke via telefonvarsler.",
         "data": {
           "watch_name": "Navn på søket",
           "countries": "Land",
           "toll_api_key": "BompengeAppen API-nøkkel (valgfritt for søk)"
         },
         "data_description": {
-          "toll_api_key": "Ingen nøkkel ennå? [Registrer deg gratis og få API-nøkkel](https://bompengeappen.no/api-portal). Nøkkelen brukes bare til rute- og bomoppslag."
+          "toll_api_key": "Ingen nøkkel ennå? [Registrer deg gratis og få API-nøkkel]({api_signup_url}). Nøkkelen brukes bare til rute- og bomoppslag."
         }
       },
       "route": {
@@ -167,7 +167,7 @@
       },
       "costs": {
         "title": "Bom, API-nøkkel og reisekostnader",
-        "description": "Hent gratis nøkkel (500 forespørsler/døgn) hos [BompengeAppen API-portal](https://bompengeappen.no/api-portal). Tast inn nøkkelen her for bom, beregnet rute og veihindringer som følger med rutesvaret. Tomt felt beholder en allerede lagret nøkkel. Vi kobler oss ikke direkte til Statens vegvesens separate API. Andre reisekostnader er anslag.",
+        "description": "Hent gratis nøkkel (500 forespørsler/døgn) hos [BompengeAppen API-portal]({api_signup_url}). Tast inn nøkkelen her for bom, beregnet rute og veihindringer som følger med rutesvaret. Tomt felt beholder en allerede lagret nøkkel. Vi kobler oss ikke direkte til Statens vegvesens separate API. Andre reisekostnader er anslag.",
         "data": {
           "fuel_l_100km": "Forbruk bensin/diesel (liter/100 km)",
           "fuel_price_nok_l": "Drivstoffpris (kr/liter)",
@@ -176,7 +176,7 @@
           "toll_api_key": "API-nøkkel (la stå tomt for å beholde eksisterende)"
         },
         "data_description": {
-          "toll_api_key": "[Opprett gratis nøkkel](https://bompengeappen.no/api-portal). La feltet stå tomt for å beholde nøkkelen som allerede er lagret."
+          "toll_api_key": "[Opprett gratis nøkkel]({api_signup_url}). La feltet stå tomt for å beholde nøkkelen som allerede er lagret."
         }
       },
       "alerts": {
