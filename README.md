@@ -1,5 +1,13 @@
 # Freerider HA
 
+## Version 0.10.5 — one shared BompengeAppen API key
+
+Enter the optional **BompengeAppen API key once**, on the first setup screen when adding the very first Freerider search. It is then shared automatically by every saved search, with **no API-key field on additional searches or individual device travel-cost screens**. Existing per-search keys are migrated on restart into private, installation-wide Home Assistant storage; the old copies are removed from each search's configuration.
+
+To replace or explicitly remove the global key later, open **Freerider HA → Configure** on the first-created search and choose **Shared API settings (all searches)**. Leave the new key field blank to retain the existing key. Clearing the key disables new toll lookups for every search, but regular car notifications continue to work. Existing station/date, notification and fuel/charging assumptions stay per search. [Get a free key](https://bompengeappen.no/api-portal).
+
+Update to **0.10.5** in HACS and restart Home Assistant. The integration's Python and Home Assistant validation checks run on GitHub; the actual UI still needs a check in your own Home Assistant instance.
+
 ## Version 0.10.4 — working link below BompengeAppen key field
 
 The optional masked **BompengeAppen API key** field is on the first Freerider setup step. A clickable signup link appears **immediately below the field** using Home Assistant's `data_description` helper and its required `description_placeholders`. You can get a free key at [BompengeAppen API portal](https://bompengeappen.no/api-portal) (currently 500 requests/day). For existing searches use **Configure → Tolls, API key and travel expenses** to add or replace it, without clearing other settings. Car listing searches work without a key; toll and route-status lookups require one.
