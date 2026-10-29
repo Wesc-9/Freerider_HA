@@ -118,6 +118,11 @@ class FreeriderLiveOffer(CoordinatorEntity, SensorEntity):
             "tilbud_utloper": offer.offer_expires_at,
             "seneste_retur": offer.latest_return_at,
             "bom_estimat_nok": toll.get("amount_nok") if toll else None,
+            "rute_km_beregnet":toll.get("distance_km") if toll else None,
+            "kjoretid_beregnet_min":toll.get("duration_min") if toll else None,
+            "veihindring_registrert":toll.get("road_obstructed") if toll else None,
+            "trafikksjekk_tidspunkt":toll.get("road_checked_at") if toll else None,
+            "sjekk_vegvesen_trafikk":"https://www.vegvesen.no/trafikk",
             "beregnet_reisekostnad":cost_breakdown(offer,toll,self.coordinator.settings),
             "sist_bekreftet_i_rutelisten":self.coordinator.last_success_utc,
             "lenkestatus":(
@@ -171,6 +176,13 @@ class FreeriderCount(CoordinatorEntity, SensorEntity):
                 {
                     **ride.as_event(),
                     "toll_estimate": self.coordinator.toll_estimates.get(ride.key),
+                    "road_status": (
+                        "obstruction_reported"
+                        if self.coordinator.toll_estimates[ride.key].get("road_obstructed") is True
+                        else "no_obstruction_reported"
+                        if self.coordinator.toll_estimates[ride.key].get("road_obstructed") is False
+                        else "not_checked"
+                    ) if ride.key in self.coordinator.toll_estimates else "not_checked",
                     "time_feasibility":journey_feasibility(
                         ride,datetime.now(ZoneInfo("Europe/Oslo")),
                     ),
