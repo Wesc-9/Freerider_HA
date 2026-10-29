@@ -89,7 +89,7 @@ class ApiKeyTests(unittest.IsolatedAsyncioTestCase):
         import json
         for p in ("strings.json","translations/nb.json","translations/en.json"):
             data=json.loads((root/p).read_text())
-            for section,step in (("config","user"),("options","costs")):
+            for section,step in (("config","user"),("options","api")):
                 element=data[section]["step"][step]
                 description=element["data_description"]["toll_api_key"]
                 self.assertIn("{api_signup_url}",description)
@@ -97,6 +97,9 @@ class ApiKeyTests(unittest.IsolatedAsyncioTestCase):
         config_flow=(root/"config_flow.py").read_text()
         self.assertIn('"api_signup_url": "https://bompengeappen.no/api-portal"',config_flow)
         self.assertIn("TextSelectorType.PASSWORD",config_flow)
+        self.assertIn("include_api_key=first_setup",config_flow)
+        self.assertNotIn("toll_api_key", data["options"]["step"]["costs"]["data"])
+        self.assertIn("api", data["options"]["step"]["init"]["menu_options"])
 
 
 if __name__=="__main__":unittest.main()
