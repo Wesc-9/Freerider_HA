@@ -4,10 +4,11 @@
     "step": {
       "user": {
         "title": "1 · Velg land",
-        "description": "Freerider HA er et uoffisielt prosjekt for enklere søk etter ledige Freerider-biler. Ikke utviklet, godkjent eller tilknyttet Hertz. Velg landet du ønsker å søke i.",
+        "description": "Opprett søkeprofil. Bompengeestimat og rutesjekk krever en personlig API-nøkkel. [Registrer deg gratis og få API-nøkkel](https://bompengeappen.no/api-portal). Søket fungerer uten nøkkel, men da hentes ingen bom- eller rutevarsler. Nøkkelen sendes bare til BompengeAppen fra Home Assistant, ikke via telefonvarsler.",
         "data": {
           "watch_name": "Navn på søket",
-          "countries": "Land"
+          "countries": "Land",
+          "toll_api_key": "BompengeAppen API-nøkkel (valgfritt for søk)"
         }
       },
       "route": {
@@ -89,7 +90,7 @@
           "route": "Steder, dato og varsler",
           "filters": "Bilpreferanser (valgfritt)",
           "updates": "Søkeintervall og hendelser",
-          "costs": "Reisekostnader (egne satser)",
+          "costs": "Bom, API-nøkkel og reisekostnader",
           "alerts": "Varslingsregler og stilleperioder"
         }
       },
@@ -162,13 +163,14 @@
         }
       },
       "costs": {
-        "title": "Estimert drivstoff og lading",
-        "description": "Legg inn eget forventet forbruk og priser. 0 betyr ikke oppgitt (da beregnes ikke komponenten). Kun drivstofftype oppgitt på bilen brukes. Kostnadene er delanslag, ikke en komplett leiepris. Ferger/avgifter kan komme i tillegg.",
+        "title": "Bom, API-nøkkel og reisekostnader",
+        "description": "Hent gratis nøkkel (500 forespørsler/døgn) hos [BompengeAppen API-portal](https://bompengeappen.no/api-portal). Tast inn nøkkelen her for bom, beregnet rute og veihindringer som følger med rutesvaret. Tomt felt beholder en allerede lagret nøkkel. Vi kobler oss ikke direkte til Statens vegvesens separate API. Andre reisekostnader er anslag.",
         "data": {
           "fuel_l_100km": "Forbruk bensin/diesel (liter/100 km)",
           "fuel_price_nok_l": "Drivstoffpris (kr/liter)",
           "electric_kwh_100km": "Forbruk elbil (kWh/100 km)",
-          "electric_price_nok_kwh": "Ladepris (kr/kWh)"
+          "electric_price_nok_kwh": "Ladepris (kr/kWh)",
+          "toll_api_key": "API-nøkkel (la stå tomt for å beholde eksisterende)"
         }
       },
       "alerts": {

@@ -4,10 +4,11 @@
     "step": {
       "user": {
         "title": "1 · Choose countries",
-        "description": "Freerider HA is an unofficial project for easier searches for available Freerider cars. Not developed, endorsed or affiliated with Hertz. Choose the countries to search.",
+        "description": "Create a search profile. Toll prices and route checks require a personal API key. [Register for a free API key](https://bompengeappen.no/api-portal). Car searches work without it, but toll and route checks remain unavailable. The key is sent from Home Assistant to BompengeAppen, never in phone notifications.",
         "data": {
           "watch_name": "Name of saved search",
-          "countries": "Countries"
+          "countries": "Countries",
+          "toll_api_key": "BompengeAppen API key (optional for search)"
         }
       },
       "route": {
@@ -89,7 +90,7 @@
           "route": "Places, dates and notifications",
           "filters": "Vehicle filters (optional)",
           "updates": "Refresh interval and events",
-          "costs": "Trip cost assumptions",
+          "costs": "Tolls, API key and travel expenses",
           "alerts": "Alert preferences and quiet hours"
         }
       },
@@ -162,13 +163,14 @@
         }
       },
       "costs": {
-        "title": "Estimated fuel and charging",
-        "description": "Enter your own consumption and prices. Zero means unknown and disables that estimate. Only stated vehicle fuel types are used. These are partial estimates, not a full rental cost. Ferries/fees may be extra.",
+        "title": "Tolls, API key and travel expenses",
+        "description": "Get a free key (500 requests/day) from [BompengeAppen API portal](https://bompengeappen.no/api-portal). Enter it for toll quotes, planned routes and any road-obstruction flags included in the route response. Blank preserves an existing key. No direct connection to a separate Statens vegvesen API. Other costs are estimates.",
         "data": {
           "fuel_l_100km": "Petrol/diesel consumption (litres/100 km)",
           "fuel_price_nok_l": "Fuel price (NOK/litre)",
           "electric_kwh_100km": "Electric consumption (kWh/100 km)",
-          "electric_price_nok_kwh": "Charging price (NOK/kWh)"
+          "electric_price_nok_kwh": "Charging price (NOK/kWh)",
+          "toll_api_key": "API key (leave blank to keep the existing key)"
         }
       },
       "alerts": {
