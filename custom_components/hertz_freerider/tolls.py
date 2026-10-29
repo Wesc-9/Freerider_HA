@@ -6,7 +6,7 @@ https://bompengeappen.no/api-docs
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from math import isfinite
 
 import aiohttp
@@ -78,6 +78,7 @@ async def async_estimate_toll(hass, ride: Ride, start_time: str | None = None) -
         result = parse_toll_response(data, electric=(ride.fuel == "electric"))
     except ValueError as exc:
         raise TollLookupError(str(exc)) from exc
+    result["road_checked_at"] = datetime.now(timezone.utc).isoformat()
     result["ride_id"] = ride.key
     result["from"] = ride.origin
     result["to"] = ride.destination
