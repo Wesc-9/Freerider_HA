@@ -9,6 +9,9 @@
           "watch_name": "Name of saved search",
           "countries": "Countries",
           "toll_api_key": "BompengeAppen API key (optional for search)"
+        },
+        "data_description": {
+          "toll_api_key": "Need a key? [Register for a free API key](https://bompengeappen.no/api-portal). The key is only used for toll and route requests."
         }
       },
       "route": {
@@ -171,6 +174,9 @@
           "electric_kwh_100km": "Electric consumption (kWh/100 km)",
           "electric_price_nok_kwh": "Charging price (NOK/kWh)",
           "toll_api_key": "API key (leave blank to keep the existing key)"
+        },
+        "data_description": {
+          "toll_api_key": "[Get a free key](https://bompengeappen.no/api-portal). Leave blank to keep an existing saved key."
         }
       },
       "alerts": {
