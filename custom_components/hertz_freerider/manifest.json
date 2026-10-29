@@ -15,5 +15,6 @@
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/Wesc-9/Freerider_HA/issues",
   "requirements": [],
-  "version": "0.10.5"
+  "version": "0.11.0",
+  "single_config_entry": true
 }
