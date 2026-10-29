@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.0 (2026-10-29) — native Home Assistant Add trip button
+- New installations configure the shared BompengeAppen API key once before adding their first trip, just like Flight Assistant.
+- Native config subentries add **Legg til reise / Add trip**, travel forms, editable trip settings and independent devices and sensors.
+- Each trip keeps its own search history, route, dates, notification target, pauses and toll estimates; all trips reuse the global API key.
+- Preserve prior config entries, entity IDs and searches without destructive automatic conversion to subentries.
+- Add tests for trip isolation, configuration migration and shared credentials.
+
+
 ## 0.10.5 (2026-10-29) — one installation-wide BompengeAppen key
 - First setup optionally accepts one API key. Subsequent Freerider watch setups no longer show an API field.
 - The key is saved centrally in private Home Assistant storage, reused by manual toll requests and notification estimates across every search.
