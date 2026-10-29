@@ -38,6 +38,43 @@ class TollTests(unittest.TestCase):
         self.assertTrue(result["toll_stations"][1]["covered_by_hour_rule"])
         self.assertFalse(result["ferry_included"])
 
+    def test_obstruction_true_on_correct_recommended_route(self):
+        payload = {
+            "routes": [
+                {"routeId":"another","isObstructed":False},
+                {"routeId":"test-route","isObstructed":True,
+                 "obstructingFeatures":[{"type":"Feature"},{"type":"Feature"}]},
+            ],
+            "_billing":PAYLOAD["_billing"],
+        }
+        result=parse_toll_response(payload,electric=False)
+        self.assertIs(result["road_obstructed"],True)
+        self.assertEqual(result["road_obstruction_count"],2)
+        self.assertEqual(result["amount_nok"],50)
+
+    def test_flag_false_only_when_explicitly_returned(self):
+        payload={
+            "routes":[{"routeId":"test-route","isObstructed":False}],
+            "_billing":PAYLOAD["_billing"],
+        }
+        self.assertIs(parse_toll_response(payload,electric=False)["road_obstructed"],False)
+
+    def test_unknown_traffic_is_never_called_clear(self):
+        payload={"_billing":PAYLOAD["_billing"]}
+        self.assertIsNone(parse_toll_response(payload,electric=False)["road_obstructed"])
+        payload={
+            "routes":[{"routeId":"test-route","isObstructed":"false"}],
+            "_billing":PAYLOAD["_billing"],
+        }
+        self.assertIsNone(parse_toll_response(payload,electric=False)["road_obstructed"])
+
+    def test_no_wrong_route_obstruction_flag(self):
+        payload={
+            "routes":[{"routeId":"different-route","isObstructed":True}],
+            "_billing":PAYLOAD["_billing"],
+        }
+        self.assertIsNone(parse_toll_response(payload,electric=False)["road_obstructed"])
+
     def test_electric_no_discount(self):
         result = parse_toll_response(PAYLOAD, electric=True)
         self.assertEqual(result["amount_nok"], 26)
