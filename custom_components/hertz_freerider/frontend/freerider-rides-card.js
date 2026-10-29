@@ -18,22 +18,23 @@
       this._openMaps = new Set();
       this._showFavorites = false;
       this._message = "";
+      this._calculating = new Set();
       const style = document.createElement("style");
       style.textContent = `
         :host { display:block; font-family:var(--paper-font-body1_-_font-family, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif); }
         ha-card { display:block; background:var(--ha-card-background, var(--card-background-color,#fff)); border-radius:20px; overflow:hidden; color:var(--primary-text-color,#222); }
-        .wrap { padding:20px; display:grid; gap:14px; }
-        .head { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-        .title { font-size:19px; font-weight:700; letter-spacing:-.02em; }
+        .wrap { padding:13px; display:grid; gap:10px; }
+        .head { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+        .title { font-size:17px; font-weight:700; letter-spacing:-.02em; }
         .sub { font-size:12px; color:var(--secondary-text-color,#777); line-height:1.5; }
         .pill { background:var(--secondary-background-color,#f1f1f1); border-radius:999px; padding:7px 11px; font-weight:650; font-size:12px; white-space:nowrap; }
-        .ride { border:1px solid var(--divider-color,#e7e7e7); border-radius:16px; padding:15px; display:grid; gap:11px; background:var(--card-background-color,#fff); }
+        .ride { border:1px solid var(--divider-color,#e7e7e7); border-radius:14px; padding:12px; display:grid; gap:8px; background:var(--card-background-color,#fff); }
         .route { font-size:13px; font-weight:500; line-height:1.45; color:var(--secondary-text-color,#777); overflow-wrap:anywhere; }
         .vehicle { color:var(--primary-text-color,#222); font-size:16px; font-weight:750; line-height:1.35; margin-bottom:5px; overflow-wrap:anywhere; }
-        .metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
-        .label { font-size:11px; color:var(--secondary-text-color,#777); display:block; margin-bottom:2px; }
-        .value { font-size:13px; font-weight:600; overflow-wrap:anywhere; }
-        .toll { border-radius:10px; background:var(--secondary-background-color,#f6f6f6); padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
+        .metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:6px; }
+        .label { font-size:10px; color:var(--secondary-text-color,#777); display:block; margin-bottom:2px; }
+        .value { font-size:12px; font-weight:600; overflow-wrap:anywhere; }
+        .toll { border-radius:9px; background:var(--secondary-background-color,#f6f6f6); padding:8px 10px; display:flex; align-items:center; justify-content:space-between; gap:12px; }
         .toll .value { text-align:right; }
         .notice { color:var(--secondary-text-color,#777); font-size:11px; line-height:1.45; }
         a.book { display:flex; align-items:center; justify-content:center; min-height:40px; border-radius:11px; color:#fff; background:#77654a; text-decoration:none; font-size:13px; font-weight:700; text-align:center; padding:2px 12px; }
@@ -41,7 +42,7 @@
         .toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
         .chooser { border:1px solid var(--divider-color,#ddd); padding:9px; border-radius:10px; color:var(--primary-text-color); background:var(--card-background-color); font-size:12px; flex:1; min-width:145px; }
         .actions {display:flex; flex-wrap:wrap; gap:7px; }
-        .mini { border:1px solid var(--divider-color,#ddd); border-radius:9px; padding:8px 10px; font-size:12px; font-weight:600; background:var(--secondary-background-color,#f7f7f7); color:var(--primary-text-color); cursor:pointer; }
+        .mini { border:1px solid var(--divider-color,#ddd); border-radius:9px; padding:7px 9px; font-size:12px; font-weight:600; background:var(--secondary-background-color,#f7f7f7); color:var(--primary-text-color); cursor:pointer; }
         .mini:focus-visible {outline:2px solid var(--primary-color,#777); }
         .detail { font-size:12px; color:var(--secondary-text-color,#777); }
         .map { width:100%; height:245px; border:1px solid var(--divider-color,#ddd); border-radius:10px; }
@@ -199,6 +200,23 @@
       return node;
     }
 
+    _estimate(entryId,rideId) {
+      if (!entryId || !rideId || this._calculating.has(rideId)) return;
+      this._calculating.add(rideId);
+      this._message="";
+      this._render();
+      this._hass.callService("hertz_freerider","estimate_toll",{
+        entry_id:entryId,ride_id:rideId,
+      }).then(()=>{
+        this._message="";
+      }).catch((err)=>{
+        this._message=String(err?.message||err);
+      }).finally(()=>{
+        this._calculating.delete(rideId);
+        this._render();
+      });
+    }
+
     _favorite(entryId,rideId,favorite) {
       if (!entryId || !rideId) return;
       this._hass.callService("hertz_freerider","set_favorite",{
@@ -291,8 +309,8 @@
           label.append(this._text("div","route",(ride.origin || "?")+" → "+(ride.destination || "?")));
           card.append(label);
           const metrics = this._text("div","metrics","");
-          this._metric(metrics,tr("Distanse","Distance"),km(ride.distance_km));
-          this._metric(metrics,tr("Kjøretid (anslag)","Travel time (estimate)"),duration(ride.drive_minutes));
+          this._metric(metrics,tr("Distanse","Distance"),km(ride.distance_km ?? ride.toll_estimate?.distance_km));
+          this._metric(metrics,tr("Kjøretid (anslag)","Travel time (estimate)"),duration(ride.drive_minutes ?? ride.toll_estimate?.duration_min));
           this._metric(metrics,tr("Tilgjengelig fra","Available from"),this._date(ride.available_at || ride.date_start));
           this._metric(metrics,tr("Seneste retur","Return deadline"),this._date(ride.latest_return_at));
           card.append(metrics);
@@ -319,6 +337,36 @@
           }
           toll.append(this._text("div","value",price));
           card.append(toll);
+          // Road obstruction status is only sourced from the recommended
+          // SVV route snapshot. Not checked != no known problems.
+          const road= this._text("div","toll","");
+          road.append(this._text("span","label",tr("Veiforhold på ruten","Road conditions")));
+          let roadStatus=tr("Ikke kontrollert","Not checked");
+          if(estimate?.road_obstructed===true) {
+            roadStatus=tr("Hindring meldt – kontroller ruten","Obstruction reported – check route");
+          } else if(estimate?.road_obstructed===false) {
+            roadStatus=tr("Ingen hindring i rutesvaret","No obstruction in route response");
+          }
+          road.append(this._text("div","value",roadStatus));
+          card.append(road);
+          if(estimate?.road_checked_at){
+            const ts=String(estimate.road_checked_at);
+            card.append(this._text("div","notice",tr(
+              "Rutesjekk fra Statens vegvesen via BompengeAppen: ",
+              "SVV road planning snapshot via BompengeAppen: "
+            )+this._date(ts)+" · "+tr(
+              "Ikke fullstendige sanntidsmeldinger.",
+              "Not comprehensive live traffic data."
+            )));
+          }
+          const traffic=document.createElement("a");
+          traffic.className="detail";
+          traffic.href="https://www.vegvesen.no/trafikk";
+          traffic.target="_blank";
+          traffic.rel="noopener noreferrer";
+          traffic.textContent=tr("Se aktuelle stengninger og trafikkmeldinger hos Vegvesen",
+            "View current road closures and incidents at Statens vegvesen");
+          card.append(traffic);
           const costs = ride.estimated_trip_costs || {};
           const fmtNok = (x) => typeof x === "number" && Number.isFinite(x)
             ? new Intl.NumberFormat(nb ? "nb-NO" : "en-US", {maximumFractionDigits:0}).format(x)+" kr"
@@ -357,6 +405,18 @@
               : "An exact offer link is unavailable. Opens Freerider for manual selection."
           )));
           const actions=this._text("div","actions","");
+          if(ride.country==="NO" && ride.pickup_country==="no"
+            && ride.return_country==="no"
+            && ride.vehicle_type!=="van" && ride.vehicle_type!=="minibus"
+            && this._routeUrl(ride)) {
+            const button=this._makeButton(
+              this._calculating.has(ride.id)?tr("Beregner …","Calculating …")
+                :tr("Beregn bom og veistatus","Calculate toll and road status"),
+              ()=>this._estimate(entryId,ride.id),
+            );
+            button.disabled=this._calculating.has(ride.id);
+            actions.append(button);
+          }
           actions.append(this._makeButton(
             favIds.has(ride.id)?"★ "+tr("Favoritt","Favorite"):"☆ "+tr("Lagre favoritt","Save favorite"),
             ()=>this._favorite(entryId,ride.id,!favIds.has(ride.id)),
