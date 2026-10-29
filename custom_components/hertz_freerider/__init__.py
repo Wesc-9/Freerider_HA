@@ -12,6 +12,7 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, SERVICE_REFRESH
 from .tolls import TollLookupError
+from .api_settings import get_shared_api_settings
 from .coordinator import FreeriderCoordinator
 from .dashboard import async_setup_dashboard
 
@@ -86,6 +87,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 async def async_setup_entry(hass, entry) -> bool:
     """Set up one watch. An unavailable source must not block configuration."""
+    # Move legacy per-search credentials into one private global setting.
+    await get_shared_api_settings(hass).async_import_from_entry(entry)
     coordinator = FreeriderCoordinator(hass, entry)
     await coordinator.async_initialize()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
