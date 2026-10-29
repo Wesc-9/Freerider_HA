@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.10.3 (2026-10-29) — BompengeAppen credential and road status
+- Optional masked BompengeAppen API key in the **first registration screen**, with clickable registration link displayed immediately below via Home Assistant `data_description`.
+- Existing watch profiles can add or change their key under **Configure → Toll, API key and travel expenses** without deleting saved searches. Leaving the replacement field blank preserves any configured key.
+- A valid saved API key is **required for any toll calculation**. Requests use Bearer authentication in the HTTPS Authorization header, never a URL query value.
+- Keep the key out of Home Assistant's publicly visible sensor filters, events and notifications. Profile monitors still operate without an API key; road quotes and toll amounts then remain unavailable.
+- Parse the route-specific obstruction flag returned by BompengeAppen, with unknown/absent status treated as unchecked and timestamped. No direct Statens vegvesen API dependency.
+- Smaller result cards, route distance and travel time, manual toll/road status estimate action for eligible cars. Missing vehicle class for vans is not guessed.
+- Compact, abbreviated registration labels; move advanced direction filtering to Configure. Native HA config flow cannot force two dates on the same horizontal line.
+- Add offline regression tests for auth header, no-key blocking and secret non-disclosure.
+
 ## 0.10.2 (2026-10-29) — date-selection usability fix
 - Replace permanently read-only date previews with live date selectors on the From/To page.
 - With All dates ON, explicitly clear/ignore dates; with it OFF, save selected from/to dates on the same screen.

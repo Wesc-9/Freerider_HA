@@ -1,5 +1,16 @@
 # Freerider HA
 
+## New in 0.10.3 — BompengeAppen key, compact results and route status
+
+**BompengeAppen toll calculation now requires a personal API key.** In the first installation screen you can paste your key into the masked input; immediately below it there is a [link to the free API registration portal](https://bompengeappen.no/api-portal). If a search already exists, choose **Configure → Toll, API key and travel expenses** to enter or replace a key (leave blank to retain the previously saved secret). The free account currently has 500 requests/day, as documented by BompengeAppen. **Freerider car searches continue to work without an API key**; toll amounts and the optional road-route check will not be requested.
+
+The key is sent **server-to-server only** using the documented `Authorization: Bearer …` header. It is not placed in URLs, mobile notifications or public Home Assistant sensor attributes. Automatic toll lookups remain limited to at most 10/day per Home Assistant instance, with a shared cache.
+
+The optional Home Assistant results card is more compact, and **eligible Norwegian passenger-car** offers have a **Calculate toll and road status** action. It uses BompengeAppen's route endpoint, returning a route-based toll estimate, its distance/duration and any documented `isObstructed` flag returned for that planned route. Unknown road status is not a claim that roads are open. **No separate Statens vegvesen API is used or requested.** Commercial vans with unknown toll weight class do not receive a misleading passenger-car quote. A normal visit to the public road-information website is a separate manual link.
+
+The native Home Assistant setup screen has shorter labels and fewer advanced controls. The two built-in date selectors cannot be forced into one horizontal row in the existing native config flow; both remain editable on the same screen. For a fully side-by-side date range a custom frontend would be required.
+
+
 ## 0.10.2 — Date input fixed
 
 **All dates ON** means the search is unrestricted by date. **All dates OFF** allows you to choose a from date and optional to date *directly on the same registration/edit screen*. In previous versions those inputs were always read-only. On Home Assistant Core 2026.10, dynamically disabling date selectors from the same-form checkbox is not available, so 0.10.2 leaves them editable and **ignores/clears them when All dates is ON**. Home Assistant Core 2026.11 is introducing conditional field visibility. For phone notifications, you must additionally activate **New car alerts** and select a phone. Date settings alone do not turn alerts on.
