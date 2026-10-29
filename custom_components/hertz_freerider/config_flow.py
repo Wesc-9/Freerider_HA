@@ -12,6 +12,8 @@ from datetime import date
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.config_entries import FlowType, SOURCE_USER, SubentryFlowContext
+from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 from .const import (
@@ -31,6 +33,7 @@ from .notifications import notification_targets, TARGET_OFF
 from .station_catalog import async_get_station_catalog
 from .search_enhancements import distance_km
 from .radius_settings import validate_radius_settings, radius_default
+from .trip_profiles import has_legacy_watch, SUBENTRY_TYPE
 
 
 def select(options: list[str], translation_key: str):
@@ -65,6 +68,15 @@ def countries_schema(values: dict | None = None, *, include_api_key: bool = True
             selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
         )
     return vol.Schema(fields)
+
+
+def initial_api_schema() -> vol.Schema:
+    """Only show a shared API key during first installation."""
+    return vol.Schema({
+        vol.Optional(CONF_TOLL_API_KEY): selector.TextSelector(
+            selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
+        ),
+    })
 
 
 def _place_selector(names: list[str]):
@@ -383,38 +395,42 @@ class FreeriderConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._draft: dict = {}
         self._stations: list[str] | None = None
 
+    @classmethod
+    @callback
+    def async_get_supported_subentry_types(cls, config_entry):
+        """Expose the native 'Legg til reise' button."""
+        from .trip_subentries import FreeriderTripSubentryFlow
+        return {SUBENTRY_TYPE: FreeriderTripSubentryFlow}
+
     async def async_step_user(self, user_input=None):
-        """Page one: name and countries."""
-        errors = {}
-        first_setup = not self.hass.config_entries.async_entries(DOMAIN)
+        """First screen registers shared API settings, not an individual trip."""
+        await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured()
         if user_input is not None:
-            # First-ever registration may include a key. The setup handler
-            # immediately moves it into private installation-wide storage.
-            user_input = dict(user_input)
-            if not first_setup:
-                user_input.pop(CONF_TOLL_API_KEY, None)
             key = user_input.get(CONF_TOLL_API_KEY)
-            if not isinstance(key, str) or not key.strip():
-                user_input.pop(CONF_TOLL_API_KEY, None)
-            else:
-                user_input[CONF_TOLL_API_KEY] = key.strip()
-            user_input = {
-                **user_input,
-                CONF_COUNTRIES: [
-                    country.upper() for country in user_input.get(CONF_COUNTRIES, [])
-                ],
-            }
-            invalid = validation_error(user_input)
-            if invalid is None:
-                self._draft.update(user_input)
-                return await self.async_step_route()
-            errors["base"] = invalid
+            key = key.strip() if isinstance(key, str) else ""
+            return self.async_create_entry(
+                title="Freerider HA",
+                data={CONF_TOLL_API_KEY: key} if key else {},
+            )
         return self.async_show_form(
-            step_id="user", data_schema=countries_schema(user_input, include_api_key=first_setup), errors=errors,
+            step_id="user",
+            data_schema=initial_api_schema(),
             description_placeholders={
                 "api_signup_url": "https://bompengeappen.no/api-portal",
             },
         )
+
+    async def async_on_create_entry(self, result):
+        """Open the first trip setup automatically, as Flight Assistant does."""
+        next_result = await self.hass.config_entries.subentries.async_init(
+            (result["result"].entry_id, SUBENTRY_TYPE),
+            context=SubentryFlowContext(source=SOURCE_USER),
+        )
+        result["next_flow"] = (
+            FlowType.CONFIG_SUBENTRIES_FLOW, next_result["flow_id"]
+        )
+        return result
 
     async def async_step_route(self, user_input=None):
         """Page two: multi-station route and optional date range in one form."""
@@ -571,7 +587,9 @@ class FreeriderOptionsFlow(config_entries.OptionsFlow):
 
     async def async_step_init(self, user_input=None):
         """Choose which part of the configuration to change."""
-        menu = ["route", "filters", "costs", "updates", "alerts"]
+        menu = ["route", "filters", "costs", "updates", "alerts"] if has_legacy_watch(
+            self.config_entry
+        ) else []
         if first_watch_entry(self.hass, self.config_entry):
             menu.insert(0, "api")
         return self.async_show_menu(step_id="init", menu_options=menu)
