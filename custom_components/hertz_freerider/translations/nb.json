@@ -4,14 +4,14 @@
     "step": {
       "user": {
         "title": "1 · Velg land",
-        "description": "Opprett søkeprofil. Bompengeestimat og rutesjekk krever en personlig API-nøkkel. [Registrer deg gratis og få API-nøkkel]({api_signup_url}). Søket fungerer uten nøkkel, men da hentes ingen bom- eller rutevarsler. Nøkkelen sendes bare til BompengeAppen fra Home Assistant, ikke via telefonvarsler.",
+        "description": "Ved første oppsett kan du legge inn én felles BompengeAppen API-nøkkel for alle Freerider-søk. [Skaff gratis API-nøkkel]({api_signup_url}). Bilvarsler fungerer også uten nøkkel. Nye søk spør ikke etter den igjen.",
         "data": {
           "watch_name": "Navn på søket",
           "countries": "Land",
-          "toll_api_key": "BompengeAppen API-nøkkel (valgfritt for søk)"
+          "toll_api_key": "Felles BompengeAppen API-nøkkel (valgfritt)"
         },
         "data_description": {
-          "toll_api_key": "Ingen nøkkel ennå? [Registrer deg gratis og få API-nøkkel]({api_signup_url}). Nøkkelen brukes bare til rute- og bomoppslag."
+          "toll_api_key": "[Registrer gratis API-nøkkel]({api_signup_url}). Gjelder alle Freerider-søk."
         }
       },
       "route": {
@@ -94,7 +94,8 @@
           "filters": "Bilpreferanser (valgfritt)",
           "updates": "Søkeintervall og hendelser",
           "costs": "Bom, API-nøkkel og reisekostnader",
-          "alerts": "Varslingsregler og stilleperioder"
+          "alerts": "Varslingsregler og stilleperioder",
+          "api": "Felles API-innstillinger (alle søk)"
         }
       },
       "route": {
@@ -166,17 +167,13 @@
         }
       },
       "costs": {
-        "title": "Bom, API-nøkkel og reisekostnader",
-        "description": "Hent gratis nøkkel (500 forespørsler/døgn) hos [BompengeAppen API-portal]({api_signup_url}). Tast inn nøkkelen her for bom, beregnet rute og veihindringer som følger med rutesvaret. Tomt felt beholder en allerede lagret nøkkel. Vi kobler oss ikke direkte til Statens vegvesens separate API. Andre reisekostnader er anslag.",
+        "title": "Reisekostnader per søk",
+        "description": "Angi dine egne forutsetninger for drivstoff og strøm. BompengeAppen API-nøkkelen er felles for alle søk og administreres separat under Felles API-innstillinger.",
         "data": {
           "fuel_l_100km": "Forbruk bensin/diesel (liter/100 km)",
           "fuel_price_nok_l": "Drivstoffpris (kr/liter)",
           "electric_kwh_100km": "Forbruk elbil (kWh/100 km)",
-          "electric_price_nok_kwh": "Ladepris (kr/kWh)",
-          "toll_api_key": "API-nøkkel (la stå tomt for å beholde eksisterende)"
-        },
-        "data_description": {
-          "toll_api_key": "[Opprett gratis nøkkel]({api_signup_url}). La feltet stå tomt for å beholde nøkkelen som allerede er lagret."
+          "electric_price_nok_kwh": "Ladepris (kr/kWh)"
         }
       },
       "alerts": {
@@ -202,6 +199,17 @@
         "description": "Velg til-dato, eller la det stå tomt for én dato.",
         "data": {
           "date_end": "Dato til"
+        }
+      },
+      "api": {
+        "title": "Felles BompengeAppen API-nøkkel",
+        "description": "Denne nøkkelen gjelder alle Freerider-enheter og søk. [Hent gratis API-nøkkel]({api_signup_url}). La nøkkelfeltet stå tomt for å beholde eksisterende nøkkel. Kryss av for sletting bare hvis du vil deaktivere bompengeberegning for alle søk.",
+        "data": {
+          "toll_api_key": "Ny API-nøkkel (tomt = behold)",
+          "clear_api_key": "Fjern felles API-nøkkel"
+        },
+        "data_description": {
+          "toll_api_key": "[Registrer gratis nøkkel]({api_signup_url}). Den lagres kun i Home Assistants private lagring."
         }
       }
     },
