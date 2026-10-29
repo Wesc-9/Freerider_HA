@@ -12,18 +12,17 @@
       },
       "route": {
         "title": "2 · From, to and travel dates",
-        "description": "Choose pickup/return locations and radius. Turn OFF All dates to choose dates directly below. When All dates is ON, entered dates are ignored and the search has no date restriction. To receive phone alerts, also enable New car alerts and select a phone.",
+        "description": "Select pickup, return, radius and optional dates. All dates removes date restrictions. For mobile alerts, enable notifications and select a phone. Direction and advanced filters are under Configure.",
         "data": {
-          "origin": "From – select several places (optional)",
-          "destination": "To – select several places (optional)",
-          "direction": "Direction",
-          "date_start": "From date (used when All dates is OFF)",
-          "date_end": "To date (optional, used when All dates is OFF)",
-          "notify_enabled": "Notify me about new cars",
-          "notify_target": "Send notifications to",
-          "origin_radius_km": "Radius around pickup locations (km)",
-          "destination_radius_km": "Radius around return locations (km)",
-          "all_dates": "All dates – no date restriction"
+          "origin": "From – locations",
+          "destination": "To – locations",
+          "date_start": "From date",
+          "date_end": "To date",
+          "notify_enabled": "Mobile alerts",
+          "notify_target": "Notify",
+          "origin_radius_km": "Pickup radius",
+          "destination_radius_km": "Return radius",
+          "all_dates": "All dates"
         }
       },
       "date": {
@@ -96,20 +95,19 @@
       },
       "route": {
         "title": "Places and dates",
-        "description": "Choose pickup/return locations and radius. Turn OFF All dates to choose dates directly below. When All dates is ON, entered dates are ignored and the search has no date restriction. To receive phone alerts, also enable New car alerts and select a phone.",
+        "description": "Select pickup, return, radius and optional dates. All dates removes date restrictions. For mobile alerts, enable notifications and select a phone. Direction and advanced filters are under Configure.",
         "data": {
           "watch_name": "Search name",
           "countries": "Countries",
-          "origin": "From – select several places (optional)",
-          "destination": "To – select several places (optional)",
-          "direction": "Direction",
-          "date_start": "From date (used when All dates is OFF)",
-          "date_end": "To date (optional, used when All dates is OFF)",
-          "notify_enabled": "Notify me about new cars",
-          "notify_target": "Send notifications to",
-          "origin_radius_km": "Radius around pickup locations (km)",
-          "destination_radius_km": "Radius around return locations (km)",
-          "all_dates": "All dates – no date restriction"
+          "origin": "From – locations",
+          "destination": "To – locations",
+          "date_start": "From date",
+          "date_end": "To date",
+          "notify_enabled": "Mobile alerts",
+          "notify_target": "Notify",
+          "origin_radius_km": "Pickup radius",
+          "destination_radius_km": "Return radius",
+          "all_dates": "All dates"
         }
       },
       "dates": {
@@ -137,7 +135,8 @@
           "min_seats": "Minimum seats (0 = any)",
           "model_include": "Vehicle names to include (separate with ;)",
           "model_exclude": "Vehicle names to exclude (separate with ;)",
-          "sort_by": "Sort offers by"
+          "sort_by": "Sort offers by",
+          "direction": "Direction"
         }
       },
       "updates": {

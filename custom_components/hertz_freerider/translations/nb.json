@@ -12,18 +12,17 @@
       },
       "route": {
         "title": "2 · Velg fra, til og dato",
-        "description": "Velg hentested, leveringssted og radius. Slå AV «Alle datoer» for å kunne velge datoer direkte nedenfor. Er «Alle datoer» PÅ, ignoreres datofeltene, og søket har ingen datobegrensning. For mobilvarsler må du i tillegg slå på «Varsle om nye biler» og velge telefon.",
+        "description": "Velg fra og til, radius og eventuelt datoer. «Alle datoer» betyr at søket ikke begrenses av dato. For mobilvarsel: slå på bryteren og velg telefon. Retning og øvrige filtre finnes under Konfigurer.",
         "data": {
-          "origin": "Fra – velg flere steder (valgfritt)",
-          "destination": "Til – velg flere steder (valgfritt)",
-          "direction": "Retning",
-          "date_start": "Fra-dato (brukes når Alle datoer er AV)",
-          "date_end": "Til-dato (valgfritt, brukes når Alle datoer er AV)",
-          "notify_enabled": "Varsle om nye biler",
-          "notify_target": "Send varsel til",
-          "origin_radius_km": "Radius rundt avreisesteder (km)",
-          "destination_radius_km": "Radius rundt leveringssteder (km)",
-          "all_dates": "Alle datoer – ingen datobegrensning"
+          "origin": "Fra – steder",
+          "destination": "Til – steder",
+          "date_start": "Fra dato",
+          "date_end": "Til dato",
+          "notify_enabled": "Mobilvarsel",
+          "notify_target": "Varsle til",
+          "origin_radius_km": "Radius fra",
+          "destination_radius_km": "Radius til",
+          "all_dates": "Alle datoer"
         }
       },
       "date": {
@@ -96,20 +95,19 @@
       },
       "route": {
         "title": "Steder og dato",
-        "description": "Velg hentested, leveringssted og radius. Slå AV «Alle datoer» for å kunne velge datoer direkte nedenfor. Er «Alle datoer» PÅ, ignoreres datofeltene, og søket har ingen datobegrensning. For mobilvarsler må du i tillegg slå på «Varsle om nye biler» og velge telefon.",
+        "description": "Velg fra og til, radius og eventuelt datoer. «Alle datoer» betyr at søket ikke begrenses av dato. For mobilvarsel: slå på bryteren og velg telefon. Retning og øvrige filtre finnes under Konfigurer.",
         "data": {
           "watch_name": "Navn på søket",
           "countries": "Land",
-          "origin": "Fra – velg flere steder (valgfritt)",
-          "destination": "Til – velg flere steder (valgfritt)",
-          "direction": "Retning",
-          "date_start": "Fra-dato (brukes når Alle datoer er AV)",
-          "date_end": "Til-dato (valgfritt, brukes når Alle datoer er AV)",
-          "notify_enabled": "Varsle om nye biler",
-          "notify_target": "Send varsel til",
-          "origin_radius_km": "Radius rundt avreisesteder (km)",
-          "destination_radius_km": "Radius rundt leveringssteder (km)",
-          "all_dates": "Alle datoer – ingen datobegrensning"
+          "origin": "Fra – steder",
+          "destination": "Til – steder",
+          "date_start": "Fra dato",
+          "date_end": "Til dato",
+          "notify_enabled": "Mobilvarsel",
+          "notify_target": "Varsle til",
+          "origin_radius_km": "Radius fra",
+          "destination_radius_km": "Radius til",
+          "all_dates": "Alle datoer"
         }
       },
       "dates": {
@@ -137,7 +135,8 @@
           "min_seats": "Minste antall seter (0 = alle)",
           "model_include": "Bilnavn som inkluderes (atskilt med ;)",
           "model_exclude": "Bilnavn som utelates (atskilt med ;)",
-          "sort_by": "Sorter treff etter"
+          "sort_by": "Sorter treff etter",
+          "direction": "Retning"
         }
       },
       "updates": {
