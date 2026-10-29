@@ -9,15 +9,23 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .device import watch_device_info
 from .const import DOMAIN
+from .trip_profiles import all_watch_profiles
 
 
 async def async_setup_entry(hass, entry, async_add_entities) -> None:
-    """Add a refresh action even if the live source is currently unavailable."""
-    async_add_entities([
-        FreeriderRefresh(hass.data[DOMAIN][entry.entry_id], entry),
-        FreeriderEstimateFirstToll(hass.data[DOMAIN][entry.entry_id], entry),
-        FreeriderTestNotification(hass.data[DOMAIN][entry.entry_id], entry),
-    ])
+    """Each native trip gets its own refresh, toll and notification buttons."""
+    for profile in all_watch_profiles(entry):
+        coordinator = hass.data[DOMAIN][profile.entry_id]
+        entities = [
+            FreeriderRefresh(coordinator, profile),
+            FreeriderEstimateFirstToll(coordinator, profile),
+            FreeriderTestNotification(coordinator, profile),
+        ]
+        subentry_id = getattr(profile, "subentry_id", None)
+        if subentry_id is not None:
+            async_add_entities(entities, config_subentry_id=subentry_id)
+        else:
+            async_add_entities(entities)
 
 
 class FreeriderRefresh(CoordinatorEntity, ButtonEntity):
