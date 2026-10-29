@@ -1,5 +1,13 @@
 # Freerider HA
 
+## Version 0.11.0 — native «Legg til reise» in Home Assistant
+
+Freerider now offers the same native **Add trip / Legg til reise** action on its integration page as Flight Assistant. On a **new installation**, the initial form asks only for one optional BompengeAppen API key. After saving, Home Assistant automatically opens the first trip form. Each trip is a native Home Assistant configuration subentry with its own name, origins, destinations, date preferences, mobile alerts, route monitors and sensors. Additional trips use the **Add trip** button and **never ask for another API key**. Each trip may be edited or removed independently from the integration page.
+
+**Upgrading from 0.10.5:** Existing saved searches, device IDs, configuration and notifications are kept. They remain valid legacy entries and may coexist with the new native trip subentries (they are not silently renamed or deleted). On the original integration page, choose **Legg til reise** to add the next trip. Because this migration preserves existing entries rather than rewriting them, you may temporarily see both older saved-search entries and newer trip subentries.
+
+To change the shared BompengeAppen key, use **Configure → Shared API settings** from the original/first Freerider config entry. Home Assistant Core supporting config subentries is required. Update in HACS and restart Home Assistant. The add/edit flow and mobile view still need testing in a real Home Assistant installation.
+
 ## Version 0.10.5 — one shared BompengeAppen API key
 
 Enter the optional **BompengeAppen API key once**, on the first setup screen when adding the very first Freerider search. It is then shared automatically by every saved search, with **no API-key field on additional searches or individual device travel-cost screens**. Existing per-search keys are migrated on restart into private, installation-wide Home Assistant storage; the old copies are removed from each search's configuration.
