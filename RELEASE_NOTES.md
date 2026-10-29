@@ -1,21 +1,17 @@
-# Freerider HA 0.10.1
+# Freerider HA 0.10.2 — date fields work in registration
 
-## A simpler first-time setup
+## Fixed
+- **From date and To date are now usable on the same registration/configuration screen.** Previously they were always marked `read_only=True`, even after switching **All dates** off.
+- **All dates ON** (default): No date limit; any entered dates are intentionally ignored and cleared when saved. **All dates OFF**: Choose a from date and optionally a to date directly, without being sent through more forms. A missing from date or an end before start is rejected with a clear form error.
+- Norwegian and English labels now explain that date inputs apply only when All dates is OFF.
+- The **New car alerts** switch remains independent. To get push notifications at any date, turn on notifications and select a registered phone.
 
-Choose origin and destination locations on the usual second screen. Each is immediately followed by an independent **0–100 km radius slider** (5 km steps). 0 km means only selected locations. Radius includes actual provider-listed GPS stations within straight-line distance of each selected reference. No coordinates are fabricated; entering an unknown custom place with a nonzero radius shows a validation message.
+## Why are the inputs not greyed out when All dates is ON?
+On Home Assistant Core 2026.10 and earlier, config-flow fields cannot be enabled/disabled live based on another field's switch. Rather than making the fields permanently read-only as in 0.10.1, **0.10.2 makes them editable** and treats All dates as authoritative when saved. Dynamic conditional config-flow fields are planned for Home Assistant 2026.11. This compatibility fix ensures you can actually choose dates today.
 
-**All dates — notify me whenever a matching car appears** is turned on by default. Any previous date filter is cleared when selected. Start/end date previews are visibly disabled in that form.
+## Install
+Update through HACS to **0.10.2**, restart Home Assistant, then open **Add service** or edit your Freerider search under **Configure → Places, dates and notifications**.
 
-To choose a date range, turn All dates off and continue. The setup asks for the **first date**, then advances to the **last date** step; last date is optional for a single-day search. A picker-to-picker auto-focus without submitting the step is not supported by the installed HA frontend, so each step requires its standard Next button.
+Existing searches, radius sliders, pause switch, mobile alerts, sensors and saved settings are preserved. Automated CI tests passed, but this form interaction still needs a final check in the actual Home Assistant mobile app.
 
-## Disable and notifications
-- Home Assistant's native **Disable** flow fixed by leaving lifecycle callbacks to HA instead of mistakenly calling config-entry unload twice.
-- A separate **Search active** switch under each watch stops the watch's polling and notifications while preserving its entire configuration.
-- The existing **New car alerts** switch continues to mute alerts only.
-- Phone messages show the provider's exact car name (such as VW CRAFTER 14M3 4MOTION TDI VA) **without a preceding emoji**, in both languages.
-
-## After updating
-Update to **0.10.1** in HACS, restart Home Assistant, add a test search and inspect its radius sliders and All dates switch. For an existing search select Freerider HA → Configure → Places, dates and notifications. Use the device's Search active switch to pause only that search, or native Disable to stop the config entry.
-
-### Validation and limitations
-Automated Python tests, JavaScript tests and Home Assistant hassfest verify the implementation; a successful native Disable and date-picker UX in the user's real Home Assistant instance must still be confirmed. HACS publication validation may still be blocked by missing GitHub repository Topics. This is an unofficial project not affiliated with Hertz; permission to poll a public endpoint at a given frequency is not established. Leiebilretur/other providers are deliberately not mixed in without verifying supported data access and terms.
+Independent community project, not affiliated with Hertz.

@@ -1,5 +1,10 @@
 # Freerider HA
 
+## 0.10.2 — Date input fixed
+
+**All dates ON** means the search is unrestricted by date. **All dates OFF** allows you to choose a from date and optional to date *directly on the same registration/edit screen*. In previous versions those inputs were always read-only. On Home Assistant Core 2026.10, dynamically disabling date selectors from the same-form checkbox is not available, so 0.10.2 leaves them editable and **ignores/clears them when All dates is ON**. Home Assistant Core 2026.11 is introducing conditional field visibility. For phone notifications, you must additionally activate **New car alerts** and select a phone. Date settings alone do not turn alerts on.
+
+
 ## What's new in 0.10.1 — easier registration and working Disable
 
 The **From/To registration screen** now has two real **drag sliders**, immediately below their place selectors: `Origin radius (km)` and `Destination radius (km)`. Set each independently from **0 to 100 km** in 5 km steps. At **0 km** only your selected stations apply. Positive radius includes verified provider-listed stations within straight-line distance of **every** selected origin/destination with known station GPS. Missing coordinates produce a useful validation message rather than guessed matches. Current saved-search settings continue to work and the separate radius configuration menu was removed in favor of the main `Places, dates and notifications` form.

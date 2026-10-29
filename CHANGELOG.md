@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.10.2 (2026-10-29) — date-selection usability fix
+- Replace permanently read-only date previews with live date selectors on the From/To page.
+- With All dates ON, explicitly clear/ignore dates; with it OFF, save selected from/to dates on the same screen.
+- Validate required start date, single day and ordered date range; add Python regression tests.
+- Clarify both date options and the separate notification switch in English/Norwegian.
+- Dynamic in-place grey/enable behavior is not supported in Home Assistant Core 2026.10; prioritize functional date selection on current versions.
+
+
 ## 0.10.1 (2026-10-27) — first-run search radius and unrestricted dates, Disable fix
 - 0–100 km pickup and return radius sliders directly under their station selectors, with independently selected values and verified station GPS per selected reference station.
 - Radius persistence in new and existing watch profiles, safe error handling for unknown GPS and migration from old single-center searches.
