@@ -85,14 +85,18 @@ class ApiKeyTests(unittest.IsolatedAsyncioTestCase):
         self.assertIn('"toll_api_configured"',sensor)
         self.assertNotIn('"filters": self.coordinator.settings',sensor)
 
-    def test_register_link_is_actual_free_key_portal(self):
+    def test_register_link_below_key_with_ha_description_placeholder(self):
         import json
         for p in ("strings.json","translations/nb.json","translations/en.json"):
             data=json.loads((root/p).read_text())
-            self.assertIn("https://bompengeappen.no/api-portal",
-                          data["config"]["step"]["user"]["description"])
-            self.assertIn("https://bompengeappen.no/api-portal",
-                          data["options"]["step"]["costs"]["description"])
+            for section,step in (("config","user"),("options","costs")):
+                element=data[section]["step"][step]
+                description=element["data_description"]["toll_api_key"]
+                self.assertIn("{api_signup_url}",description)
+                self.assertNotIn("https://",description)
+        config_flow=(root/"config_flow.py").read_text()
+        self.assertIn('"api_signup_url": "https://bompengeappen.no/api-portal"',config_flow)
+        self.assertIn("TextSelectorType.PASSWORD",config_flow)
 
 
 if __name__=="__main__":unittest.main()
